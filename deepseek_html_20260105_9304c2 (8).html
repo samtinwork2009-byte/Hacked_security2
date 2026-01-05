@@ -6591,3 +6591,87 @@
                 addTerminalLine('[系統] 成功連接到目標系統！', 'success');
                 
                 const statusIndicator = document.querySelector('.status-indicator
+                                                               // ===== 通知系統 =====
+        function showNotification(title, message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const titleElement = document.getElementById('notification-title-text');
+            const messageElement = document.getElementById('notification-message');
+            const iconElement = notification.querySelector('.notification-title i');
+            
+            notification.className = 'notification';
+            notification.classList.add(type);
+            
+            // 設置圖標
+            let iconClass = 'fas fa-info-circle';
+            if (type === 'hacker') iconClass = 'fas fa-user-secret';
+            else if (type === 'law_enforcement') iconClass = 'fas fa-shield-alt';
+            else if (type === 'warning') iconClass = 'fas fa-exclamation-triangle';
+            else if (type === 'danger') iconClass = 'fas fa-skull-crossbones';
+            else if (type === 'success') iconClass = 'fas fa-check-circle';
+            
+            iconElement.className = iconClass;
+            titleElement.textContent = title;
+            messageElement.textContent = message;
+            
+            notification.classList.add('show');
+            
+            // 5秒後自動隱藏
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        function showCustomModal(title, content, onConfirm = null, onCancel = null) {
+            document.getElementById('modal-title-text').textContent = title;
+            document.getElementById('modal-message').innerHTML = content;
+            
+            const modal = document.getElementById('custom-modal');
+            const confirmBtn = document.getElementById('modal-confirm');
+            const cancelBtn = document.getElementById('modal-cancel');
+            const input = document.getElementById('modal-input');
+            
+            // 默認隱藏輸入框
+            input.style.display = 'none';
+            
+            // 設置確認按鈕
+            if (onConfirm) {
+                confirmBtn.style.display = 'block';
+                confirmBtn.onclick = () => {
+                    onConfirm();
+                    modal.classList.remove('active');
+                };
+            } else {
+                confirmBtn.style.display = 'none';
+            }
+            
+            // 設置取消按鈕
+            if (onCancel) {
+                cancelBtn.style.display = 'block';
+                cancelBtn.onclick = () => {
+                    onCancel();
+                    modal.classList.remove('active');
+                };
+            } else {
+                cancelBtn.style.display = 'block';
+                cancelBtn.onclick = () => modal.classList.remove('active');
+            }
+            
+            modal.classList.add('active');
+        }
+
+        // ===== 初始化 =====
+        window.onload = function() {
+            // 初始設置
+            updateNavActive();
+            
+            // 預設一些通知
+            setTimeout(() => {
+                showNotification('歡迎來到對戰模式第二季', '選擇你的角色，開始這場黑客與執法部門的對決！', 'info');
+            }, 1000);
+        };
+
+        console.log('對戰模式第二季 • 執法對決 SEASON 2 加載完成！');
+        console.log('© 2025 Sam. T. 版權所有');
+    </script>
+</body>
+</html>
