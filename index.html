@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
@@ -1015,6 +1016,95 @@
             font-size: 2.5rem;
             color: #00ff99;
             margin-bottom: 15px;
+        }
+
+        /* ===== 特殊技能面板 ===== */
+        .special-skills-panel {
+            background: var(--panel-bg);
+            border-radius: 12px;
+            padding: 25px;
+            border: 2px solid #ff9900;
+            margin-top: 20px;
+            min-height: 200px;
+        }
+
+        .special-skills-panel .tools-title {
+            color: #ff9900;
+        }
+
+        .special-skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .special-skill-card {
+            background: linear-gradient(135deg, rgba(255, 153, 0, 0.3), rgba(255, 102, 0, 0.3));
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid #ff9900;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .special-skill-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 153, 0, 0.5);
+            background: linear-gradient(135deg, rgba(255, 180, 0, 0.5), rgba(255, 130, 0, 0.5));
+            border-color: #ffcc00;
+        }
+
+        .special-skill-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .special-skill-card.disabled:hover {
+            transform: none;
+            box-shadow: none;
+            background: rgba(30, 30, 40, 0.8);
+        }
+
+        .special-skill-card .tool-icon {
+            color: #ffcc00;
+        }
+
+        .special-skill-card .tool-name {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .special-skill-card .tool-desc {
+            font-size: 0.85rem;
+            color: #ccc;
+            margin-bottom: 15px;
+            flex-grow: 1;
+        }
+
+        .special-skill-card .skill-cost {
+            font-size: 0.9rem;
+            color: #ffcc00;
+            font-weight: bold;
+        }
+
+        .special-skill-card .cooldown-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
         }
 
         .law-enforcement-ui .tool-icon {
@@ -2758,6 +2848,521 @@
         .node.hacker { border-color: #00ff41; }
         .node.target { border-color: #ff3333; }
         .node-label { position: absolute; bottom: -20px; font-size: 0.7rem; white-space: nowrap; }
+
+        /* ===== 全螢幕戰況地圖 ===== */
+        .battle-map-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 2500;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .battle-map-header {
+            background: linear-gradient(135deg, rgba(20, 20, 40, 0.95), rgba(10, 10, 30, 0.95));
+            border-bottom: 2px solid rgba(0, 100, 255, 0.3);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 100, 255, 0.2);
+        }
+
+        .map-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4a90d9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .map-title i {
+            color: #00ff41;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .map-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .map-btn {
+            background: rgba(74, 144, 217, 0.1);
+            border: 1px solid #4a90d9;
+            color: #4a90d9;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .map-btn:hover {
+            background: rgba(74, 144, 217, 0.3);
+            box-shadow: 0 0 10px rgba(74, 144, 217, 0.5);
+        }
+
+        .map-btn.active {
+            background: #4a90d9;
+            color: white;
+        }
+
+        .map-btn-close {
+            background: rgba(255, 59, 59, 0.1);
+            border-color: #ff3b3b;
+            color: #ff3b3b;
+        }
+
+        .map-btn-close:hover {
+            background: rgba(255, 59, 59, 0.3);
+            box-shadow: 0 0 10px rgba(255, 59, 59, 0.5);
+        }
+
+        .battle-map-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .map-view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            background: radial-gradient(ellipse at center, #0a0a1a 0%, #000000 100%);
+        }
+
+        .map-view.active {
+            display: block;
+        }
+
+        /* 網絡拓撲視圖 */
+        .topology-canvas {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: transparent;
+        }
+
+        .topology-node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 10;
+            animation: nodeGlow 3s infinite alternate;
+        }
+
+        @keyframes nodeGlow {
+            0% { box-shadow: 0 0 10px rgba(74, 144, 217, 0.5); }
+            100% { box-shadow: 0 0 20px rgba(74, 144, 217, 0.8); }
+        }
+
+        .topology-node.hacker {
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.2), rgba(0, 200, 50, 0.4));
+            border: 3px solid #00ff41;
+        }
+
+        .topology-node.law-enforcement {
+            background: linear-gradient(135deg, rgba(74, 144, 217, 0.2), rgba(50, 120, 200, 0.4));
+            border: 3px solid #4a90d9;
+        }
+
+        .topology-node.target {
+            background: linear-gradient(135deg, rgba(255, 100, 100, 0.2), rgba(200, 50, 50, 0.4));
+            border: 3px solid #ff6464;
+            animation: targetAlert 1s infinite alternate;
+        }
+
+        @keyframes targetAlert {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        .topology-node:hover {
+            transform: scale(1.2);
+        }
+
+        .node-icon {
+            font-size: 1.5rem;
+            margin-bottom: 2px;
+        }
+
+        .node-label {
+            font-size: 0.7rem;
+            text-align: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .node-status {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #00ff41;
+            border: 2px solid #000;
+        }
+
+        .node-status.offline {
+            background: #ff4444;
+        }
+
+        .node-status.warning {
+            background: #ffaa00;
+        }
+
+        .topology-connection {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, #4a90d9, #00ff41);
+            z-index: 5;
+            opacity: 0.7;
+            animation: connectionFlow 2s infinite linear;
+        }
+
+        @keyframes connectionFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        .topology-connection.attack {
+            background: linear-gradient(90deg, #ff4444, #ffaa00);
+            height: 3px;
+            animation: attackFlow 1s infinite linear;
+        }
+
+        @keyframes attackFlow {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+
+        .topology-legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .legend-color.hacker-node {
+            background: #00ff41;
+        }
+
+        .legend-color.le-node {
+            background: #4a90d9;
+        }
+
+        .legend-color.attack-path {
+            background: linear-gradient(90deg, #ff4444, #ffaa00);
+            border-radius: 0;
+            width: 30px;
+            height: 3px;
+        }
+
+        .legend-color.defense-zone {
+            background: rgba(74, 144, 217, 0.3);
+            border: 2px solid #4a90d9;
+        }
+
+        /* 設備狀態視圖 */
+        .devices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .device-card {
+            background: linear-gradient(135deg, rgba(20, 20, 40, 0.9), rgba(10, 10, 30, 0.9));
+            border: 2px solid #4a90d9;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .device-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(74, 144, 217, 0.3);
+        }
+
+        .device-card.hacked {
+            border-color: #00ff41;
+            background: linear-gradient(135deg, rgba(0, 40, 0, 0.9), rgba(0, 20, 0, 0.9));
+        }
+
+        .device-card.compromised {
+            border-color: #ffaa00;
+            background: linear-gradient(135deg, rgba(40, 20, 0, 0.9), rgba(20, 10, 0, 0.9));
+        }
+
+        .device-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .device-icon {
+            font-size: 2rem;
+            color: #4a90d9;
+        }
+
+        .device-info h3 {
+            margin: 0;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .device-info p {
+            margin: 5px 0 0 0;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .device-specs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .spec-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+
+        .spec-label {
+            color: #aaa;
+            display: block;
+        }
+
+        .spec-value {
+            color: white;
+            font-weight: bold;
+        }
+
+        .device-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-indicator {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-online {
+            background: rgba(0, 255, 65, 0.2);
+            color: #00ff41;
+            border: 1px solid #00ff41;
+        }
+
+        .status-hacked {
+            background: rgba(0, 255, 65, 0.2);
+            color: #00ff41;
+            border: 1px solid #00ff41;
+        }
+
+        .status-compromised {
+            background: rgba(255, 170, 0, 0.2);
+            color: #ffaa00;
+            border: 1px solid #ffaa00;
+        }
+
+        .status-offline {
+            background: rgba(255, 68, 68, 0.2);
+            color: #ff4444;
+            border: 1px solid #ff4444;
+        }
+
+        /* 情報監控視圖 */
+        .intel-dashboard {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            height: 100%;
+        }
+
+        .intel-panel {
+            background: linear-gradient(135deg, rgba(20, 20, 40, 0.9), rgba(10, 10, 30, 0.9));
+            border: 2px solid #4a90d9;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: rgba(74, 144, 217, 0.1);
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #4a90d9;
+            font-weight: bold;
+        }
+
+        .intel-stream {
+            height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .intel-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #4a90d9;
+            animation: intelFadeIn 0.5s ease-in;
+        }
+
+        @keyframes intelFadeIn {
+            0% { opacity: 0; transform: translateX(-20px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        .intel-item.hacker {
+            border-left-color: #00ff41;
+        }
+
+        .intel-item.law-enforcement {
+            border-left-color: #4a90d9;
+        }
+
+        .intel-item.warning {
+            border-left-color: #ffaa00;
+            background: rgba(255, 170, 0, 0.1);
+        }
+
+        .intel-item.danger {
+            border-left-color: #ff4444;
+            background: rgba(255, 68, 68, 0.1);
+        }
+
+        .intel-timestamp {
+            color: #aaa;
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+        }
+
+        .intel-content {
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .personal-data {
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+        }
+
+        .personal-section {
+            margin-bottom: 20px;
+        }
+
+        .personal-section h4 {
+            color: #4a90d9;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+
+        .personal-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .personal-label {
+            color: #aaa;
+        }
+
+        .personal-value {
+            color: white;
+            font-weight: bold;
+        }
+
+        /* 地圖狀態欄 */
+        .map-status-bar {
+            background: linear-gradient(135deg, rgba(20, 20, 40, 0.95), rgba(10, 10, 30, 0.95));
+            border-top: 2px solid rgba(0, 100, 255, 0.3);
+            padding: 10px 30px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .status-label {
+            color: #4a90d9;
+        }
+
+        .status-value {
+            color: white;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
         .connection-line {
             position: absolute;
             height: 2px;
@@ -2795,6 +3400,700 @@
         .contamination-warning { color: #ff3333; font-size: 0.7rem; animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     
+        /* ===== 戰況地圖樣式 ===== */
+        .battle-map-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .map-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid rgba(0, 100, 255, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            z-index: 10;
+        }
+
+        .map-title {
+            color: #4a90d9;
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .map-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .map-btn {
+            background: rgba(74, 144, 217, 0.1);
+            border: 1px solid #4a90d9;
+            color: #4a90d9;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .map-btn:hover {
+            background: rgba(74, 144, 217, 0.2);
+            box-shadow: 0 0 10px rgba(74, 144, 217, 0.3);
+        }
+
+        .map-btn.back-btn {
+            background: rgba(255, 51, 51, 0.1);
+            border-color: #ff3333;
+            color: #ff3333;
+        }
+
+        .map-btn.back-btn:hover {
+            background: rgba(255, 51, 51, 0.2);
+            box-shadow: 0 0 10px rgba(255, 51, 51, 0.3);
+        }
+
+        /* 狀態欄 */
+        .map-status-bar {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid rgba(0, 100, 255, 0.3);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 15;
+        }
+
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .status-label {
+            font-size: 0.75rem;
+            color: #aaa;
+        }
+
+        .status-value {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #4a90d9;
+        }
+
+        .status-value.threat-level {
+            color: #ff9900;
+        }
+
+        .status-value.health-status {
+            color: #00ff41;
+        }
+
+        .status-value.evidence-integrity {
+            color: #4a90d9;
+        }
+
+        .status-value.resource-usage {
+            color: #ff9900;
+        }
+
+        .status-value.active-connections {
+            color: #00ff41;
+        }
+
+        .network-map {
+            position: absolute;
+            top: 100px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center, #0a0a0a 0%, #000000 100%);
+        }
+
+        .node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .node:hover {
+            stroke-width: 4;
+            filter: drop-shadow(0 0 10px currentColor);
+        }
+
+        .connection {
+            stroke-linecap: round;
+        }
+
+        .attack-path {
+            stroke-dasharray: 10, 5;
+            animation: attackFlow 1s linear infinite;
+        }
+
+        @keyframes attackFlow {
+            0% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: -15; }
+        }
+
+        /* 設備資訊面板 */
+        .device-info-panel {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            width: 350px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #4a90d9;
+            border-radius: 10px;
+            z-index: 20;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            background: rgba(74, 144, 217, 0.1);
+        }
+
+        .panel-header span {
+            color: #4a90d9;
+            font-weight: bold;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            color: #fff;
+        }
+
+        .panel-content {
+            padding: 15px;
+        }
+
+        .device-specs, .personal-data {
+            margin-bottom: 20px;
+        }
+
+        .spec-item, .data-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .spec-label, .data-label {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .spec-value, .data-value {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .personal-data h4 {
+            color: #4a90d9;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #4a90d9;
+            padding-bottom: 5px;
+        }
+
+        /* 即時監控 */
+        .live-monitoring {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            width: 400px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            z-index: 20;
+            max-height: 80vh;
+            overflow: hidden;
+        }
+
+        .monitoring-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            background: rgba(0, 255, 65, 0.1);
+        }
+
+        .monitoring-header span {
+            color: #00ff41;
+            font-weight: bold;
+        }
+
+        .monitoring-content {
+            padding: 15px;
+        }
+
+        .camera-feeds {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .feed-item {
+            background: #111;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .feed-label {
+            background: #333;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            color: #aaa;
+            border-bottom: 1px solid #444;
+        }
+
+        .feed-screen {
+            height: 150px;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .screen-placeholder {
+            color: #666;
+            text-align: center;
+        }
+
+        .screen-placeholder i {
+            font-size: 2rem;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        /* 情報流 */
+        .intelligence-stream {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ff9900;
+            border-radius: 10px;
+            z-index: 20;
+            overflow: hidden;
+        }
+
+        .stream-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            border-bottom: 1px solid #333;
+            background: rgba(255, 153, 0, 0.1);
+        }
+
+        .stream-header span {
+            color: #ff9900;
+            font-weight: bold;
+        }
+
+        .stream-content {
+            height: calc(100% - 50px);
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .stream-message {
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            display: flex;
+            gap: 10px;
+        }
+
+        .stream-message.incoming {
+            background: rgba(0, 255, 65, 0.1);
+            border-left: 3px solid #00ff41;
+        }
+
+        .stream-message.outgoing {
+            background: rgba(74, 144, 217, 0.1);
+            border-left: 3px solid #4a90d9;
+        }
+
+        .stream-message.alert {
+            background: rgba(255, 51, 51, 0.1);
+            border-left: 3px solid #ff3333;
+            animation: alertPulse 1s infinite;
+        }
+
+        @keyframes alertPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .message-time {
+            color: #888;
+            font-size: 0.75rem;
+            min-width: 60px;
+        }
+
+        .message-content {
+            flex: 1;
+            color: #fff;
+        }
+
+        /* 增強的地圖元素 */
+        .threat-zone {
+            filter: blur(1px);
+        }
+
+        .defense-zone {
+            filter: blur(0.5px);
+        }
+
+        .data-packet {
+            opacity: 0.7;
+        }
+
+        .node text {
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .evidence-point {
+            cursor: pointer;
+            filter: drop-shadow(0 0 5px currentColor);
+        }
+
+        .evidence-point:hover {
+            r: 12;
+        }
+
+        .tool-indicator {
+            opacity: 0.8;
+        }
+
+        /* 威脅分析面板 */
+        .threat-analysis-panel {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            width: 380px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ff9900;
+            border-radius: 10px;
+            z-index: 20;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .threat-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+
+        .metric-label {
+            color: #aaa;
+            font-size: 0.85rem;
+        }
+
+        .metric-value {
+            font-weight: bold;
+            color: #4a90d9;
+        }
+
+        .metric-value.threat-high {
+            color: #ff3333;
+        }
+
+        .metric-value.defense-good {
+            color: #00ff41;
+        }
+
+        .threat-chart h4, .active-threats h4 {
+            color: #ff9900;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ff9900;
+            padding-bottom: 5px;
+        }
+
+        .chart-container {
+            background: #111;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .threat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .threat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            border-left: 3px solid #4a90d9;
+        }
+
+        .threat-item.critical {
+            border-left-color: #ff3333;
+            background: rgba(255, 51, 51, 0.1);
+        }
+
+        .threat-item.high {
+            border-left-color: #ff9900;
+            background: rgba(255, 153, 0, 0.1);
+        }
+
+        .threat-item.medium {
+            border-left-color: #4a90d9;
+        }
+
+        .threat-type {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .threat-severity {
+            color: #aaa;
+            font-size: 0.8rem;
+        }
+
+        .threat-time {
+            color: #888;
+            font-size: 0.75rem;
+        }
+
+        /* 資源監控面板 */
+        .resource-monitor-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 500px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            z-index: 20;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .resource-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .resource-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 5px;
+        }
+
+        .resource-label {
+            color: #aaa;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .resource-bar {
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            overflow: hidden;
+        }
+
+        .resource-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff41 0%, #4a90d9 100%);
+            transition: width 0.3s ease;
+        }
+
+        .cpu-fill {
+            background: linear-gradient(90deg, #ff9900 0%, #ff6600 100%);
+        }
+
+        .memory-fill {
+            background: linear-gradient(90deg, #4a90d9 0%, #357abd 100%);
+        }
+
+        .network-fill {
+            background: linear-gradient(90deg, #ff3333 0%, #cc0000 100%);
+        }
+
+        .storage-fill {
+            background: linear-gradient(90deg, #00ff41 0%, #009933 100%);
+        }
+
+        .resource-value {
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .system-services h4, .performance-metrics h4 {
+            color: #00ff41;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #00ff41;
+            padding-bottom: 5px;
+        }
+
+        .service-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .service-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            border-left: 3px solid #00ff41;
+        }
+
+        .service-item.warning {
+            border-left-color: #ff9900;
+        }
+
+        .service-name {
+            color: #fff;
+        }
+
+        .service-status {
+            color: #00ff41;
+            font-size: 0.8rem;
+        }
+
+        .service-item.warning .service-status {
+            color: #ff9900;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .metric-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .metric-title {
+            color: #aaa;
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+        }
+
+        .metric-box .metric-value {
+            color: #fff;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        /* 響應式設計增強 */
+        @media (max-width: 768px) {
+            .map-status-bar {
+                flex-wrap: wrap;
+                height: auto;
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .status-item {
+                min-width: 80px;
+            }
+
+            .threat-analysis-panel, .resource-monitor-panel {
+                width: 90%;
+                left: 5%;
+                transform: none;
+            }
+
+            .resource-monitor-panel {
+                bottom: 10px;
+                left: 5%;
+                width: 90%;
+            }
+
+            .threat-metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .resource-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    
     </style>
 </head>
 <body>
@@ -2806,6 +4105,7 @@
         <ul class="nav-menu">
             <li><a onclick="goToMainPage()" id="nav-home">主頁</a></li>
             <li><a onclick="showSetupPage()" id="nav-season2">開始第二季對戰</a></li>
+            <li><a onclick="showBattleMap()" id="nav-battlemap">戰況地圖</a></li>
             <li><a onclick="showGuide()" id="nav-guide">操作指南</a></li>
             <li><a onclick="openShop()" id="nav-shop">商店</a></li>
             <li><a onclick="openTransactionHistory()" id="nav-history">交易記錄</a></li>
@@ -2830,6 +4130,108 @@
         </div>
         <div class="modal-buttons" id="step-modal-buttons">
             <!-- 動態生成按鈕 -->
+        </div>
+    </div>
+
+    <!-- 全螢幕戰況地圖 -->
+    <div id="battle-map-modal" class="battle-map-overlay" style="display:none;">
+        <div class="battle-map-header">
+            <div class="map-title">
+                <i class="fas fa-globe"></i>
+                <span>全螢幕戰況地圖 • LIVE MONITORING</span>
+            </div>
+            <div class="map-controls">
+                <button class="map-btn" onclick="toggleMapView('network')" id="network-view-btn">
+                    <i class="fas fa-network-wired"></i> 網絡拓撲
+                </button>
+                <button class="map-btn" onclick="toggleMapView('devices')" id="devices-view-btn">
+                    <i class="fas fa-desktop"></i> 設備狀態
+                </button>
+                <button class="map-btn" onclick="toggleMapView('intel')" id="intel-view-btn">
+                    <i class="fas fa-eye"></i> 情報監控
+                </button>
+                <button class="map-btn map-btn-close" onclick="closeBattleMap()">
+                    <i class="fas fa-times"></i> 關閉
+                </button>
+            </div>
+        </div>
+        
+        <div class="battle-map-content">
+            <!-- 網絡拓撲視圖 -->
+            <div id="network-topology-view" class="map-view active">
+                <div class="topology-canvas" id="topology-canvas">
+                    <!-- 動態生成的網絡節點和連線 -->
+                </div>
+                <div class="topology-legend">
+                    <div class="legend-item">
+                        <div class="legend-color hacker-node"></div>
+                        <span>黑客節點</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color le-node"></div>
+                        <span>執法節點</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color attack-path"></div>
+                        <span>攻擊路徑</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color defense-zone"></div>
+                        <span>防禦範圍</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 設備狀態視圖 -->
+            <div id="devices-status-view" class="map-view">
+                <div class="devices-grid" id="devices-grid">
+                    <!-- 動態生成的設備狀態 -->
+                </div>
+            </div>
+            
+            <!-- 情報監控視圖 -->
+            <div id="intel-monitoring-view" class="map-view">
+                <div class="intel-dashboard">
+                    <div class="intel-panel">
+                        <div class="panel-header">
+                            <i class="fas fa-satellite"></i>
+                            <span>即時情報流</span>
+                        </div>
+                        <div class="intel-stream" id="intel-stream">
+                            <!-- 動態情報流 -->
+                        </div>
+                    </div>
+                    <div class="intel-panel">
+                        <div class="panel-header">
+                            <i class="fas fa-user-secret"></i>
+                            <span>目標個人資料</span>
+                        </div>
+                        <div class="personal-data" id="personal-data">
+                            <!-- 個人資料顯示 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 地圖狀態欄 -->
+        <div class="map-status-bar">
+            <div class="status-item">
+                <span class="status-label">遊戲時間:</span>
+                <span class="status-value" id="map-game-time">00:00</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">活躍節點:</span>
+                <span class="status-value" id="map-active-nodes">0</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">攻擊路徑:</span>
+                <span class="status-value" id="map-attack-paths">0</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">情報更新:</span>
+                <span class="status-value" id="map-intel-updates">0</span>
+            </div>
         </div>
     </div>
 
@@ -3077,6 +4479,503 @@
     <!-- 遊戲頁面 -->
     <div id="game-page" class="page"></div>
 
+    <!-- 戰況地圖頁面 -->
+    <div id="battle-map-page" class="page">
+        <div class="battle-map-container">
+            <!-- 地圖標題 -->
+            <div class="map-header">
+                <div class="map-title">
+                    <i class="fas fa-globe"></i>
+                    <span>全螢幕戰況地圖</span>
+                </div>
+                <div class="map-controls">
+                    <button class="map-btn" onclick="toggleLiveMonitoring()">
+                        <i class="fas fa-video"></i> 即時監控
+                    </button>
+                    <button class="map-btn" onclick="toggleIntelligenceStream()">
+                        <i class="fas fa-stream"></i> 情報流
+                    </button>
+                    <button class="map-btn" onclick="toggleThreatAnalysis()">
+                        <i class="fas fa-chart-line"></i> 威脅分析
+                    </button>
+                    <button class="map-btn" onclick="toggleResourceMonitor()">
+                        <i class="fas fa-server"></i> 資源監控
+                    </button>
+                    <button class="map-btn back-btn" onclick="goToMainPage()">
+                        <i class="fas fa-arrow-left"></i> 返回
+                    </button>
+                </div>
+            </div>
+
+            <!-- 狀態欄 -->
+            <div class="map-status-bar">
+                <div class="status-item">
+                    <span class="status-label">威脅等級:</span>
+                    <span class="status-value threat-level" id="threat-level">中等</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">系統健康度:</span>
+                    <span class="status-value health-status" id="system-health">95%</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">證據完整性:</span>
+                    <span class="status-value evidence-integrity" id="evidence-integrity">98%</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">資源使用率:</span>
+                    <span class="status-value resource-usage" id="resource-usage">67%</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">活躍連接:</span>
+                    <span class="status-value active-connections" id="active-connections">12</span>
+                </div>
+            </div>
+
+            <!-- 網絡地圖區域 -->
+            <div class="network-map">
+                <svg id="network-svg" width="100%" height="100%" viewBox="0 0 1200 800">
+                    <!-- 背景網格 -->
+                    <defs>
+                        <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+                            <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(0,100,255,0.1)" stroke-width="1"/>
+                        </pattern>
+                        <!-- 攻擊效果 -->
+                        <radialGradient id="attackGradient" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" style="stop-color:#ff3333;stop-opacity:0.8" />
+                            <stop offset="100%" style="stop-color:#ff3333;stop-opacity:0" />
+                        </radialGradient>
+                        <!-- 防禦效果 -->
+                        <radialGradient id="defenseGradient" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" style="stop-color:#00ff41;stop-opacity:0.6" />
+                            <stop offset="100%" style="stop-color:#00ff41;stop-opacity:0" />
+                        </radialGradient>
+                        <!-- 威脅指示器 -->
+                        <filter id="threatGlow">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                            <feMerge> 
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid)" />
+
+                    <!-- 威脅區域覆蓋 -->
+                    <circle cx="900" cy="400" r="200" fill="url(#attackGradient)" opacity="0.3" class="threat-zone opponent-threat">
+                        <animate attributeName="opacity" values="0.1;0.4;0.1" dur="3s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle cx="300" cy="400" r="180" fill="url(#defenseGradient)" opacity="0.2" class="defense-zone player-defense">
+                        <animate attributeName="opacity" values="0.1;0.3;0.1" dur="4s" repeatCount="indefinite"/>
+                    </circle>
+
+                    <!-- 防禦範圍 -->
+                    <circle cx="300" cy="400" r="150" fill="none" stroke="rgba(0,255,0,0.3)" stroke-width="2" stroke-dasharray="5,5" class="defense-range player-defense">
+                        <animate attributeName="r" values="150;160;150" dur="2s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle cx="900" cy="400" r="150" fill="none" stroke="rgba(255,0,0,0.3)" stroke-width="2" stroke-dasharray="5,5" class="defense-range opponent-defense">
+                        <animate attributeName="r" values="150;160;150" dur="2s" repeatCount="indefinite"/>
+                    </circle>
+
+                    <!-- 數據包流動動畫 -->
+                    <g class="data-packets">
+                        <!-- 玩家到對手的數據包 -->
+                        <circle cx="300" cy="400" r="3" fill="#00ff41" class="data-packet player-packet">
+                            <animateMotion dur="2s" repeatCount="indefinite">
+                                <path d="M 0 0 L 600 0"/>
+                            </animateMotion>
+                        </circle>
+                        <circle cx="300" cy="400" r="3" fill="#00ff41" class="data-packet player-packet">
+                            <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.5s">
+                                <path d="M 0 0 L 600 0"/>
+                            </animateMotion>
+                        </circle>
+                        <!-- 對手到玩家的數據包 -->
+                        <circle cx="900" cy="400" r="3" fill="#ff3333" class="data-packet opponent-packet">
+                            <animateMotion dur="2s" repeatCount="indefinite">
+                                <path d="M 0 0 L -600 0"/>
+                            </animateMotion>
+                        </circle>
+                        <circle cx="900" cy="400" r="3" fill="#ff3333" class="data-packet opponent-packet">
+                            <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.7s">
+                                <path d="M 0 0 L -600 0"/>
+                            </animateMotion>
+                        </circle>
+                    </g>
+
+                    <!-- 網絡節點 -->
+                    <!-- 玩家側節點 -->
+                    <g class="player-nodes">
+                        <circle cx="300" cy="400" r="20" fill="#00ff41" stroke="#fff" stroke-width="3" class="node player-node main-node" data-device="pc" data-status="active">
+                            <animate attributeName="r" values="20;25;20" dur="1s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="300" y="405" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold">PC</text>
+                        
+                        <circle cx="200" cy="300" r="15" fill="#4a90d9" stroke="#fff" stroke-width="2" class="node player-node" data-device="browser" data-status="active">
+                            <animate attributeName="r" values="15;18;15" dur="1.5s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="200" y="305" text-anchor="middle" fill="#fff" font-size="8">瀏覽器</text>
+                        
+                        <circle cx="400" cy="300" r="15" fill="#4a90d9" stroke="#fff" stroke-width="2" class="node player-node" data-device="router" data-status="active">
+                            <animate attributeName="r" values="15;18;15" dur="1.2s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="400" y="305" text-anchor="middle" fill="#fff" font-size="8">路由器</text>
+                        
+                        <circle cx="250" cy="500" r="12" fill="#888" stroke="#fff" stroke-width="2" class="node player-node" data-device="mobile" data-status="warning">
+                            <animate attributeName="r" values="12;15;12" dur="2s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="250" y="505" text-anchor="middle" fill="#fff" font-size="8">手機</text>
+                        
+                        <circle cx="150" cy="450" r="10" fill="#ff9900" stroke="#fff" stroke-width="2" class="node player-node" data-device="server" data-status="active">
+                            <animate attributeName="r" values="10;13;10" dur="1.8s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="150" y="455" text-anchor="middle" fill="#fff" font-size="7">伺服器</text>
+                    </g>
+
+                    <!-- 對手側節點 -->
+                    <g class="opponent-nodes">
+                        <circle cx="900" cy="400" r="20" fill="#ff3333" stroke="#fff" stroke-width="3" class="node opponent-node main-node" data-device="pc" data-status="threat">
+                            <animate attributeName="r" values="20;25;20" dur="1s" repeatCount="indefinite"/>
+                            <animate attributeName="fill" values="#ff3333;#ff6666;#ff3333" dur="0.5s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="900" y="405" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold">PC</text>
+                        
+                        <circle cx="800" cy="300" r="15" fill="#ff9900" stroke="#fff" stroke-width="2" class="node opponent-node" data-device="browser" data-status="threat">
+                            <animate attributeName="r" values="15;18;15" dur="1.5s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="800" y="305" text-anchor="middle" fill="#fff" font-size="8">瀏覽器</text>
+                        
+                        <circle cx="1000" cy="300" r="15" fill="#ff9900" stroke="#fff" stroke-width="2" class="node opponent-node" data-device="router" data-status="active">
+                            <animate attributeName="r" values="15;18;15" dur="1.2s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="1000" y="305" text-anchor="middle" fill="#fff" font-size="8">路由器</text>
+                        
+                        <circle cx="850" cy="500" r="12" fill="#888" stroke="#fff" stroke-width="2" class="node opponent-node" data-device="mobile" data-status="active">
+                            <animate attributeName="r" values="12;15;12" dur="2s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="850" y="505" text-anchor="middle" fill="#fff" font-size="8">手機</text>
+                        
+                        <circle cx="1050" cy="450" r="10" fill="#ff6666" stroke="#fff" stroke-width="2" class="node opponent-node" data-device="proxy" data-status="threat">
+                            <animate attributeName="r" values="10;13;10" dur="1.8s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="1050" y="455" text-anchor="middle" fill="#fff" font-size="7">代理</text>
+                    </g>
+
+                    <!-- 連接線 -->
+                    <g class="connections">
+                        <!-- 玩家內部連接 -->
+                        <line x1="300" y1="400" x2="200" y2="300" stroke="#00ff41" stroke-width="3" class="connection player-connection active">
+                            <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+                        </line>
+                        <line x1="300" y1="400" x2="400" y2="300" stroke="#00ff41" stroke-width="3" class="connection player-connection active">
+                            <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+                        </line>
+                        <line x1="300" y1="400" x2="250" y2="500" stroke="#00ff41" stroke-width="3" class="connection player-connection warning">
+                            <animate attributeName="stroke-opacity" values="0.2;0.8;0.2" dur="1.5s" repeatCount="indefinite"/>
+                        </line>
+                        <line x1="300" y1="400" x2="150" y2="450" stroke="#00ff41" stroke-width="2" class="connection player-connection active">
+                            <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="2.5s" repeatCount="indefinite"/>
+                        </line>
+
+                        <!-- 對手內部連接 -->
+                        <line x1="900" y1="400" x2="800" y2="300" stroke="#ff3333" stroke-width="3" class="connection opponent-connection threat">
+                            <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite"/>
+                        </line>
+                        <line x1="900" y1="400" x2="1000" y2="300" stroke="#ff3333" stroke-width="3" class="connection opponent-connection active">
+                            <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+                        </line>
+                        <line x1="900" y1="400" x2="850" y2="500" stroke="#ff3333" stroke-width="3" class="connection opponent-connection active">
+                            <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+                        </line>
+                        <line x1="900" y1="400" x2="1050" y2="450" stroke="#ff3333" stroke-width="2" class="connection opponent-connection threat">
+                            <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="1.8s" repeatCount="indefinite"/>
+                        </line>
+
+                        <!-- 攻擊路徑 -->
+                        <line x1="400" y1="300" x2="800" y2="300" stroke="#ffff00" stroke-width="4" class="attack-path active" style="display: block;">
+                            <animate attributeName="stroke-dasharray" values="0,20;20,0" dur="0.5s" repeatCount="indefinite"/>
+                        </line>
+                        <line x1="250" y1="500" x2="850" y2="500" stroke="#ffff00" stroke-width="4" class="attack-path active" style="display: block;">
+                            <animate attributeName="stroke-dasharray" values="0,20;20,0" dur="0.5s" repeatCount="indefinite"/>
+                        </line>
+                        <line x1="150" y1="450" x2="1050" y2="450" stroke="#ff6600" stroke-width="3" class="attack-path potential" style="display: block; opacity: 0.5;">
+                            <animate attributeName="stroke-dasharray" values="0,15;15,0" dur="1s" repeatCount="indefinite"/>
+                        </line>
+                    </g>
+
+                    <!-- 證據收集點 -->
+                    <g class="evidence-points">
+                        <circle cx="350" cy="350" r="8" fill="#ffff00" stroke="#fff" stroke-width="2" class="evidence-point collected" data-type="ip_logs">
+                            <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="350" y="355" text-anchor="middle" fill="#000" font-size="8" font-weight="bold">證</text>
+                        
+                        <circle cx="950" cy="350" r="8" fill="#ff6600" stroke="#fff" stroke-width="2" class="evidence-point available" data-type="malware_sample">
+                            <animate attributeName="r" values="8;12;8" dur="2.5s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="950" y="355" text-anchor="middle" fill="#000" font-size="8" font-weight="bold">證</text>
+                    </g>
+
+                    <!-- 工具使用指示器 -->
+                    <g class="tool-indicators">
+                        <rect x="320" y="380" width="20" height="4" fill="#00ff41" class="tool-indicator active" data-tool="firewall">
+                            <animate attributeName="width" values="20;30;20" dur="1s" repeatCount="indefinite"/>
+                        </rect>
+                        <rect x="920" y="380" width="20" height="4" fill="#ff3333" class="tool-indicator active" data-tool="ddos">
+                            <animate attributeName="width" values="20;30;20" dur="1s" repeatCount="indefinite"/>
+                        </rect>
+                    </g>
+                </svg>
+            </div>
+
+            <!-- 設備資訊面板 -->
+            <div class="device-info-panel" id="device-info-panel" style="display: none;">
+                <div class="panel-header">
+                    <i class="fas fa-info-circle"></i>
+                    <span>設備規格資訊</span>
+                    <button class="close-btn" onclick="closeDeviceInfo()">&times;</button>
+                </div>
+                <div class="panel-content">
+                    <div class="device-specs">
+                        <div class="spec-item">
+                            <span class="spec-label">設備類型:</span>
+                            <span class="spec-value" id="device-type">-</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">作業系統:</span>
+                            <span class="spec-value" id="os-info">-</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">處理器:</span>
+                            <span class="spec-value" id="cpu-info">-</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">記憶體:</span>
+                            <span class="spec-value" id="ram-info">-</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">網路狀態:</span>
+                            <span class="spec-value" id="network-status">-</span>
+                        </div>
+                    </div>
+                    <div class="personal-data">
+                        <h4>個人資料</h4>
+                        <div class="data-item">
+                            <span class="data-label">用戶名稱:</span>
+                            <span class="data-value" id="user-name">-</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">IP位置:</span>
+                            <span class="data-value" id="ip-location">-</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">活動時間:</span>
+                            <span class="data-value" id="activity-time">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 即時監控畫面 -->
+            <div class="live-monitoring" id="live-monitoring" style="display: none;">
+                <div class="monitoring-header">
+                    <i class="fas fa-video"></i>
+                    <span>即時監控畫面</span>
+                    <button class="close-btn" onclick="closeLiveMonitoring()">&times;</button>
+                </div>
+                <div class="monitoring-content">
+                    <div class="camera-feeds">
+                        <div class="feed-item">
+                            <div class="feed-label">玩家設備監控</div>
+                            <div class="feed-screen" id="player-feed">
+                                <div class="screen-placeholder">
+                                    <i class="fas fa-desktop"></i>
+                                    <span>監控中...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="feed-item">
+                            <div class="feed-label">對手設備監控</div>
+                            <div class="feed-screen" id="opponent-feed">
+                                <div class="screen-placeholder">
+                                    <i class="fas fa-desktop"></i>
+                                    <span>監控中...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 情報流 -->
+            <div class="intelligence-stream" id="intelligence-stream" style="display: none;">
+                <div class="stream-header">
+                    <i class="fas fa-stream"></i>
+                    <span>情報流</span>
+                    <button class="close-btn" onclick="closeIntelligenceStream()">&times;</button>
+                </div>
+                <div class="stream-content" id="stream-messages">
+                    <div class="stream-message incoming">
+                        <div class="message-time">14:32:15</div>
+                        <div class="message-content">偵測到對手嘗試連接埠掃描</div>
+                    </div>
+                    <div class="stream-message outgoing">
+                        <div class="message-time">14:32:18</div>
+                        <div class="message-content">防火牆已攔截可疑流量</div>
+                    </div>
+                    <div class="stream-message alert">
+                        <div class="message-time">14:32:22</div>
+                        <div class="message-content">警告：對手發起DDoS攻擊</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 威脅分析面板 -->
+            <div class="threat-analysis-panel" id="threat-analysis-panel" style="display: none;">
+                <div class="panel-header">
+                    <i class="fas fa-chart-line"></i>
+                    <span>威脅分析儀表板</span>
+                    <button class="close-btn" onclick="closeThreatAnalysis()">&times;</button>
+                </div>
+                <div class="panel-content">
+                    <div class="threat-metrics">
+                        <div class="metric-item">
+                            <span class="metric-label">即時威脅等級:</span>
+                            <span class="metric-value threat-high" id="realtime-threat">高</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">攻擊嘗試頻率:</span>
+                            <span class="metric-value" id="attack-frequency">12/分鐘</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">防禦有效性:</span>
+                            <span class="metric-value defense-good" id="defense-effectiveness">85%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">預測下次攻擊:</span>
+                            <span class="metric-value" id="next-attack-prediction">2分鐘內</span>
+                        </div>
+                    </div>
+                    
+                    <div class="threat-chart">
+                        <h4>威脅趨勢圖</h4>
+                        <div class="chart-container">
+                            <canvas id="threat-chart" width="300" height="150"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="active-threats">
+                        <h4>活躍威脅</h4>
+                        <div class="threat-list" id="active-threats-list">
+                            <div class="threat-item critical">
+                                <span class="threat-type">DDoS攻擊</span>
+                                <span class="threat-severity">關鍵</span>
+                                <span class="threat-time">進行中</span>
+                            </div>
+                            <div class="threat-item high">
+                                <span class="threat-type">連接埠掃描</span>
+                                <span class="threat-severity">高</span>
+                                <span class="threat-time">1分鐘前</span>
+                            </div>
+                            <div class="threat-item medium">
+                                <span class="threat-type">可疑流量</span>
+                                <span class="threat-severity">中</span>
+                                <span class="threat-time">3分鐘前</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 資源監控面板 -->
+            <div class="resource-monitor-panel" id="resource-monitor-panel" style="display: none;">
+                <div class="panel-header">
+                    <i class="fas fa-server"></i>
+                    <span>資源監控中心</span>
+                    <button class="close-btn" onclick="closeResourceMonitor()">&times;</button>
+                </div>
+                <div class="panel-content">
+                    <div class="resource-grid">
+                        <div class="resource-item">
+                            <div class="resource-label">CPU使用率</div>
+                            <div class="resource-bar">
+                                <div class="resource-fill cpu-fill" style="width: 67%"></div>
+                            </div>
+                            <div class="resource-value">67%</div>
+                        </div>
+                        
+                        <div class="resource-item">
+                            <div class="resource-label">記憶體使用率</div>
+                            <div class="resource-bar">
+                                <div class="resource-fill memory-fill" style="width: 45%"></div>
+                            </div>
+                            <div class="resource-value">45%</div>
+                        </div>
+                        
+                        <div class="resource-item">
+                            <div class="resource-label">網路頻寬</div>
+                            <div class="resource-bar">
+                                <div class="resource-fill network-fill" style="width: 78%"></div>
+                            </div>
+                            <div class="resource-value">78%</div>
+                        </div>
+                        
+                        <div class="resource-item">
+                            <div class="resource-label">儲存空間</div>
+                            <div class="resource-bar">
+                                <div class="resource-fill storage-fill" style="width: 32%"></div>
+                            </div>
+                            <div class="resource-value">32%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="system-services">
+                        <h4>系統服務狀態</h4>
+                        <div class="service-list">
+                            <div class="service-item active">
+                                <span class="service-name">防火牆</span>
+                                <span class="service-status">運行中</span>
+                            </div>
+                            <div class="service-item active">
+                                <span class="service-name">入侵偵測</span>
+                                <span class="service-status">運行中</span>
+                            </div>
+                            <div class="service-item warning">
+                                <span class="service-name">日誌系統</span>
+                                <span class="service-status">警告</span>
+                            </div>
+                            <div class="service-item active">
+                                <span class="service-name">備份系統</span>
+                                <span class="service-status">運行中</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="performance-metrics">
+                        <h4>效能指標</h4>
+                        <div class="metrics-grid">
+                            <div class="metric-box">
+                                <div class="metric-title">響應時間</div>
+                                <div class="metric-value">45ms</div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-title">吞吐量</div>
+                                <div class="metric-value">1.2GB/s</div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-title">錯誤率</div>
+                                <div class="metric-value">0.02%</div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-title">可用性</div>
+                                <div class="metric-value">99.98%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 自定義模態框 -->
     <div class="modal-overlay" id="custom-modal">
         <div class="modal-box">
@@ -3173,6 +5072,62 @@
                     forensics: { level: 1, maxLevel: 5, cost: 7000, effect: '+20% 鑑識能力' },
                     collaboration: { level: 1, maxLevel: 5, cost: 8000, effect: '+25% 協作效率' },
                     defense: { level: 1, maxLevel: 5, cost: 10000, effect: '+15% 防禦力' }
+                }
+            },
+            
+            // 高階特殊技能系統
+            specialSkills: {
+                hacker: {
+                    digital_evaporation: {
+                        name: '數位蒸發',
+                        description: '清除過去72小時內所有可追蹤的數位足跡',
+                        cooldown: 1800, // 30分鐘
+                        lastUsed: 0,
+                        effect: 'clear_all_footprints',
+                        cost: 50000
+                    },
+                    evidence_pollution_wave: {
+                        name: '證據污染波',
+                        description: '對特定類別證據進行大範圍數據注入',
+                        cooldown: 900, // 15分鐘
+                        lastUsed: 0,
+                        effect: 'mass_evidence_pollution',
+                        cost: 30000
+                    },
+                    channel_hijack: {
+                        name: '協作頻道劫持',
+                        description: '模仿指揮系統，發送虛假指令',
+                        cooldown: 1200, // 20分鐘
+                        lastUsed: 0,
+                        effect: 'fake_command_injection',
+                        cost: 40000
+                    }
+                },
+                law_enforcement: {
+                    net_capture_order: {
+                        name: '全網圍捕令',
+                        description: '強制要求ISP配合，大範圍壓縮匿名網路',
+                        cooldown: 0, // 一次性使用
+                        used: false,
+                        effect: 'global_net_sweep',
+                        cost: 100000
+                    },
+                    time_trap: {
+                        name: '時間陷阱',
+                        description: '偽裝系統漏洞，引誘黑客深入蜜罐',
+                        cooldown: 600, // 10分鐘
+                        lastUsed: 0,
+                        effect: 'honeypot_deception',
+                        cost: 25000
+                    },
+                    physical_digital_raid: {
+                        name: '物理-數位同步突襲',
+                        description: '同時進行網路斷流與實體抓捕',
+                        cooldown: 0, // 條件觸發
+                        lastUsed: 0,
+                        effect: 'synchronized_arrest',
+                        cost: 75000
+                    }
                 }
             },
             
@@ -3392,11 +5347,11 @@
             tools: {
                 hacker: {
                     reconnaissance: [
-                        { id: "nmap", name: "Nmap掃描器", icon: "fa-search", desc: "掃描目標網絡拓撲和開放端口", cooldown: 5, effect: "scan", cost: 0 },
-                        { id: "whois", name: "Whois深度查詢", icon: "fa-address-card", desc: "查詢目標域名註冊信息及歷史記錄", cooldown: 3, effect: "info", cost: 0 },
-                        { id: "dns_enum", name: "DNS深度枚舉", icon: "fa-sitemap", desc: "枚舉目標DNS記錄、子域名和關聯服務", cooldown: 4, effect: "info", cost: 0 },
-                        { id: "device_scanner", name: "設備掃描器", icon: "fa-mobile-alt", desc: "掃描目標網絡中的連接設備", cooldown: 6, effect: "scan", cost: 5000 },
-                        { id: "port_scanner", name: "端口掃描器", icon: "fa-plug", desc: "深度掃描目標開放端口及服務", cooldown: 7, effect: "scan", cost: 3000 }
+                        { id: "nmap", name: "Nmap掃描器", icon: "fa-search", desc: "掃描目標網絡拓撲和開放端口", cooldown: 5, effect: "scan", cost: 1000 },
+                        { id: "whois", name: "Whois深度查詢", icon: "fa-address-card", desc: "查詢目標域名註冊信息及歷史記錄", cooldown: 3, effect: "info", cost: 800 },
+                        { id: "dns_enum", name: "DNS深度枚舉", icon: "fa-sitemap", desc: "枚舉目標DNS記錄、子域名和關聯服務", cooldown: 4, effect: "info", cost: 1200 },
+                        { id: "device_scanner", name: "設備掃描器", icon: "fa-mobile-alt", desc: "掃描目標網絡中的連接設備", cooldown: 6, effect: "scan", cost: 2000 },
+                        { id: "port_scanner", name: "端口掃描器", icon: "fa-plug", desc: "深度掃描目標開放端口及服務", cooldown: 7, effect: "scan", cost: 1500 }
                     ],
                     stealth: [
                         { id: "log_cleaner", name: "智能日誌清理工具", icon: "fa-eraser", desc: "清除系統日誌、訪問記錄及審計追蹤", cooldown: 8, effect: "stealth", cost: 5000 },
@@ -3445,13 +5400,13 @@
                         { id: "darknet_market", name: "暗網委託市場", icon: "fa-shopping-bag", desc: "訪問暗網市場購買黑市工具", cooldown: 30, effect: "advanced", cost: 50000 }
                     ],
                     server_management: [
-                        { id: "server_console", name: "伺服器控制台", icon: "fa-terminal", desc: "打開伺服器管理控制台", cooldown: 3, effect: "server_mgmt", cost: 0 },
-                        { id: "server_status", name: "系統資源監控", icon: "fa-chart-line", desc: "查看 CPU、內存、磁碟使用狀況", cooldown: 2, effect: "server_mgmt", cost: 0 },
-                        { id: "server_logs", name: "伺服器日誌查詢", icon: "fa-file-alt", desc: "查詢伺服器訪問記錄和錯誤日誌", cooldown: 3, effect: "server_mgmt", cost: 0 },
-                        { id: "server_terminal", name: "終端指令模擬", icon: "fa-code", desc: "執行模擬 Linux/Windows 指令", cooldown: 2, effect: "server_mgmt", cost: 0 },
-                        { id: "service_control", name: "服務管理", icon: "fa-cogs", desc: "啟動/停止伺服器服務", cooldown: 5, effect: "server_mgmt", cost: 0 },
-                        { id: "process_monitor", name: "進程監控", icon: "fa-tasks", desc: "查看和管理運行中的進程", cooldown: 3, effect: "server_mgmt", cost: 0 },
-                        { id: "network_monitor", name: "網絡連接監控", icon: "fa-network-wired", desc: "查看網絡連接和端口狀況", cooldown: 3, effect: "server_mgmt", cost: 0 }
+                        { id: "server_console", name: "伺服器控制台", icon: "fa-terminal", desc: "打開伺服器管理控制台", cooldown: 3, effect: "server_mgmt", cost: 500 },
+                        { id: "server_status", name: "系統資源監控", icon: "fa-chart-line", desc: "查看 CPU、內存、磁碟使用狀況", cooldown: 2, effect: "server_mgmt", cost: 300 },
+                        { id: "server_logs", name: "伺服器日誌查詢", icon: "fa-file-alt", desc: "查詢伺服器訪問記錄和錯誤日誌", cooldown: 3, effect: "server_mgmt", cost: 600 },
+                        { id: "server_terminal", name: "終端指令模擬", icon: "fa-code", desc: "執行模擬 Linux/Windows 指令", cooldown: 2, effect: "server_mgmt", cost: 400 },
+                        { id: "service_control", name: "服務管理", icon: "fa-cogs", desc: "啟動/停止伺服器服務", cooldown: 5, effect: "server_mgmt", cost: 800 },
+                        { id: "process_monitor", name: "進程監控", icon: "fa-tasks", desc: "查看和管理運行中的進程", cooldown: 3, effect: "server_mgmt", cost: 700 },
+                        { id: "network_monitor", name: "網絡連接監控", icon: "fa-network-wired", desc: "查看網絡連接和端口狀況", cooldown: 3, effect: "server_mgmt", cost: 600 }
                     ]
                 },
                 law_enforcement: {
@@ -3520,13 +5475,13 @@
                         { id: "rapid_response", name: "快速反應攻擊", icon: "fa-bolt", desc: "快速反應對黑客系統造成傷害", cooldown: 18, effect: "attack", cost: 30000 }
                     ],
                     server_management: [
-                        { id: "server_console", name: "指揮中心控制台", icon: "fa-terminal", desc: "打開指揮中心管理控制台", cooldown: 3, effect: "server_mgmt", cost: 0 },
-                        { id: "server_status", name: "系統資源監控", icon: "fa-chart-line", desc: "查看 CPU、內存、磁碟使用狀況", cooldown: 2, effect: "server_mgmt", cost: 0 },
-                        { id: "server_logs", name: "系統日誌查詢", icon: "fa-file-alt", desc: "查詢系統訪問記錄和事件日誌", cooldown: 3, effect: "server_mgmt", cost: 0 },
-                        { id: "server_terminal", name: "終端指令模擬", icon: "fa-code", desc: "執行模擬系統指令", cooldown: 2, effect: "server_mgmt", cost: 0 },
-                        { id: "service_control", name: "服務管理", icon: "fa-cogs", desc: "啟動/停止系統服務", cooldown: 5, effect: "server_mgmt", cost: 0 },
-                        { id: "process_monitor", name: "進程監控", icon: "fa-tasks", desc: "查看和管理系統進程", cooldown: 3, effect: "server_mgmt", cost: 0 },
-                        { id: "network_monitor", name: "網絡連接監控", icon: "fa-network-wired", desc: "查看網絡連接和端口狀況", cooldown: 3, effect: "server_mgmt", cost: 0 }
+                        { id: "server_console", name: "指揮中心控制台", icon: "fa-terminal", desc: "打開指揮中心管理控制台", cooldown: 3, effect: "server_mgmt", cost: 500 },
+                        { id: "server_status", name: "系統資源監控", icon: "fa-chart-line", desc: "查看 CPU、內存、磁碟使用狀況", cooldown: 2, effect: "server_mgmt", cost: 300 },
+                        { id: "server_logs", name: "系統日誌查詢", icon: "fa-file-alt", desc: "查詢系統訪問記錄和事件日誌", cooldown: 3, effect: "server_mgmt", cost: 600 },
+                        { id: "server_terminal", name: "終端指令模擬", icon: "fa-code", desc: "執行模擬系統指令", cooldown: 2, effect: "server_mgmt", cost: 400 },
+                        { id: "service_control", name: "服務管理", icon: "fa-cogs", desc: "啟動/停止系統服務", cooldown: 5, effect: "server_mgmt", cost: 800 },
+                        { id: "process_monitor", name: "進程監控", icon: "fa-tasks", desc: "查看和管理系統進程", cooldown: 3, effect: "server_mgmt", cost: 700 },
+                        { id: "network_monitor", name: "網絡連接監控", icon: "fa-network-wired", desc: "查看網絡連接和端口狀況", cooldown: 3, effect: "server_mgmt", cost: 600 }
                     ]
                 }
             },
@@ -3650,9 +5605,417 @@
                 case 'setup':
                     document.getElementById('nav-season2').classList.add('active');
                     break;
+                case 'battlemap':
+                    document.getElementById('nav-battlemap').classList.add('active');
+                    break;
                 case 'game':
                     document.getElementById('nav-season2').classList.add('active');
                     break;
+            }
+        }
+
+        // ===== 戰況地圖函數 =====
+        function showBattleMap() {
+            showPage('battle-map-page');
+            GameState.currentPage = 'battlemap';
+            updateNavActive();
+            initializeBattleMap();
+        }
+
+        function initializeBattleMap() {
+            // 初始化地圖動畫
+            startNetworkAnimation();
+            
+            // 模擬攻擊路徑
+            setTimeout(() => {
+                showAttackPaths();
+            }, 3000);
+            
+            // 添加節點點擊事件
+            addNodeClickEvents();
+            
+            // 啟動情報流
+            startIntelligenceStream();
+            
+            // 啟動狀態欄更新
+            updateMapStatusBar();
+            setInterval(updateMapStatusBar, 5000);
+            
+            // 啟動數據包動畫
+            startDataPacketAnimation();
+        }
+
+        function startNetworkAnimation() {
+            // 節點閃爍動畫已在CSS中定義
+            // 可以添加更多動態效果
+            const nodes = document.querySelectorAll('.node');
+            nodes.forEach((node, index) => {
+                setTimeout(() => {
+                    node.style.animationDelay = `${index * 0.2}s`;
+                }, index * 200);
+            });
+        }
+
+        function startDataPacketAnimation() {
+            // 數據包動畫已在SVG中定義，這裡可以添加額外的邏輯
+            setInterval(() => {
+                // 隨機改變數據包數量和速度
+                const packets = document.querySelectorAll('.data-packet');
+                packets.forEach(packet => {
+                    const speed = 1.5 + Math.random() * 1.5;
+                    packet.style.animationDuration = `${speed}s`;
+                });
+            }, 10000);
+        }
+
+        function showAttackPaths() {
+            const attackPaths = document.querySelectorAll('.attack-path');
+            attackPaths.forEach((path, index) => {
+                setTimeout(() => {
+                    path.style.display = 'block';
+                }, index * 1000);
+            });
+        }
+
+        function addNodeClickEvents() {
+            const nodes = document.querySelectorAll('.node');
+            nodes.forEach(node => {
+                node.addEventListener('click', (e) => {
+                    const deviceType = e.target.getAttribute('data-device');
+                    showDeviceInfo(deviceType, e.target.classList.contains('opponent-node'));
+                });
+            });
+        }
+
+        function showDeviceInfo(deviceType, isOpponent) {
+            const panel = document.getElementById('device-info-panel');
+            const deviceTypeEl = document.getElementById('device-type');
+            const osInfoEl = document.getElementById('os-info');
+            const cpuInfoEl = document.getElementById('cpu-info');
+            const ramInfoEl = document.getElementById('ram-info');
+            const networkStatusEl = document.getElementById('network-status');
+            const userNameEl = document.getElementById('user-name');
+            const ipLocationEl = document.getElementById('ip-location');
+            const activityTimeEl = document.getElementById('activity-time');
+            
+            // 模擬設備資訊
+            const deviceData = {
+                pc: {
+                    type: '個人電腦',
+                    os: isOpponent ? 'Windows 11 Pro' : 'Windows 10 Home',
+                    cpu: isOpponent ? 'Intel Core i7-11700K' : 'AMD Ryzen 5 5600X',
+                    ram: isOpponent ? '32GB DDR4' : '16GB DDR4',
+                    network: '高速寬頻 (100Mbps)',
+                    user: isOpponent ? 'target_user' : 'player_user',
+                    location: isOpponent ? '中國北京' : '台灣台北',
+                    activity: new Date().toLocaleTimeString()
+                },
+                browser: {
+                    type: '網頁瀏覽器',
+                    os: isOpponent ? 'Chrome 120.0.6099.109' : 'Firefox 121.0',
+                    cpu: 'N/A',
+                    ram: isOpponent ? '2.1GB' : '1.8GB',
+                    network: 'HTTPS加密連接',
+                    user: isOpponent ? 'target_session' : 'player_session',
+                    location: isOpponent ? '中國北京' : '台灣台北',
+                    activity: new Date().toLocaleTimeString()
+                },
+                router: {
+                    type: '路由器/網路設備',
+                    os: isOpponent ? 'Cisco IOS 15.4' : 'TP-Link Archer C7',
+                    cpu: '嵌入式處理器',
+                    ram: '256MB',
+                    network: 'WiFi 6 / 5GHz',
+                    user: 'admin',
+                    location: isOpponent ? '中國北京' : '台灣台北',
+                    activity: '24/7 在線'
+                },
+                mobile: {
+                    type: '行動裝置',
+                    os: isOpponent ? 'Android 13' : 'iOS 17.2',
+                    cpu: isOpponent ? 'Snapdragon 8 Gen 2' : 'A16 Bionic',
+                    ram: isOpponent ? '12GB' : '8GB',
+                    network: '5G LTE',
+                    user: isOpponent ? 'mobile_target' : 'mobile_player',
+                    location: isOpponent ? '中國北京' : '台灣台北',
+                    activity: new Date().toLocaleTimeString()
+                }
+            };
+            
+            const data = deviceData[deviceType] || deviceData.pc;
+            
+            deviceTypeEl.textContent = data.type;
+            osInfoEl.textContent = data.os;
+            cpuInfoEl.textContent = data.cpu;
+            ramInfoEl.textContent = data.ram;
+            networkStatusEl.textContent = data.network;
+            userNameEl.textContent = data.user;
+            ipLocationEl.textContent = data.location;
+            activityTimeEl.textContent = data.activity;
+            
+            panel.style.display = 'block';
+        }
+
+        function closeDeviceInfo() {
+            document.getElementById('device-info-panel').style.display = 'none';
+        }
+
+        function toggleLiveMonitoring() {
+            const monitoring = document.getElementById('live-monitoring');
+            if (monitoring.style.display === 'block') {
+                monitoring.style.display = 'none';
+            } else {
+                monitoring.style.display = 'block';
+                // 模擬監控畫面更新
+                updateMonitoringFeeds();
+            }
+        }
+
+        function updateMonitoringFeeds() {
+            // 模擬監控畫面內容更新
+            setInterval(() => {
+                const playerFeed = document.getElementById('player-feed');
+                const opponentFeed = document.getElementById('opponent-feed');
+                
+                // 隨機更新狀態
+                const activities = [
+                    '鍵盤輸入中...',
+                    '瀏覽網頁...',
+                    '檔案傳輸...',
+                    '系統監控...',
+                    '網路連接...'
+                ];
+                
+                playerFeed.innerHTML = `
+                    <div class="screen-placeholder">
+                        <i class="fas fa-desktop"></i>
+                        <span>${activities[Math.floor(Math.random() * activities.length)]}</span>
+                    </div>
+                `;
+                
+                opponentFeed.innerHTML = `
+                    <div class="screen-placeholder">
+                        <i class="fas fa-desktop"></i>
+                        <span>${activities[Math.floor(Math.random() * activities.length)]}</span>
+                    </div>
+                `;
+            }, 3000);
+        }
+
+        function closeLiveMonitoring() {
+            document.getElementById('live-monitoring').style.display = 'none';
+        }
+
+        function toggleIntelligenceStream() {
+            const stream = document.getElementById('intelligence-stream');
+            if (stream.style.display === 'block') {
+                stream.style.display = 'none';
+            } else {
+                stream.style.display = 'block';
+            }
+        }
+
+        function closeIntelligenceStream() {
+            document.getElementById('intelligence-stream').style.display = 'none';
+        }
+
+        function startIntelligenceStream() {
+            // 模擬情報流訊息
+            const messages = [
+                { type: 'incoming', content: '偵測到對手嘗試連接埠掃描' },
+                { type: 'outgoing', content: '防火牆已攔截可疑流量' },
+                { type: 'alert', content: '警告：對手發起DDoS攻擊' },
+                { type: 'incoming', content: '發現對手使用Tor網絡' },
+                { type: 'outgoing', content: '啟動追蹤模式' },
+                { type: 'alert', content: '緊急：對手嘗試入侵核心系統' },
+                { type: 'incoming', content: '對手IP位置已鎖定' },
+                { type: 'outgoing', content: '申請逮捕令中...' }
+            ];
+            
+            let messageIndex = 0;
+            const streamContent = document.getElementById('stream-messages');
+            
+            const addMessage = () => {
+                if (messageIndex < messages.length) {
+                    const msg = messages[messageIndex];
+                    const messageEl = document.createElement('div');
+                    messageEl.className = `stream-message ${msg.type}`;
+                    messageEl.innerHTML = `
+                        <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                        <div class="message-content">${msg.content}</div>
+                    `;
+                    streamContent.appendChild(messageEl);
+                    streamContent.scrollTop = streamContent.scrollHeight;
+                    messageIndex++;
+                    
+                    setTimeout(addMessage, 2000 + Math.random() * 3000);
+                }
+            };
+            
+            addMessage();
+        }
+
+        function toggleThreatAnalysis() {
+            const panel = document.getElementById('threat-analysis-panel');
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'block';
+                updateThreatAnalysis();
+                initializeThreatChart();
+            }
+        }
+
+        function closeThreatAnalysis() {
+            document.getElementById('threat-analysis-panel').style.display = 'none';
+        }
+
+        function updateThreatAnalysis() {
+            // 模擬即時更新威脅分析數據
+            const threatLevels = ['低', '中', '高', '關鍵'];
+            const frequencies = ['3/分鐘', '8/分鐘', '12/分鐘', '25/分鐘'];
+            const effectiveness = ['65%', '78%', '85%', '92%'];
+            const predictions = ['5分鐘內', '3分鐘內', '2分鐘內', '立即'];
+            
+            document.getElementById('realtime-threat').textContent = threatLevels[Math.floor(Math.random() * threatLevels.length)];
+            document.getElementById('attack-frequency').textContent = frequencies[Math.floor(Math.random() * frequencies.length)];
+            document.getElementById('defense-effectiveness').textContent = effectiveness[Math.floor(Math.random() * effectiveness.length)];
+            document.getElementById('next-attack-prediction').textContent = predictions[Math.floor(Math.random() * predictions.length)];
+            
+            // 更新活躍威脅列表
+            updateActiveThreats();
+        }
+
+        function updateActiveThreats() {
+            const threatsList = document.getElementById('active-threats-list');
+            const threatTypes = [
+                { type: 'DDoS攻擊', severity: 'critical', time: '進行中' },
+                { type: '連接埠掃描', severity: 'high', time: '1分鐘前' },
+                { type: 'SQL注入嘗試', severity: 'high', time: '2分鐘前' },
+                { type: '可疑流量', severity: 'medium', time: '3分鐘前' },
+                { type: '暴力破解', severity: 'medium', time: '5分鐘前' }
+            ];
+            
+            threatsList.innerHTML = '';
+            const activeThreats = threatTypes.slice(0, 3 + Math.floor(Math.random() * 2));
+            
+            activeThreats.forEach(threat => {
+                const threatEl = document.createElement('div');
+                threatEl.className = `threat-item ${threat.severity}`;
+                threatEl.innerHTML = `
+                    <span class="threat-type">${threat.type}</span>
+                    <span class="threat-severity">${threat.severity === 'critical' ? '關鍵' : threat.severity === 'high' ? '高' : '中'}</span>
+                    <span class="threat-time">${threat.time}</span>
+                `;
+                threatsList.appendChild(threatEl);
+            });
+        }
+
+        function initializeThreatChart() {
+            // 簡單的Canvas圖表模擬
+            const canvas = document.getElementById('threat-chart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 繪製簡單的威脅趨勢線
+            ctx.strokeStyle = '#ff9900';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            const points = [20, 40, 60, 30, 80, 90, 120, 70, 160, 100, 200, 80, 240, 110, 280, 95];
+            points.forEach((point, index) => {
+                const x = (index / (points.length - 1)) * (canvas.width - 40) + 20;
+                const y = canvas.height - point - 20;
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+            
+            // 添加網格線
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                const y = (i / 5) * (canvas.height - 40) + 20;
+                ctx.beginPath();
+                ctx.moveTo(20, y);
+                ctx.lineTo(canvas.width - 20, y);
+                ctx.stroke();
+            }
+        }
+
+        function toggleResourceMonitor() {
+            const panel = document.getElementById('resource-monitor-panel');
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'block';
+                updateResourceMonitor();
+                startResourceUpdates();
+            }
+        }
+
+        function closeResourceMonitor() {
+            document.getElementById('resource-monitor-panel').style.display = 'none';
+        }
+
+        function updateResourceMonitor() {
+            // 更新資源使用率
+            const cpuUsage = 60 + Math.random() * 20;
+            const memoryUsage = 30 + Math.random() * 30;
+            const networkUsage = 50 + Math.random() * 40;
+            const storageUsage = 20 + Math.random() * 30;
+            
+            document.querySelector('.cpu-fill').style.width = `${cpuUsage}%`;
+            document.querySelector('.memory-fill').style.width = `${memoryUsage}%`;
+            document.querySelector('.network-fill').style.width = `${networkUsage}%`;
+            document.querySelector('.storage-fill').style.width = `${storageUsage}%`;
+            
+            document.querySelector('.resource-item:nth-child(1) .resource-value').textContent = `${Math.round(cpuUsage)}%`;
+            document.querySelector('.resource-item:nth-child(2) .resource-value').textContent = `${Math.round(memoryUsage)}%`;
+            document.querySelector('.resource-item:nth-child(3) .resource-value').textContent = `${Math.round(networkUsage)}%`;
+            document.querySelector('.resource-item:nth-child(4) .resource-value').textContent = `${Math.round(storageUsage)}%`;
+            
+            // 更新狀態欄
+            document.getElementById('resource-usage').textContent = `${Math.round((cpuUsage + memoryUsage + networkUsage + storageUsage) / 4)}%`;
+        }
+
+        function startResourceUpdates() {
+            // 每3秒更新一次資源數據
+            setInterval(() => {
+                updateResourceMonitor();
+            }, 3000);
+        }
+
+        function updateMapStatusBar() {
+            // 更新狀態欄數據
+            const threatLevels = ['低', '中', '高', '關鍵'];
+            const healthLevels = ['85%', '90%', '95%', '98%'];
+            const integrityLevels = ['92%', '95%', '98%', '99%'];
+            const connections = ['8', '12', '15', '18'];
+            
+            document.getElementById('threat-level').textContent = threatLevels[Math.floor(Math.random() * threatLevels.length)];
+            document.getElementById('system-health').textContent = healthLevels[Math.floor(Math.random() * healthLevels.length)];
+            document.getElementById('evidence-integrity').textContent = integrityLevels[Math.floor(Math.random() * integrityLevels.length)];
+            document.getElementById('active-connections').textContent = connections[Math.floor(Math.random() * connections.length)];
+            
+            // 更新威脅等級顏色
+            const threatEl = document.getElementById('threat-level');
+            const threatText = threatEl.textContent;
+            threatEl.className = 'status-value threat-level';
+            if (threatText === '關鍵') {
+                threatEl.style.color = '#ff3333';
+            } else if (threatText === '高') {
+                threatEl.style.color = '#ff9900';
+            } else if (threatText === '中') {
+                threatEl.style.color = '#ffcc00';
+            } else {
+                threatEl.style.color = '#00ff41';
             }
         }
 
@@ -4078,6 +6441,480 @@
             GameState.currentStepTask = null;
         }
 
+        // ===== 全螢幕戰況地圖函數 =====
+        function openBattleMap() {
+            const modal = document.getElementById('battle-map-modal');
+            modal.style.display = 'flex';
+            
+            // 初始化地圖
+            initializeBattleMap();
+            updateBattleMap();
+            
+            // 開始即時更新
+            startMapUpdates();
+        }
+
+        function closeBattleMap() {
+            const modal = document.getElementById('battle-map-modal');
+            modal.style.display = 'none';
+            
+            // 停止更新
+            stopMapUpdates();
+        }
+
+        function toggleMapView(viewType) {
+            // 移除所有活動狀態
+            document.querySelectorAll('.map-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.map-view').forEach(view => view.classList.remove('active'));
+            
+            // 激活選中的視圖
+            document.getElementById(viewType + '-view-btn').classList.add('active');
+            document.getElementById(viewType + '-view').classList.add('active');
+            
+            // 更新內容
+            updateMapView(viewType);
+        }
+
+        function initializeBattleMap() {
+            // 設置默認視圖
+            toggleMapView('network');
+        }
+
+        function updateBattleMap() {
+            updateMapStatusBar();
+            updateMapView('network'); // 更新當前活動視圖
+        }
+
+        function updateMapView(viewType) {
+            switch(viewType) {
+                case 'network':
+                    updateNetworkTopology();
+                    break;
+                case 'devices':
+                    updateDevicesStatus();
+                    break;
+                case 'intel':
+                    updateIntelMonitoring();
+                    break;
+            }
+        }
+
+        function updateNetworkTopology() {
+            const canvas = document.getElementById('topology-canvas');
+            if (!canvas) return;
+            
+            // 清除現有內容
+            canvas.innerHTML = '';
+            
+            // 生成網絡節點
+            const nodes = generateNetworkNodes();
+            const connections = generateNetworkConnections(nodes);
+            
+            // 渲染節點
+            nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = `topology-node ${node.type}`;
+                nodeElement.style.left = node.x + 'px';
+                nodeElement.style.top = node.y + 'px';
+                
+                nodeElement.innerHTML = `
+                    <div class="node-icon">
+                        <i class="fas ${node.icon}"></i>
+                    </div>
+                    <div class="node-label">${node.label}</div>
+                    <div class="node-status ${node.status}"></div>
+                `;
+                
+                nodeElement.onclick = () => showNodeDetails(node);
+                canvas.appendChild(nodeElement);
+            });
+            
+            // 渲染連線
+            connections.forEach(conn => {
+                const connectionElement = document.createElement('div');
+                connectionElement.className = `topology-connection ${conn.type}`;
+                
+                const fromNode = nodes.find(n => n.id === conn.from);
+                const toNode = nodes.find(n => n.id === conn.to);
+                
+                if (fromNode && toNode) {
+                    const dx = toNode.x - fromNode.x;
+                    const dy = toNode.y - fromNode.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    connectionElement.style.width = distance + 'px';
+                    connectionElement.style.left = (fromNode.x + 30) + 'px';
+                    connectionElement.style.top = (fromNode.y + 30) + 'px';
+                    connectionElement.style.transform = `rotate(${angle}deg)`;
+                    
+                    canvas.appendChild(connectionElement);
+                }
+            });
+        }
+
+        function generateNetworkNodes() {
+            const canvasWidth = 1200;
+            const canvasHeight = 600;
+            
+            return [
+                // 黑客節點
+                { id: 'hacker_pc', type: 'hacker', label: '黑客PC', icon: 'fa-laptop', x: 100, y: 200, status: 'online' },
+                { id: 'hacker_vpn', type: 'hacker', label: 'VPN伺服器', icon: 'fa-shield-alt', x: 250, y: 150, status: 'online' },
+                { id: 'proxy_chain', type: 'hacker', label: '代理鏈', icon: 'fa-link', x: 400, y: 100, status: 'online' },
+                { id: 'botnet', type: 'hacker', label: '殭屍網路', icon: 'fa-skull', x: 550, y: 200, status: 'warning' },
+                
+                // 目標節點
+                { id: 'target_firewall', type: 'target', label: '防火牆', icon: 'fa-shield-alt', x: 700, y: 150, status: 'warning' },
+                { id: 'target_server', type: 'target', label: '目標伺服器', icon: 'fa-server', x: 850, y: 200, status: 'online' },
+                { id: 'evidence_db', type: 'target', label: '證據庫', icon: 'fa-database', x: 1000, y: 250, status: 'compromised' },
+                
+                // 執法部門節點
+                { id: 'le_command', type: 'law-enforcement', label: '指揮中心', icon: 'fa-building', x: 850, y: 400, status: 'online' },
+                { id: 'le_firewall', type: 'law-enforcement', label: '防禦系統', icon: 'fa-shield-alt', x: 700, y: 450, status: 'warning' },
+                { id: 'le_monitor', type: 'law-enforcement', label: '監控中心', icon: 'fa-eye', x: 550, y: 500, status: 'online' }
+            ];
+        }
+
+        function generateNetworkConnections(nodes) {
+            return [
+                { from: 'hacker_pc', to: 'hacker_vpn', type: '' },
+                { from: 'hacker_vpn', to: 'proxy_chain', type: '' },
+                { from: 'proxy_chain', to: 'botnet', type: '' },
+                { from: 'botnet', to: 'target_firewall', type: 'attack' },
+                { from: 'target_firewall', to: 'target_server', type: 'attack' },
+                { from: 'target_server', to: 'evidence_db', type: 'attack' },
+                { from: 'le_command', to: 'le_firewall', type: '' },
+                { from: 'le_firewall', to: 'le_monitor', type: '' },
+                { from: 'le_monitor', to: 'target_firewall', type: '' }
+            ];
+        }
+
+        function showNodeDetails(node) {
+            const details = getNodeDetails(node);
+            showNotification(`節點詳情: ${node.label}`, details, 'info');
+        }
+
+        function getNodeDetails(node) {
+            const details = {
+                'hacker_pc': '作業系統: Windows 11\nCPU: Intel i7-11700K\nRAM: 32GB\n網路: 1Gbps\n狀態: 活躍攻擊中',
+                'hacker_vpn': '位置: 荷蘭阿姆斯特丹\n加密: AES-256\n節點數: 15\n流量: 500Mbps',
+                'proxy_chain': '鏈長: 7層\n國家: 5個\n延遲: 45ms\n成功率: 98%',
+                'botnet': '規模: 50,000設備\nDDoS功率: 100Gbps\n活躍率: 85%',
+                'target_firewall': '廠商: Cisco ASA\n版本: 9.12\n漏洞: 已利用\n狀態: 被突破',
+                'target_server': 'OS: Ubuntu 20.04\n服務: Apache, MySQL\n權限: Root\n數據: 已竊取',
+                'evidence_db': '類型: PostgreSQL\n記錄: 10,000條\n加密: 已破解\n狀態: 數據污染',
+                'le_command': '人員: 25名\n系統: 指揮平台\n狀態: 高度警戒',
+                'le_firewall': '廠商: Palo Alto\n威脅等級: 紅色\n攔截: 1,200次',
+                'le_monitor': '攝像頭: 50個\nAI分析: 啟動\n偵測率: 95%'
+            };
+            return details[node.id] || '無詳細信息';
+        }
+
+        function updateDevicesStatus() {
+            const grid = document.getElementById('devices-grid');
+            if (!grid) return;
+            
+            const devices = generateDeviceList();
+            
+            grid.innerHTML = devices.map(device => `
+                <div class="device-card ${device.status}">
+                    <div class="device-header">
+                        <div class="device-icon">
+                            <i class="fas ${device.icon}"></i>
+                        </div>
+                        <div class="device-info">
+                            <h3>${device.name}</h3>
+                            <p>${device.type} • ${device.location}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="device-specs">
+                        <div class="spec-item">
+                            <span class="spec-label">作業系統</span>
+                            <span class="spec-value">${device.os}</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">處理器</span>
+                            <span class="spec-value">${device.cpu}</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">記憶體</span>
+                            <span class="spec-value">${device.ram}</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">存儲</span>
+                            <span class="spec-value">${device.storage}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="device-status">
+                        <div class="status-indicator status-${device.status}">
+                            ${device.statusText}
+                        </div>
+                        <div class="device-actions">
+                            <button class="map-btn" onclick="scanDevice('${device.id}')">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function generateDeviceList() {
+            return [
+                {
+                    id: 'hacker_laptop',
+                    name: '黑客筆記本',
+                    type: '個人電腦',
+                    location: '未知位置',
+                    icon: 'fa-laptop',
+                    os: 'Kali Linux',
+                    cpu: 'Intel i7-11800H',
+                    ram: '32GB DDR4',
+                    storage: '1TB NVMe SSD',
+                    status: 'hacked',
+                    statusText: '已入侵'
+                },
+                {
+                    id: 'target_server',
+                    name: '證據庫伺服器',
+                    type: '企業伺服器',
+                    location: '數據中心',
+                    icon: 'fa-server',
+                    os: 'Ubuntu 22.04 LTS',
+                    cpu: 'AMD EPYC 7742',
+                    ram: '256GB',
+                    storage: '10TB RAID',
+                    status: 'compromised',
+                    statusText: '已入侵'
+                },
+                {
+                    id: 'le_workstation',
+                    name: '調查員工作站',
+                    type: '辦公電腦',
+                    location: '執法大樓',
+                    icon: 'fa-desktop',
+                    os: 'Windows 11 Pro',
+                    cpu: 'Intel i5-12400',
+                    ram: '16GB',
+                    storage: '512GB SSD',
+                    status: 'online',
+                    statusText: '在線'
+                },
+                {
+                    id: 'mobile_device',
+                    name: '目標手機',
+                    type: '智能手機',
+                    location: '移動中',
+                    icon: 'fa-mobile-alt',
+                    os: 'Android 13',
+                    cpu: 'Snapdragon 8 Gen 2',
+                    ram: '12GB',
+                    storage: '256GB',
+                    status: 'online',
+                    statusText: '在線'
+                },
+                {
+                    id: 'router',
+                    name: '網絡路由器',
+                    type: '網絡設備',
+                    location: '目標網絡',
+                    icon: 'fa-router',
+                    os: 'Cisco IOS',
+                    cpu: '多核處理器',
+                    ram: '4GB',
+                    storage: '256MB Flash',
+                    status: 'compromised',
+                    statusText: '已入侵'
+                },
+                {
+                    id: 'surveillance_cam',
+                    name: '監控攝像頭',
+                    type: 'IoT設備',
+                    location: '公共區域',
+                    icon: 'fa-video',
+                    os: '嵌入式Linux',
+                    cpu: 'ARM Cortex-A7',
+                    ram: '512MB',
+                    storage: '32GB',
+                    status: 'offline',
+                    statusText: '離線'
+                }
+            ];
+        }
+
+        function updateIntelMonitoring() {
+            updateIntelStream();
+            updatePersonalData();
+        }
+
+        function updateIntelStream() {
+            const stream = document.getElementById('intel-stream');
+            if (!stream) return;
+            
+            const intelItems = generateIntelItems();
+            
+            stream.innerHTML = intelItems.map(item => `
+                <div class="intel-item ${item.type} ${item.priority}">
+                    <div class="intel-timestamp">${item.timestamp}</div>
+                    <div class="intel-content">${item.content}</div>
+                </div>
+            `).join('');
+            
+            // 滾動到底部
+            stream.scrollTop = stream.scrollHeight;
+        }
+
+        function generateIntelItems() {
+            const now = new Date();
+            return [
+                {
+                    timestamp: now.toLocaleTimeString(),
+                    content: '偵測到來自荷蘭的異常VPN連接',
+                    type: 'hacker',
+                    priority: 'warning'
+                },
+                {
+                    timestamp: new Date(now.getTime() - 30000).toLocaleTimeString(),
+                    content: '證據庫訪問日誌顯示可疑IP: 192.168.1.100',
+                    type: 'law-enforcement',
+                    priority: 'danger'
+                },
+                {
+                    timestamp: new Date(now.getTime() - 60000).toLocaleTimeString(),
+                    content: '黑客使用零日漏洞成功入侵防火牆',
+                    type: 'hacker',
+                    priority: 'danger'
+                },
+                {
+                    timestamp: new Date(now.getTime() - 90000).toLocaleTimeString(),
+                    content: 'AI分析系統偵測到DDoS攻擊模式',
+                    type: 'law-enforcement',
+                    priority: ''
+                },
+                {
+                    timestamp: new Date(now.getTime() - 120000).toLocaleTimeString(),
+                    content: '加密貨幣錢包收到可疑轉帳: 0.5 BTC',
+                    type: 'hacker',
+                    priority: 'warning'
+                },
+                {
+                    timestamp: new Date(now.getTime() - 150000).toLocaleTimeString(),
+                    content: '社交媒體分析發現目標使用假身份',
+                    type: 'law-enforcement',
+                    priority: ''
+                }
+            ];
+        }
+
+        function updatePersonalData() {
+            const dataDiv = document.getElementById('personal-data');
+            if (!dataDiv) return;
+            
+            const personalData = generatePersonalData();
+            
+            dataDiv.innerHTML = `
+                <div class="personal-section">
+                    <h4><i class="fas fa-user"></i> 基本信息</h4>
+                    ${personalData.basic.map(item => `
+                        <div class="personal-item">
+                            <span class="personal-label">${item.label}</span>
+                            <span class="personal-value">${item.value}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="personal-section">
+                    <h4><i class="fas fa-map-marker-alt"></i> 位置信息</h4>
+                    ${personalData.location.map(item => `
+                        <div class="personal-item">
+                            <span class="personal-label">${item.label}</span>
+                            <span class="personal-value">${item.value}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="personal-section">
+                    <h4><i class="fas fa-coins"></i> 金融信息</h4>
+                    ${personalData.financial.map(item => `
+                        <div class="personal-item">
+                            <span class="personal-label">${item.label}</span>
+                            <span class="personal-value">${item.value}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function generatePersonalData() {
+            return {
+                basic: [
+                    { label: '真實姓名', value: '張三' },
+                    { label: '化名', value: 'ShadowHunter' },
+                    { label: '年齡', value: '28歲' },
+                    { label: '職業', value: '自由程式設計師' },
+                    { label: '教育程度', value: '計算機科學碩士' }
+                ],
+                location: [
+                    { label: '當前位置', value: '估計: 東亞地區' },
+                    { label: 'IP地址', value: '動態變換' },
+                    { label: '時區', value: 'UTC+8' },
+                    { label: '語言', value: '中文/英文' },
+                    { label: 'ISP', value: '未知' }
+                ],
+                financial: [
+                    { label: '加密貨幣餘額', value: '≈ 50 BTC' },
+                    { label: '銀行帳戶', value: '多個離岸帳戶' },
+                    { label: '月收入', value: '未知' },
+                    { label: '交易平台', value: '多個暗網交易所' }
+                ]
+            };
+        }
+
+        function updateMapStatusBar() {
+            const gameTime = document.getElementById('map-game-time');
+            const activeNodes = document.getElementById('map-active-nodes');
+            const attackPaths = document.getElementById('map-attack-paths');
+            const intelUpdates = document.getElementById('map-intel-updates');
+            
+            if (GameState.gameActive) {
+                const timeLeft = GameState.gameTimeLimit - Math.floor((Date.now() - GameState.gameStartTime) / 1000);
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                gameTime.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                gameTime.textContent = '00:00';
+            }
+            
+            activeNodes.textContent = Math.floor(Math.random() * 20) + 10;
+            attackPaths.textContent = Math.floor(Math.random() * 15) + 5;
+            intelUpdates.textContent = Math.floor(Math.random() * 50) + 20;
+        }
+
+        let mapUpdateInterval;
+
+        function startMapUpdates() {
+            mapUpdateInterval = setInterval(() => {
+                if (document.getElementById('battle-map-modal').style.display !== 'none') {
+                    updateBattleMap();
+                }
+            }, 2000); // 每2秒更新一次
+        }
+
+        function stopMapUpdates() {
+            if (mapUpdateInterval) {
+                clearInterval(mapUpdateInterval);
+                mapUpdateInterval = null;
+            }
+        }
+
+        function scanDevice(deviceId) {
+            showNotification('設備掃描', `正在掃描設備 ${deviceId}...`, 'info');
+            // 這裡可以添加更詳細的掃描邏輯
+        }
+
         function renderStep() {
             const task = GameState.currentStepTask;
             const step = task.steps[task.currentStep];
@@ -4269,22 +7106,32 @@
 
             // 執法部門勝利條件
             if (le.identityLock.physical >= 100) {
-                endGameWithAnimation('law_enforcement', '實體定位完成：黑客已被現場逮捕。');
+                endGameWithAnimation('law_enforcement', '實體定位完成：黑客真實身份已被鎖定並拘捕。');
                 return;
             }
             
             if (timeLeft <= 0) {
-                if (le.serverHealth > 0 && le.evidenceLibraryHealth > 0) {
-                    endGameWithAnimation('law_enforcement', '系統防禦成功：黑客未能癱瘓核心系統，行動時間已過。');
+                // 檢查核心證據是否被保護
+                const hasCleanEvidence = le.evidenceChain.some(e => e.critical && !e.contaminated);
+                if (le.serverHealth > 0 && le.evidenceLibraryHealth > 0 && hasCleanEvidence) {
+                    endGameWithAnimation('law_enforcement', '時間耗盡：指揮中心與證據庫未被癱瘓，至少一份核心證據保持完整。');
                 } else {
-                    endGameWithAnimation('hacker', '任務超時：雖然系統受損，但黑客成功逃脫。');
+                    endGameWithAnimation('hacker', '時間耗盡：黑客成功污染或銷毀所有關鍵證據，並逃脫追捕。');
                 }
                 return;
             }
 
             // 黑客勝利條件
             if (le.serverHealth <= 0 || le.evidenceLibraryHealth <= 0) {
-                endGameWithAnimation('hacker', '核心系統癱瘓：執法部門指揮中心/證據庫已被徹底破壞。');
+                endGameWithAnimation('hacker', '核心系統癱瘓：指揮中心或證據庫已被徹底破壞。');
+                return;
+            }
+            
+            // 檢查是否所有關鍵證據都被污染或銷毀
+            const criticalEvidence = le.evidenceChain.filter(e => e.critical);
+            const allCriticalCompromised = criticalEvidence.length > 0 && criticalEvidence.every(e => e.contaminated || e.destroyed);
+            if (allCriticalCompromised && timeLeft < 600) { // 最後10分鐘
+                endGameWithAnimation('hacker', '證據銷毀：所有關鍵證據已被污染或徹底銷毀，黑客成功脫身。');
                 return;
             }
             
@@ -4446,6 +7293,17 @@
                                     <!-- 工具將由JavaScript動態生成 -->
                                 </div>
                             </div>
+                            
+                            <!-- 特殊技能面板 -->
+                            <div class="special-skills-panel">
+                                <div class="tools-title">
+                                    <i class="fas fa-star"></i>
+                                    <span>高階特殊技能</span>
+                                </div>
+                                <div class="special-skills-grid" id="special-skills-grid">
+                                    <!-- 特殊技能將由JavaScript動態生成 -->
+                                </div>
+                            </div>
                         </div>
                         
                         <!-- 右側面板 -->
@@ -4553,6 +7411,7 @@
             updateTargetRealtimeInfo();
             updateToolCategories();
             updateToolsGrid(GameState.currentRole === 'hacker' ? 'reconnaissance' : 'investigation');
+            updateSpecialSkillsGrid();
             updateSpecialPanel();
             
             // 設置終端輸入事件
@@ -5018,12 +7877,176 @@
             });
         }
 
+        // ===== 特殊技能網格更新 =====
+        function updateSpecialSkillsGrid() {
+            const skillsGrid = document.getElementById('special-skills-grid');
+            if (!skillsGrid) return;
+            
+            const skills = GameState.specialSkills[GameState.currentRole];
+            if (!skills) return;
+            
+            skillsGrid.innerHTML = '';
+            Object.entries(skills).forEach(([skillId, skill]) => {
+                const now = Date.now() / 1000;
+                const isOnCooldown = skill.cooldown > 0 && now - skill.lastUsed < skill.cooldown;
+                const isUsed = skillId === 'net_capture_order' && skill.used;
+                const isDisabled = isOnCooldown || isUsed;
+                
+                const skillCard = document.createElement('div');
+                skillCard.className = `special-skill-card ${isDisabled ? 'disabled' : ''}`;
+                
+                let cooldownText = '';
+                if (isOnCooldown) {
+                    const remaining = Math.ceil(skill.cooldown - (now - skill.lastUsed));
+                    cooldownText = `<div class="cooldown-indicator">${Math.floor(remaining/60)}:${(remaining%60).toString().padStart(2,'0')}</div>`;
+                } else if (isUsed) {
+                    cooldownText = `<div class="cooldown-indicator">已使用</div>`;
+                }
+                
+                skillCard.innerHTML = `
+                    ${cooldownText}
+                    <div class="tool-icon"><i class="fas fa-star"></i></div>
+                    <div class="tool-name">${skill.name}</div>
+                    <div class="tool-desc">${skill.description}</div>
+                    <div class="skill-cost">費用: $${skill.cost.toLocaleString()}</div>
+                `;
+                
+                if (!isDisabled) {
+                    skillCard.onclick = () => activateSpecialSkill(skillId);
+                }
+                
+                skillsGrid.appendChild(skillCard);
+            });
+        }
+
         // ===== 工具使用函數 =====
         function useTool(toolId, toolData) {
             if (!GameState.gameActive) return;
+            
+            const role = GameState.currentRole;
+            const playerData = GameState.playerData[role];
+            const opponentData = GameState.playerData[role === 'hacker' ? 'law_enforcement' : 'hacker'];
+            
+            // 檢查冷卻時間和資源
+            if (toolData.cooldown > 0) {
+                // 簡單的冷卻檢查 (實際實現需要更複雜的冷卻系統)
+                const lastUsed = playerData.cooldowns[toolId] || 0;
+                const now = Date.now() / 1000;
+                if (now - lastUsed < toolData.cooldown) {
+                    showNotification('工具冷卻中', '請等待冷卻時間結束', 'warning');
+                    return;
+                }
+                playerData.cooldowns[toolId] = now;
+            }
+            
+            if (toolData.cost > 0) {
+                const costField = role === 'hacker' ? 'money' : 'budget';
+                if (playerData[costField] < toolData.cost) {
+                    showNotification('資源不足', '需要 $' + toolData.cost, 'warning');
+                    return;
+                }
+                playerData[costField] -= toolData.cost;
+            }
+            
             showNotification('工具已激活', '工具「' + toolData.name + '」正在執行...', 'success');
             addTerminalLine('[執行] 啟動工具: ' + toolData.name, 'command');
-            addTerminalLine('[結果] 工具執行成功，冷卻時間: ' + toolData.cooldown + '秒', 'success');
+            
+            // 實現工具效果
+            implementToolEffect(toolId, toolData, playerData, opponentData);
+            
+            // 更新UI
+            updateGameStats();
+            updateSystemStatusBars();
+            updateAttackDefenseBars();
+            updateHealthVisualization();
+        }
+        
+        function implementToolEffect(toolId, toolData, playerData, opponentData) {
+            const role = GameState.currentRole;
+            
+            switch(toolData.effect) {
+                // 黑客工具效果
+                case 'scan':
+                    if (role === 'hacker') {
+                        playerData.controlProgress += 5;
+                        addTerminalLine('[掃描] 發現新目標，控制進度 +5%', 'success');
+                    }
+                    break;
+                    
+                case 'stealth':
+                    if (role === 'hacker') {
+                        playerData.stealth += 10;
+                        addTerminalLine('[隱蔽] 隱蔽度提升，減少被偵測風險', 'success');
+                    }
+                    break;
+                    
+                case 'counter':
+                    if (role === 'hacker') {
+                        if (toolId === 'evidence_wiper') {
+                            // 徹底銷毀證據
+                            const destroyCount = Math.min(3, opponentData.evidenceChain.length);
+                            for (let i = 0; i < destroyCount; i++) {
+                                if (opponentData.evidenceChain[i]) {
+                                    opponentData.evidenceChain[i].destroyed = true;
+                                    opponentData.evidenceChain[i].name += ' [已銷毀]';
+                                }
+                            }
+                            addTerminalLine(`[銷毀] 已徹底銷毀 ${destroyCount} 項證據！`, 'success');
+                        } else if (toolId === 'data_injection') {
+                            // 污染證據
+                            if (opponentData.evidenceChain.length > 0) {
+                                const targetIndex = Math.floor(Math.random() * opponentData.evidenceChain.length);
+                                opponentData.evidenceChain[targetIndex].contaminated = true;
+                                opponentData.evidenceChain[targetIndex].name += ' [已污染]';
+                                addTerminalLine('[污染] 證據數據已被注入偽造信息', 'success');
+                            }
+                        }
+                    }
+                    break;
+                    
+                case 'attack':
+                    if (role === 'hacker') {
+                        if (toolId === 'data_wipe') {
+                            opponentData.evidenceLibraryHealth -= 15;
+                            addTerminalLine('[攻擊] 證據庫數據擦除攻擊成功', 'success');
+                        } else if (toolId === 'ransomware') {
+                            opponentData.serverHealth -= 25;
+                            addTerminalLine('[勒索] 勒索軟件已部署，系統功能受限', 'success');
+                        }
+                    }
+                    break;
+                    
+                // 執法部門工具效果
+                case 'investigate':
+                    if (role === 'law_enforcement') {
+                        playerData.investigationProgress += 8;
+                        addTerminalLine('[調查] 收集到新情報，調查進度 +8%', 'success');
+                    }
+                    break;
+                    
+                case 'track':
+                    if (role === 'law_enforcement') {
+                        const lockIncrease = toolId === 'gps_tracker' ? 15 : 10;
+                        playerData.identityLock.technical += lockIncrease;
+                        addTerminalLine(`[追蹤] 身份鎖定進度提升 ${lockIncrease}%`, 'success');
+                    }
+                    break;
+                    
+                case 'defend':
+                    if (role === 'law_enforcement') {
+                        if (toolId === 'evidence_protector') {
+                            // 保護證據
+                            opponentData.evidenceChain.forEach(e => {
+                                if (!e.contaminated) e.protected = true;
+                            });
+                            addTerminalLine('[防禦] 證據保護系統已啟動', 'success');
+                        }
+                    }
+                    break;
+                    
+                default:
+                    addTerminalLine('[結果] 工具執行成功，冷卻時間: ' + toolData.cooldown + '秒', 'success');
+            }
         }
 
         // ===== 遊戲更新循環 =====
@@ -5087,6 +8110,129 @@
             GameState.connectionStatus = 'disconnected';
             addTerminalLine('[系統] 已斷開連接', 'warning');
             showNotification('連接已斷開', '已斷開與對手系統的連接', 'warning');
+        }
+
+        // ===== 特殊技能系統 =====
+        function activateSpecialSkill(skillId) {
+            const role = GameState.currentRole;
+            const skill = GameState.specialSkills[role][skillId];
+            
+            if (!skill) {
+                showNotification('技能錯誤', '無效的技能ID', 'warning');
+                return;
+            }
+            
+            const now = Date.now() / 1000;
+            
+            // 檢查冷卻時間
+            if (skill.cooldown > 0 && now - skill.lastUsed < skill.cooldown) {
+                const remaining = Math.ceil(skill.cooldown - (now - skill.lastUsed));
+                showNotification('技能冷卻中', `還需 ${Math.floor(remaining/60)} 分鐘 ${remaining%60} 秒`, 'warning');
+                return;
+            }
+            
+            // 檢查一次性技能
+            if (skillId === 'net_capture_order' && skill.used) {
+                showNotification('技能已使用', '全網圍捕令只能使用一次', 'warning');
+                return;
+            }
+            
+            // 檢查資金
+            const playerData = GameState.playerData[role];
+            const costField = role === 'hacker' ? 'money' : 'budget';
+            if (playerData[costField] < skill.cost) {
+                showNotification('資金不足', `需要 $${skill.cost.toLocaleString()}`, 'warning');
+                return;
+            }
+            
+            // 扣除資金
+            playerData[costField] -= skill.cost;
+            
+            // 執行技能效果
+            executeSpecialSkill(skillId);
+            
+            // 更新冷卻時間
+            skill.lastUsed = now;
+            if (skillId === 'net_capture_order') skill.used = true;
+            
+            // 更新UI
+            updateGameStats();
+            addTerminalLine(`[特殊技能] ${skill.name} 已激活！`, 'success');
+            addGameLog('system', `特殊技能 ${skill.name} 被使用`);
+        }
+        
+        function executeSpecialSkill(skillId) {
+            const role = GameState.currentRole;
+            const opponentRole = role === 'hacker' ? 'law_enforcement' : 'hacker';
+            const playerData = GameState.playerData[role];
+            const opponentData = GameState.playerData[opponentRole];
+            
+            switch(skillId) {
+                case 'digital_evaporation':
+                    // 清除所有數碼足跡
+                    playerData.digitalFootprints = 0;
+                    playerData.stealth += 30;
+                    // 清除已被追蹤的證據
+                    opponentData.evidenceChain = opponentData.evidenceChain.filter(e => !e.tracked);
+                    addTerminalLine('[數位蒸發] 所有數碼足跡已清除，隱蔽度大幅提升！', 'success');
+                    break;
+                    
+                case 'evidence_pollution_wave':
+                    // 大規模證據污染
+                    const pollutionCount = Math.min(5, opponentData.evidenceChain.length);
+                    for (let i = 0; i < pollutionCount; i++) {
+                        if (opponentData.evidenceChain[i]) {
+                            opponentData.evidenceChain[i].contaminated = true;
+                            opponentData.evidenceChain[i].name += ' [已污染]';
+                        }
+                    }
+                    addTerminalLine(`[證據污染波] 已污染 ${pollutionCount} 項關鍵證據！`, 'success');
+                    break;
+                    
+                case 'channel_hijack':
+                    // 發送虛假指令
+                    addTerminalLine('[協作頻道劫持] 正在注入虛假指令到對方系統...', 'info');
+                    setTimeout(() => {
+                        opponentData.serverHealth -= 20;
+                        opponentData.analysisToolsHealth -= 15;
+                        addTerminalLine('[協作頻道劫持] 虛假指令已執行，對方系統混亂！', 'success');
+                    }, 3000);
+                    break;
+                    
+                case 'net_capture_order':
+                    // 全網圍捕
+                    playerData.networkSweepActive = true;
+                    opponentData.stealth -= 40;
+                    opponentData.activeVpnNodes = Math.max(0, opponentData.activeVpnNodes - 3);
+                    addTerminalLine('[全網圍捕令] ISP已配合，匿名網絡大幅壓縮！', 'success');
+                    break;
+                    
+                case 'time_trap':
+                    // 時間陷阱
+                    addTerminalLine('[時間陷阱] 正在部署蜜罐系統...', 'info');
+                    setTimeout(() => {
+                        if (opponentData.controlProgress > 30) {
+                            opponentData.controlProgress -= 25;
+                            playerData.investigationProgress += 30;
+                            addTerminalLine('[時間陷阱] 黑客已上鉤！獲得大量攻擊情報。', 'success');
+                        } else {
+                            addTerminalLine('[時間陷阱] 黑客未上鉤，蜜罐系統待機。', 'info');
+                        }
+                    }, 5000);
+                    break;
+                    
+                case 'physical_digital_raid':
+                    // 同步突襲 (需要高身份鎖定)
+                    if (opponentData.identityLock.physical >= 90) {
+                        addTerminalLine('[物理-數位同步突襲] 正在協調實體抓捕隊伍...', 'info');
+                        setTimeout(() => {
+                            endGameWithAnimation('law_enforcement', '同步突襲成功：網路斷流與實體抓捕同時執行，黑客已被逮捕。');
+                        }, 2000);
+                    } else {
+                        addTerminalLine('[物理-數位同步突襲] 身份鎖定不足，無法執行同步突襲。', 'warning');
+                    }
+                    break;
+            }
         }
 
         // ===== 商店相關函數 =====
