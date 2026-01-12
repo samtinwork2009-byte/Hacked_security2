@@ -1506,6 +1506,13 @@
             gap: 30px;
         }
 
+        /* Make tools and special skills panels flow vertically and scroll internally to avoid overlap */
+        .left-panel > .tools-panel, .left-panel > .special-skills-panel {
+            max-height: 520px;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         /* 終端機 */
         .terminal-container {
             background: rgba(5, 5, 5, 0.95);
@@ -1694,6 +1701,10 @@
             padding: 25px;
             border: 2px solid var(--primary-color);
             min-height: 300px;
+            /* ensure tools-panel stays in normal flow and is above special skills panel */
+            position: relative !important;
+            z-index: 3 !important;
+            margin-bottom: 12px !important;
         }
 
         .tools-title {
@@ -1790,15 +1801,28 @@
         }
 
         /* ===== 特殊技能面板 ===== */
-        .special-skills-panel {
+    .special-skills-panel {
             background: var(--panel-bg);
             border-radius: 12px;
             padding: 25px;
             border: 2px solid #ff9900;
             margin-top: 20px;
             min-height: 200px;
-            position: relative;
-            z-index: 10;
+            /* Ensure panel participates in normal flow to avoid overlapping tools-panel */
+            position: relative !important;
+            z-index: 2 !important;
+            margin-top: 8px !important;
+        }
+
+        /* Stronger selectors to prevent other rules/scripts from causing overlap */
+        .left-panel > .tools-panel {
+            position: relative !important;
+            z-index: 1000 !important;
+        }
+
+        .left-panel > .special-skills-panel {
+            position: relative !important;
+            z-index: 900 !important;
         }
 
         .special-skills-panel .tools-title {
@@ -6335,6 +6359,19 @@
 .case-logs { margin-top: 15px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 4px; font-size: 0.8rem; }
 .case-logs ul { margin-left: 20px; color: #aaa; }
 .dossier-body { padding: 15px; }
+
+/* Ensure tools panel stays above special skills and avoid overlap */
+.left-panel > .tools-panel { position: relative !important; z-index: 1200 !important; }
+.left-panel > .special-skills-panel { position: relative !important; z-index: 1000 !important; }
+/* Wider rule to catch any special skills cards placed later */
+.special-skills-panel, .special-skills-panel * { z-index: 1000 !important; }
+
+/* mode-card select button: prettier and animated */
+.mode-card .select-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); cursor: pointer; transition: transform 180ms cubic-bezier(.2,.9,.3,1), box-shadow 180ms; }
+.mode-card .select-btn i { transform: translateY(0); transition: transform 180ms; }
+.mode-card .select-btn:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.6); }
+.mode-card .select-btn:hover i { transform: rotate(-8deg) translateY(-2px); }
+.mode-card .select-btn:active { transform: translateY(-2px) scale(0.995); }
 </style>
 </head>
 <body>
@@ -6350,13 +6387,7 @@
             <li><a onclick="showInterceptPage()" id="nav-intercept">通信攔截</a></li>
             <li><a onclick="showTrapPage()" id="nav-trap">網絡陷阱</a></li>
             <li><a onclick="showDeviceNetworkMonitor()" id="nav-monitor">📊 監控系統</a></li>
-            <li style="position: relative;">
-                <a href="javascript:void(0)" id="nav-role-tools" onclick="toggleRoleMenu()">🔧 角色工具 ▼</a>
-                <div id="role-submenu" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(10, 10, 30, 0.95); border: 2px solid #4a90d9; border-radius: 6px; z-index: 1000; min-width: 200px;">
-                    <a onclick="showTargetIntelligence(); closeRoleMenu()" style="display: block; padding: 10px 15px; color: #4a90d9; border-bottom: 1px solid rgba(0,0,0,0.3); cursor: pointer;">🎯 目標情報(執法)</a>
-                    <a onclick="showDarknetMarketplace(); closeRoleMenu()" style="display: block; padding: 10px 15px; color: #00ff41; cursor: pointer;">🕵️ 暗網市場(黑客)</a>
-                </div>
-            </li>
+            <!-- 角色工具按鈕已移到角色卡片內，頂欄保留簡潔導航 -->
             <li><a onclick="showLECenter()" id="nav-le-center">執法指揮中心</a></li>
             <li><a onclick="showEvidencePage()" id="nav-evidence">證據庫</a></li>
             <li><a onclick="showGuide()" id="nav-guide">操作指南</a></li>
@@ -6637,6 +6668,14 @@
                     <i class="fas fa-skull-crossbones"></i>
                     <span>選擇黑客角色</span>
                 </button>
+                <!-- 角色工具（黑客） -->
+                <div style="position: relative; margin-top: 10px;">
+                    <a href="javascript:void(0)" id="hacker-role-tools" onclick="toggleRoleMenuFor('hacker-role-submenu')">🔧 角色工具 ▼</a>
+                    <div id="hacker-role-submenu" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(0,0,0,0.95); border: 1px solid #00ff41; border-radius:6px; z-index: 1100; min-width: 220px;">
+                        <a onclick="showDarknetMarketplace(); closeRoleMenuFor('hacker-role-submenu')" style="display:block;padding:8px 12px;color:#00ff41;cursor:pointer;">🕵️ 暗網市場(黑客)</a>
+                        <a onclick="openDarknetHub(); closeRoleMenuFor('hacker-role-submenu')" style="display:block;padding:8px 12px;color:#9b59b6;cursor:pointer;">🔗 暗網聯絡站</a>
+                    </div>
+                </div>
             </div>
 
             <!-- 執法部門模式卡片 -->
@@ -6675,6 +6714,14 @@
                     <i class="fas fa-shield-alt"></i>
                     <span>選擇執法部門角色</span>
                 </button>
+                <!-- 角色工具（執法） -->
+                <div style="position: relative; margin-top: 10px;">
+                    <a href="javascript:void(0)" id="le-role-tools" onclick="toggleRoleMenuFor('le-role-submenu')">🔧 角色工具 ▼</a>
+                    <div id="le-role-submenu" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(10,10,30,0.98); border: 1px solid #4a90d9; border-radius:6px; z-index: 1100; min-width:220px;">
+                        <a onclick="showTargetIntelligence(); closeRoleMenuFor('le-role-submenu')" style="display:block;padding:8px 12px;color:#4a90d9;cursor:pointer;">🎯 目標情報(執法)</a>
+                        <a onclick="showLECenter(); closeRoleMenuFor('le-role-submenu')" style="display:block;padding:8px 12px;color:#00aaff;cursor:pointer;">🏢 執法指揮中心</a>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -8478,13 +8525,34 @@
             }
         }
 
+        // per-card toggles
+        function toggleRoleMenuFor(id) {
+            const menu = document.getElementById(id);
+            if (!menu) return;
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function closeRoleMenuFor(id) {
+            const menu = document.getElementById(id);
+            if (menu) menu.style.display = 'none';
+        }
+
         // 點擊頁面其他地方關閉菜單
         document.addEventListener('click', (e) => {
+            // close legacy top nav menu if present
             const menu = document.getElementById('role-submenu');
             const toggle = document.getElementById('nav-role-tools');
             if (menu && toggle && !menu.contains(e.target) && !toggle.contains(e.target)) {
                 menu.style.display = 'none';
             }
+            // close per-card menus if clicking outside
+            ['hacker-role-submenu','le-role-submenu'].forEach(id => {
+                const m = document.getElementById(id);
+                const t = document.getElementById(id.replace('-submenu','-tools'));
+                if (m && t && !m.contains(e.target) && !t.contains(e.target)) {
+                    m.style.display = 'none';
+                }
+            });
         });
 
         // 更新設備監控UI
@@ -10380,6 +10448,8 @@
                     }
                 }
             });
+            // 顯示一次性的隱藏功能提示，幫助使用者尋找被隱藏的專屬功能
+            try { showHiddenFeaturesHintForRole(role); } catch(e) { /* ignore if function not present */ }
         }
     
         function initializeGameUI() {
@@ -10416,6 +10486,14 @@
                         <div class="target-info">
                             <div class="target-label">目標</div>
                             <div class="target-ip">${GameState.opponentIP} (${opponentName})</div>
+                        </div>
+                        <div style="margin-left:18px; display:flex; gap:8px; align-items:center;">
+                            <button class="btn-primary" onclick="openEvidenceGraph()">證據鏈視覺</button>
+                            <button class="btn-primary" onclick="toggleHackerVisuals()">黑客視覺</button>
+                            <button class="btn-primary" onclick="openMonitoringPanel()">監控面板</button>
+                            <button class="btn-primary" onclick="openLegalTools()">法律工具</button>
+                            <button class="btn-primary" onclick="openDefenseTools()">防禦與隱匿</button>
+                            <button class="btn-primary" onclick="openDarknetOps()">暗網操作</button>
                         </div>
                     </div>
                     
@@ -10694,7 +10772,10 @@
                                     <i class="fas fa-tools"></i>
                                     <span>專屬工具庫</span>
                                 </div>
-                                <div class="tools-categories" id="tool-categories">
+                                    <div style="margin-top:10px; margin-bottom:12px;">
+                                        <input id="tool-quick-find" placeholder="快速搜尋工具或技能..." style="width:100%; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.08); background:transparent; color:#fff;" />
+                                    </div>
+                                    <div class="tools-categories" id="tool-categories">
                                     <!-- 工具分類將由JavaScript動態生成 -->
                                 </div>
                                 <div class="tools-grid" id="tools-grid">
@@ -10993,6 +11074,10 @@
             updateSpecialSkillsGrid();
             updateSpecialPanel(); addNodeClickEvents();
             updateRoleSpecificButtons();
+            // 初始化快速搜尋輸入
+            if (typeof initQuickFind === 'function') initQuickFind();
+            // 強制將面板保持在正常文檔流中，避免被覆蓋
+            if (typeof enforcePanelFlow === 'function') enforcePanelFlow();
             
             // 設置終端輸入事件
             const terminalInput = document.getElementById('terminal-input');
@@ -12128,6 +12213,8 @@
             }
     }
 
+    
+
         // ===== 遊戲計時器 =====
         function startGameTimer() {
             let timeLeft = GameState.gameTimeLimit;
@@ -12808,6 +12895,34 @@
                 <div class="spec-row"><span>網絡連接</span><span>${specs.net}</span></div>
                 <div class="spec-row"><span>當前狀態</span><span style="color:#00ff41">${specs.status}</span></div>
             `;
+
+            // after render, run verification for role tools
+            try { verifyRoleToolsApplied(); } catch(e) { console.warn('verifyRoleToolsApplied missing', e); }
+        }
+
+        // Verify that each role's tools from GameState are present in the UI
+        function verifyRoleToolsApplied() {
+            const missing = { hacker: [], law_enforcement: [] };
+            try {
+                const hackerTools = GameState.playerData.hacker.tools || [];
+                const leTools = GameState.playerData.law_enforcement.tools || [];
+                // helper to check DOM for tool ids in tools-grid
+                function domHasTool(id) {
+                    return !!document.querySelector(`#tools-grid .tool-card[data-tool-id="${id}"]`);
+                }
+                hackerTools.forEach(t => { if (!domHasTool(t)) missing.hacker.push(t); });
+                leTools.forEach(t => { if (!domHasTool(t)) missing.law_enforcement.push(t); });
+            } catch(e) {
+                console.warn('verifyRoleToolsApplied error', e);
+            }
+            console.group('Role Tools Verification');
+            console.log('Hacker missing tools:', missing.hacker);
+            console.log('Law Enforcement missing tools:', missing.law_enforcement);
+            console.groupEnd();
+            // If missing, show a brief in-UI toast
+            if ((missing.hacker && missing.hacker.length) || (missing.law_enforcement && missing.law_enforcement.length)) {
+                showNotification('工具同步問題', '偵測到部分角色專屬工具尚未渲染，請查看 console 以取得詳情', 'warning');
+            }
         }
 
         // 3. 網絡監控模擬
@@ -13160,6 +13275,129 @@
                 }
                 updateGameStats();
             }, 2500);
+        }
+
+        // 初始化快速搜尋輸入與過濾邏輯
+        function initQuickFind() {
+            const input = document.getElementById('tool-quick-find');
+            if (!input) return;
+            input.addEventListener('input', function() {
+                const q = this.value.trim().toLowerCase();
+                filterToolsOrSkills(q);
+            });
+            // 支援按下 Enter 快速聚焦第一項
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const firstTool = document.querySelector('#tools-grid .tool-card, #special-skills-grid .special-skill-card');
+                    if (firstTool) firstTool.scrollIntoView({behavior: 'smooth', block: 'center'});
+                }
+            });
+        }
+
+        // 防止其他程式或樣式動態把面板設為絕對或改變 z-index
+        function enforcePanelFlow() {
+            const tools = document.querySelector('.tools-panel');
+            const skills = document.querySelector('.special-skills-panel');
+            // apply multiple times to override other scripts that may run later
+            for (let i=0;i<4;i++) {
+                if (tools) {
+                    tools.style.setProperty('position', 'relative', 'important');
+                    tools.style.setProperty('z-index', '3', 'important');
+                }
+                if (skills) {
+                    skills.style.setProperty('position', 'relative', 'important');
+                    skills.style.setProperty('z-index', '2', 'important');
+                }
+            }
+            // debug info
+            try {
+                if (tools) console.log('tools-panel computed:', window.getComputedStyle(tools).position, window.getComputedStyle(tools).zIndex);
+                if (skills) console.log('special-skills-panel computed:', window.getComputedStyle(skills).position, window.getComputedStyle(skills).zIndex);
+            } catch(e) {}
+            // Setup MutationObserver to guard against later script changes
+            try {
+                const observerCallback = function(mutationsList) {
+                    for (const m of mutationsList) {
+                        if (m.type === 'attributes' && (m.attributeName === 'style' || m.attributeName === 'class')) {
+                            // reapply enforcement
+                            for (let i=0;i<2;i++) {
+                                if (tools) {
+                                    tools.style.setProperty('position', 'relative', 'important');
+                                    tools.style.setProperty('z-index', '1000', 'important');
+                                }
+                                if (skills) {
+                                    skills.style.setProperty('position', 'relative', 'important');
+                                    skills.style.setProperty('z-index', '900', 'important');
+                                }
+                            }
+                        }
+                    }
+                };
+                const obs = new MutationObserver(observerCallback);
+                if (tools) obs.observe(tools, { attributes: true, attributeFilter: ['style','class'] });
+                if (skills) obs.observe(skills, { attributes: true, attributeFilter: ['style','class'] });
+            } catch(e) { }
+        }
+
+        // runtime diagnostics: detect if any element is visually covering the tools panel
+        function diagnoseOverlap() {
+            const tools = document.querySelector('.left-panel > .tools-panel');
+            if (!tools) return;
+            const toolsRect = tools.getBoundingClientRect();
+            const toolsZ = parseInt(window.getComputedStyle(tools).zIndex) || 0;
+            // scan all elements to find any with higher z-index and overlapping rect
+            const all = document.body.getElementsByTagName('*');
+            for (let i=0;i<all.length;i++) {
+                const el = all[i];
+                if (el === tools) continue;
+                try {
+                    const style = window.getComputedStyle(el);
+                    const z = parseInt(style.zIndex) || 0;
+                    if (z > toolsZ) {
+                        const r = el.getBoundingClientRect();
+                        const overlap = !(r.right < toolsRect.left || r.left > toolsRect.right || r.bottom < toolsRect.top || r.top > toolsRect.bottom);
+                        if (overlap) {
+                            console.warn('diagnoseOverlap: element likely covering tools-panel', el, 'zIndex=', z);
+                            // briefly outline offending element in bright red to help visually locate it
+                            const prev = el.style.outline;
+                            el.style.outline = '3px solid rgba(255,0,0,0.9)';
+                            setTimeout(()=>{ try{ el.style.outline = prev; }catch(e){} }, 3000);
+                        }
+                    }
+                } catch(e) {}
+            }
+        }
+
+        function filterToolsOrSkills(query) {
+            const tools = document.querySelectorAll('#tools-grid .tool-card');
+            const skills = document.querySelectorAll('#special-skills-grid .special-skill-card');
+
+            if (query === '') {
+                tools.forEach(t => t.style.display = 'flex');
+                skills.forEach(s => s.style.display = 'flex');
+                return;
+            }
+
+            tools.forEach(t => {
+                const name = (t.querySelector('.tool-name') && t.querySelector('.tool-name').innerText.toLowerCase()) || '';
+                const desc = (t.querySelector('.tool-desc') && t.querySelector('.tool-desc').innerText.toLowerCase()) || '';
+                t.style.display = (name.indexOf(query) > -1 || desc.indexOf(query) > -1) ? 'flex' : 'none';
+            });
+
+            skills.forEach(s => {
+                const name = (s.querySelector('.tool-name') && s.querySelector('.tool-name').innerText.toLowerCase()) || '';
+                const desc = (s.querySelector('.tool-desc') && s.querySelector('.tool-desc').innerText.toLowerCase()) || '';
+                s.style.display = (name.indexOf(query) > -1 || desc.indexOf(query) > -1) ? 'flex' : 'none';
+            });
+        }
+
+        // 顯示隱藏功能提示（可被 updateRoleSpecificButtons 觸發）
+        function showHiddenFeaturesHintForRole(role) {
+            const hid = role === 'law_enforcement' ? 'hidden-features-hint' : 'hacker-features-hint';
+            const el = document.getElementById(hid);
+            if (!el) return;
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 10000);
         }
 
         function showPasswordCracker() {
@@ -20041,13 +20279,10 @@ if (false) {
 })();
 
 <!-- 執法部門專業儀表分析系統 -->
-<script>
-/**
- * 執法部門專業儀表分析系統
- * 包含：證據庫、指揮中心、跨部門協調、內部伺服器監控
- */
 
-(function() {
+
+
+(function() 
     // ===== 1. 核心數據結構 =====
     
     window.LEDashboardData = {
@@ -23304,6 +23539,179 @@ setInterval(() => {
 }, 15000);
 
 console.log('[OPTIMIZATION] AI 反饋頻率優化系統已加載');
+
+</script>
+
+<!-- immersive UI templates and handlers -->
+<div id="evidence-modal" class="immersive-modal" style="display:none;">
+    <header>
+        <div style="font-weight:bold;">證據鏈視覺化</div>
+        <div><button class="close-btn" onclick="closeEvidenceGraph()">關閉</button></div>
+    </header>
+    <div class="immersive-grid">
+        <div class="evidence-graph" id="evidence-graph">Loading graph...</div>
+        <div class="timeline" id="evidence-timeline">Loading timeline...</div>
+    </div>
+</div>
+
+<div id="hacker-overlay" class="hacker-overlay" aria-hidden="true">
+    <div class="hacker-scanline"></div>
+</div>
+
+<div id="monitoring-modal" class="immersive-modal" style="display:none;">
+    <header>
+        <div style="font-weight:bold;">監控面板</div>
+        <div><button class="close-btn" onclick="closeMonitoringPanel()">關閉</button></div>
+    </header>
+    <div class="monitor-grid">
+        <div class="monitor-card">流量監視器<div class="canvas-spark" id="spark-traffic"></div></div>
+        <div class="monitor-card">異常偵測<div class="canvas-spark" id="spark-anomaly"></div></div>
+        <div class="monitor-card">設備健康<div class="canvas-spark" id="spark-health"></div></div>
+    </div>
+</div>
+
+<div id="legal-modal" class="immersive-modal" style="display:none;">
+    <header>
+        <div style="font-weight:bold;">法律工具</div>
+        <div><button class="close-btn" onclick="closeLegalTools()">關閉</button></div>
+    </header>
+    <div class="legal-form">
+        <label>案件編號 <input id="le-case-id" /></label>
+        <label>受害者 <input id="le-victim" /></label>
+        <label>說明 <textarea id="le-desc"></textarea></label>
+        <div class="action-row">
+            <button class="btn-primary" onclick="generateArrestWarrant()">生成逮捕令 (PDF)</button>
+            <button class="btn-primary" onclick="verifyEvidenceHash()">驗證證據完整性</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Minimal handlers and mock renderers for the new panels
+function openEvidenceGraph(){ document.getElementById('evidence-modal').style.display='block'; renderEvidenceGraph(); }
+function closeEvidenceGraph(){ document.getElementById('evidence-modal').style.display='none'; }
+
+function toggleHackerVisuals(){ const ov = document.getElementById('hacker-overlay'); ov.classList.toggle('active'); }
+
+function openMonitoringPanel(){ document.getElementById('monitoring-modal').style.display='block'; renderMonitoring(); }
+function closeMonitoringPanel(){ document.getElementById('monitoring-modal').style.display='none'; }
+
+function openLegalTools(){ document.getElementById('legal-modal').style.display='block'; }
+function closeLegalTools(){ document.getElementById('legal-modal').style.display='none'; }
+
+function renderEvidenceGraph(){
+    const el = document.getElementById('evidence-graph');
+    // simple mock: draw nodes as boxes
+    el.innerHTML = '';
+    const nodes = [ {id:'n1',label:'Email'}, {id:'n2',label:'IP'}, {id:'n3',label:'Device'} ];
+    nodes.forEach(n=>{ const d = document.createElement('div'); d.className='node-card'; d.textContent = n.label; el.appendChild(d); });
+    document.getElementById('evidence-timeline').textContent = '時間軸示例：2025-01-01 12:00 - 交易發現';
+}
+
+function renderMonitoring(){
+    // mock sparklines using simple color shifts
+    ['spark-traffic','spark-anomaly','spark-health'].forEach(id=>{
+        const c = document.getElementById(id);
+        if (!c) return;
+        c.style.background = `linear-gradient(90deg, rgba(0,255,65,0.12), rgba(74,144,217,0.08))`;
+    });
+}
+
+function generateArrestWarrant(){ alert('生成逮捕令：暫時為示例。'); }
+function verifyEvidenceHash(){ alert('驗證完成（模擬）'); }
+
+</script>
+
+<!-- Defense & Darknet prototypes -->
+<div id="defense-modal" class="immersive-modal" style="display:none;">
+    <header>
+        <div style="font-weight:bold;">防禦與隱匿工具</div>
+        <div><button class="close-btn" onclick="closeDefenseTools()">關閉</button></div>
+    </header>
+    <div style="display:flex; gap:12px;">
+        <div style="flex:1">
+            <div class="node-card">數位足跡清除器<button class="btn-primary" onclick="mockClearFootprints()">執行</button></div>
+            <div class="node-card">即時 IP 跳轉系統<button class="btn-primary" onclick="mockIPHop()">跳轉 IP</button></div>
+            <div class="node-card">反追蹤陷阱設置<button class="btn-primary" onclick="mockDeployTrap()">部署陷阱</button></div>
+            <div class="node-card">假身份生成器<button class="btn-primary" onclick="mockGeneratePersona()">生成</button></div>
+        </div>
+        <div style="width:320px">
+            <div class="node-card">操作日誌<div id="defense-log" style="max-height:260px; overflow:auto; margin-top:6px;"></div></div>
+        </div>
+    </div>
+</div>
+
+<div id="darknet-modal" class="immersive-modal" style="display:none;">
+    <header>
+        <div style="font-weight:bold;">暗網操作</div>
+        <div><button class="close-btn" onclick="closeDarknetOps()">關閉</button></div>
+    </header>
+    <div style="display:grid; grid-template-columns:1fr 280px; gap:10px;">
+        <div>
+            <div class="node-card">加密通訊室<button class="btn-primary" onclick="mockOpenChat()">開啟</button></div>
+            <div class="node-card">虛擬貨幣錢包管理<div id="wallet-list" style="margin-top:8px;"></div></div>
+            <div class="node-card">漏洞市場瀏覽器<button class="btn-primary" onclick="mockBrowseExploitMarket()">瀏覽</button></div>
+            <div class="node-card">匿名服務購買界面<button class="btn-primary" onclick="mockPurchaseService()">購買</button></div>
+        </div>
+        <div>
+            <div class="node-card">實時數據儀表板
+                <div style="margin-top:8px;">心跳圖：<span id="hb-value">72</span></div>
+                <div>資源消耗：<span id="res-value">18%</span></div>
+                <div>風險指數：<span id="risk-value">32</span></div>
+                <div>時間壓力：<span id="tpress">00:12:34</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openDefenseTools(){ document.getElementById('defense-modal').style.display='block'; }
+function closeDefenseTools(){ document.getElementById('defense-modal').style.display='none'; }
+function openDarknetOps(){ document.getElementById('darknet-modal').style.display='block'; renderWallets(); }
+function closeDarknetOps(){ document.getElementById('darknet-modal').style.display='none'; }
+
+function mockClearFootprints(){ logDefense('數位足跡清除完成（模擬）'); }
+function mockIPHop(){ logDefense('即時 IP 跳轉：已切換至新出口 IP（模擬）'); navigator.vibrate && navigator.vibrate(100); }
+function mockDeployTrap(){ logDefense('反追蹤陷阱已部署（模擬）'); }
+function mockGeneratePersona(){ const id='persona_'+Math.floor(Math.random()*9000+1000); logDefense('生成假身份: '+id); alert('假身份已生成: '+id); }
+function logDefense(msg){ const el=document.getElementById('defense-log'); if(!el) return; const d=document.createElement('div'); d.textContent='['+new Date().toLocaleTimeString()+'] '+msg; el.prepend(d); }
+
+function renderWallets(){ const list=document.getElementById('wallet-list'); list.innerHTML=''; const wallets=['WAL-'+Math.floor(Math.random()*9000+1000),'WAL-'+Math.floor(Math.random()*9000+1000)]; wallets.forEach(w=>{ const d=document.createElement('div'); d.textContent=w; d.style.marginBottom='6px'; list.appendChild(d); }); }
+function mockOpenChat(){ alert('加密通訊室（模擬）'); }
+function mockBrowseExploitMarket(){ alert('漏洞市場載入（模擬）'); }
+function mockPurchaseService(){ alert('已購買匿名服務（模擬）'); }
+
+// Simple realtime dashboard updater
+setInterval(()=>{
+    const hb = Math.floor(60+Math.random()*40);
+    const res = Math.floor(Math.random()*80);
+    const risk = Math.floor(Math.random()*100);
+    const t = new Date();
+    document.getElementById('hb-value') && (document.getElementById('hb-value').textContent=hb);
+    document.getElementById('res-value') && (document.getElementById('res-value').textContent=res+'%');
+    document.getElementById('risk-value') && (document.getElementById('risk-value').textContent=risk);
+    // countdown example
+    const remaining = 60*15 - Math.floor((Date.now()/1000)%900);
+    const mm = String(Math.floor(remaining/60)).padStart(2,'0'); const ss=String(remaining%60).padStart(2,'0'); document.getElementById('tpress') && (document.getElementById('tpress').textContent = '00:'+mm+':'+ss);
+},2000);
+
+// Input/feedback stubs: gestures, keyboard shortcuts, voice, vibration
+window.addEventListener('keydown', (e)=>{
+    // simple shortcuts
+    if(e.key === 'e') openEvidenceGraph();
+    if(e.key === 'd') openDefenseTools();
+    if(e.key === 'm') openMonitoringPanel();
+    if(e.key === 'g') openDarknetOps();
+    if(e.key === 'v') navigator.vibrate && navigator.vibrate(50);
+});
+
+// Touch gestures (swipe down to toggle hacker visuals)
+let touchStartY=null; document.addEventListener('touchstart', (ev)=>{ if(ev.touches && ev.touches[0]) touchStartY=ev.touches[0].clientY; });
+document.addEventListener('touchend', (ev)=>{ if(!touchStartY) return; const endY = ev.changedTouches && ev.changedTouches[0] ? ev.changedTouches[0].clientY : null; if(endY && endY - touchStartY > 80){ toggleHackerVisuals(); } touchStartY=null; });
+
+// Voice command stub (requires user gesture to enable in real browser)
+function initVoiceCommands(){ if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return; const R = window.SpeechRecognition || window.webkitSpeechRecognition; const rec = new R(); rec.continuous=false; rec.onresult = (e)=>{ const txt = e.results[0][0].transcript.toLowerCase(); if(txt.includes('evidence')) openEvidenceGraph(); if(txt.includes('defense')) openDefenseTools(); if(txt.includes('monitor')) openMonitoringPanel(); }; rec.onerror=()=>{}; return rec; }
+window.voiceRec = initVoiceCommands();
 
 </script>
 </body>
