@@ -6366,6 +6366,15 @@
 /* Wider rule to catch any special skills cards placed later */
 .special-skills-panel, .special-skills-panel * { z-index: 1000 !important; }
 
+        /* 強制工具面板置於最上層，避免特殊技能面板遮蔽 */
+        .left-panel > .tools-panel { position: relative !important; z-index: 1500 !important; pointer-events: auto; }
+        .left-panel > .special-skills-panel { position: relative !important; z-index: 1100 !important; pointer-events: auto; }
+
+        /* 響應式：在窄螢幕時，改為一欄排列 darknet 佈局 */
+        @media (max-width: 900px) {
+            .darknet-layout { grid-template-columns: 1fr !important; height: auto !important; }
+        }
+
 /* mode-card select button: prettier and animated */
 .mode-card .select-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); cursor: pointer; transition: transform 180ms cubic-bezier(.2,.9,.3,1), box-shadow 180ms; }
 .mode-card .select-btn i { transform: translateY(0); transition: transform 180ms; }
@@ -7413,28 +7422,35 @@
 
     <script>
         
-        // AI 隊伍協作邏輯
+        // AI 隊伍協作邏輯（使用 aiParams 調整靈敏度與決策間隔）
         function processAITeamLogic() {
             if (!GameState.gameActive) return;
+            if (!GameState.aiTeams) return; // 防禦性檢查，避免未定義情況下錯誤
+
+            const now = Date.now();
+            const params = GameState.aiParams || { decisionInterval: 1.5, collaborationChance: 0.05 };
+            if (now - (params.lastDecisionTime || 0) < (params.decisionInterval || 1) * 1000) return;
+            params.lastDecisionTime = now;
+            GameState.aiParams = params;
 
             const roles = ['law_enforcement', 'hacker'];
             roles.forEach(role => {
                 const team = GameState.aiTeams[role];
-                
-                // 協作冷卻處理
+
+                // 協作冷卻處理（考慮反應倍率）
                 if (team.collaborationCooldown > 0) {
-                    team.collaborationCooldown--;
+                    team.collaborationCooldown = Math.max(0, team.collaborationCooldown - Math.max(1, Math.round(params.reactionMultiplier)));
                     return;
                 }
 
-                // 檢查是否需要增援 (損毀超過 50%)
+                // 檢查是否需要增援（使用 reinforcementThreshold）
                 const activeMembers = team.members.filter(m => m.status === 'active');
-                if (activeMembers.length <= team.members.length * 0.5) {
+                if (activeMembers.length <= team.members.length * (params.reinforcementThreshold || 0.5)) {
                     requestReinforcements(role);
                 }
 
-                // 執行協作指令鏈
-                if (Math.random() < 0.05) { // 5% 機率觸發協作
+                // 協作觸發機率由 aiParams 控制
+                if (Math.random() < (params.collaborationChance || 0.05)) {
                     executeCollaborativeCommand(role);
                 }
             });
@@ -7477,6 +7493,19 @@
             
             team.members.push(newMember);
             addTerminalLine(`[增援] ${team.name} 損耗過大，${reinforcementName} 已加入戰場！`, 'success');
+        }
+
+        // 依難度調整 AI 靈敏度參數
+        function adjustAISensitivity(level) {
+            const mapping = {
+                rookie: { decisionInterval: 2.5, collaborationChance: 0.02, reinforcementThreshold: 0.6, messageChance: 0.02, reactionMultiplier: 0.6, accuracy: 0.6 },
+                professional: { decisionInterval: 1.5, collaborationChance: 0.05, reinforcementThreshold: 0.5, messageChance: 0.03, reactionMultiplier: 1.0, accuracy: 0.8 },
+                elite: { decisionInterval: 1.0, collaborationChance: 0.10, reinforcementThreshold: 0.45, messageChance: 0.05, reactionMultiplier: 1.4, accuracy: 0.9 },
+                legendary: { decisionInterval: 0.6, collaborationChance: 0.18, reinforcementThreshold: 0.4, messageChance: 0.07, reactionMultiplier: 1.8, accuracy: 0.98 }
+            };
+            const params = mapping[level] || mapping.professional;
+            GameState.aiParams = Object.assign(GameState.aiParams || {}, params, { lastDecisionTime: GameState.aiParams ? GameState.aiParams.lastDecisionTime : 0 });
+            addTerminalLine(`[AI] 已將 AI 靈敏度調整為 ${level} 模式`, 'info');
         }
 
         // 修改快捷鍵功能：不直接執行，而是跳轉到設定版面
@@ -7804,6 +7833,21 @@
         }
 
         // 覆蓋原有的 quickAction
+        // Fallback executor for quick actions in case originalQuickActionExecute isn't defined
+        if (typeof window.originalQuickActionExecute !== 'function') {
+            window.originalQuickActionExecute = function(actionId) {
+                addTerminalLine(`[快捷-預設] 執行 ${actionId}`, 'info');
+                if (ActionConfigs && ActionConfigs[actionId]) {
+                    // open hub and start execution after 300ms as a sensible default
+                    showFullscreenHub(actionId);
+                    setTimeout(() => startActionExecution(actionId), 500);
+                } else {
+                    // fallback to command-based execution
+                    executeCommand(actionId);
+                }
+            };
+        }
+
         function quickAction(actionId) {
             if (!GameState.gameActive) {
                 showNotification('遊戲未開始', '請先連接到目標', 'warning');
@@ -7906,6 +7950,16 @@
             playerIP: '192.168.1.100',
             opponentIP: '',
             difficulty: 'professional',
+            // AI 動態參數（由難度調整）
+            aiParams: {
+                decisionInterval: 1.5, // seconds between AI decision cycles
+                collaborationChance: 0.05, // base chance per decision to trigger collaboration
+                reinforcementThreshold: 0.5, // fraction of members active before reinforcements
+                messageChance: 0.03, // chance of ambient AI messages
+                reactionMultiplier: 1.0, // scales how fast cooldowns decrease / reaction speed
+                accuracy: 0.8,
+                lastDecisionTime: 0
+            },
             gameMode: 'season2',
             currentStepTask: null,
             logs: { system: [], security: [], communication: [] },
@@ -9217,6 +9271,8 @@
             }
 
             GameState.difficulty = level;
+            // 將難度同步到 AI 參數
+            if (typeof adjustAISensitivity === 'function') adjustAISensitivity(level);
 
             // 延長遊戲時間：20-30分鐘
             switch(level) {
@@ -9253,6 +9309,8 @@
             GameState.gameActive = true; GameState.logs = { system: [], security: [], communication: [] }; GameState.topologyNodes = [];
             GameState.gameStartTime = Date.now();
             GameState.connectionStatus = 'connected';
+            // 根據當前難度調整 AI 反應與靈敏度
+            if (typeof adjustAISensitivity === 'function') adjustAISensitivity(GameState.difficulty || 'professional');
             
             // 根據角色初始化遊戲數據
             if (GameState.currentRole === 'hacker') {
@@ -11088,8 +11146,16 @@
                         if (command) {
                             executeCommand(command);
                             this.value = '';
+                            // 清除建議
+                            updateInputSuggestions('');
                         }
                     }
+                });
+                terminalInput.addEventListener('input', function() {
+                    updateInputSuggestions(this.value.trim().toLowerCase());
+                });
+                terminalInput.addEventListener('focus', function() {
+                    updateInputSuggestions(this.value.trim().toLowerCase());
                 });
             }
         }
@@ -12253,6 +12319,8 @@
             } else {
                 addTerminalLine('[系統] 指令未識別，輸入 help 查看可用指令', 'error');
             }
+            // 執行完畢後清除即時建議
+            if (typeof updateInputSuggestions === 'function') updateInputSuggestions('');
         }
 
         // ===== 連接/斷開目標 =====
@@ -12260,6 +12328,184 @@
             GameState.connectionStatus = 'connected';
             addTerminalLine('[系統] 已連接到目標: ' + GameState.opponentIP, 'success');
             showNotification('連接成功', '已連接到對手系統', 'success');
+        }
+
+        // ===== 終端輸入建議系統 =====
+        function updateInputSuggestions(query) {
+            const container = document.getElementById('input-suggestions');
+            if (!container) return;
+        
+        // ===== 測試與驗證工具 =====
+        // 模擬 AI 行為以便驗證不同難度下行為差異
+        async function simulateAIBehavior({ difficulty = 'professional', ticks = 40, tickInterval = 50 } = {}) {
+            addTerminalLine(`[測試] 開始 AI 模擬 (難度: ${difficulty}, ticks: ${ticks})`, 'info');
+            // 設定難度
+            if (typeof adjustAISensitivity === 'function') adjustAISensitivity(difficulty);
+            GameState.difficulty = difficulty;
+
+            const results = { law_enforcement: { collaborations: 0, reinforcements: 0 }, hacker: { collaborations: 0, reinforcements: 0 } };
+
+            // 暫時 patch 函數以計數
+            const origExecCollab = window.executeCollaborativeCommand;
+            const origRequestReinforce = window.requestReinforcements;
+
+            window.executeCollaborativeCommand = function(role) {
+                results[role].collaborations++;
+                addTerminalLine(`[測試-記錄] ${role} 協作觸發`, 'debug');
+                if (origExecCollab) origExecCollab(role);
+            };
+            window.requestReinforcements = function(role) {
+                results[role].reinforcements++;
+                addTerminalLine(`[測試-記錄] ${role} 增援請求`, 'debug');
+                if (origRequestReinforce) origRequestReinforce(role);
+            };
+
+            // 讓 aiParams 能夠快速做決策以便於測試
+            const savedInterval = GameState.aiParams.decisionInterval;
+            GameState.aiParams.decisionInterval = 0; // 允許每次調用都做決策
+
+            for (let i = 0; i < ticks; i++) {
+                processAITeamLogic();
+                await new Promise(r => setTimeout(r, tickInterval));
+            }
+
+            // restore
+            GameState.aiParams.decisionInterval = savedInterval;
+            window.executeCollaborativeCommand = origExecCollab;
+            window.requestReinforcements = origRequestReinforce;
+
+            addTerminalLine(`[測試結果] difficulty=${difficulty} => LE.collab:${results.law_enforcement.collaborations}, LE.reinforce:${results.law_enforcement.reinforcements}; H.collab:${results.hacker.collaborations}, H.reinforce:${results.hacker.reinforcements}`, 'success');
+            return results;
+        }
+
+        // 驗證輸入建議系統
+        function testInputSuggestions() {
+            addTerminalLine('[測試] 開始輸入建議測試', 'info');
+            updateInputSuggestions('');
+            const container = document.getElementById('input-suggestions');
+            const emptyOk = container && container.children.length > 0;
+            updateInputSuggestions('sc');
+            const filteredOk = container && Array.from(container.children).some(c => c.textContent.toLowerCase().includes('sc'));
+            addTerminalLine(`[測試結果] 空輸入建議顯示:${emptyOk}、打字自動篩選:${filteredOk}`, filteredOk && emptyOk ? 'success' : 'error');
+            // 點擊第一個建議模擬
+            if (container && container.children[0]) {
+                const s = container.children[0].textContent.trim();
+                onSuggestionClick(s);
+                addTerminalLine(`[測試] 已點擊建議: ${s}`,'info');
+            }
+        }
+
+        // 驗證購買並部署裝備
+        function testBuyAndDeploy(equipId='super_computer') {
+            addTerminalLine('[測試] 開始購買並部署裝備測試', 'info');
+            GameState.currentRole = 'law_enforcement';
+            const le = GameState.playerData.law_enforcement;
+            const origBudget = le.budget;
+            // 確保有足夠預算
+            le.budget = Math.max(le.budget, 1000000);
+            buyEquipment(equipId);
+            const purchased = le.purchasedEquip.includes(equipId);
+            if (!purchased) { addTerminalLine('[測試結果] 購買失敗', 'error'); return false; }
+            equipItem(equipId);
+            const deployed = le.deployedEquip.includes(equipId);
+            const effectSeen = (equipId === 'city_surveillance') ? le.identityLockProgress >= 20 : (equipId === 'super_computer') ? (le.investigationSpeedBoost || 0) >= 50 : true;
+            addTerminalLine(`[測試結果] 購買:${purchased} 部署:${deployed} 效果:${effectSeen ? 'Yes' : 'No'}`, (purchased && deployed && effectSeen) ? 'success' : 'error');
+            // restore
+            le.budget = origBudget;
+            return purchased && deployed && effectSeen;
+        }
+
+            const commands = ['help','status','scan','attack','defend','monitor','forensics','crack','ddos','sqli','ip_tracking','open_shop','buy','equip','unequip','connect','disconnect'];
+            const suggestions = [];
+
+            // 推薦常用指令
+            if (!query) {
+                suggestions.push('help','status','open_shop','scan','monitor');
+            } else {
+                suggestions.push(...commands.filter(c => c.indexOf(query) === 0 || c.includes(query)).slice(0,8));
+            }
+
+            // 從工具庫補充推薦
+            try {
+                const role = GameState.currentRole;
+                const tools = (GameState.playerData[role] && GameState.playerData[role].tools) || [];
+                tools.forEach(t => { if (!suggestions.includes(t)) suggestions.push(t); });
+            } catch(e) {}
+
+            renderInputSuggestions(suggestions.slice(0,8));
+        }
+
+        function renderInputSuggestions(list) {
+            const container = document.getElementById('input-suggestions');
+            if (!container) return;
+            container.innerHTML = list.map(s => `<button class="suggestion-btn" onclick="onSuggestionClick('${s.replace(/'/g, "\\'")}')">${s}</button>`).join(' ');
+        }
+
+        function onSuggestionClick(s) {
+            const input = document.getElementById('terminal-input');
+            if (!input) return;
+            input.value = s;
+            input.focus();
+            // 常見指令直接執行
+            const autoExec = ['help','status','open_shop','connect','disconnect'];
+            if (autoExec.includes(s)) {
+                executeCommand(s);
+                input.value = '';
+                updateInputSuggestions('');
+            }
+        }
+
+        // ===== 自動化測試執行器 =====
+        window.runAllTests = async function() {
+            addTerminalLine('[測試] 開始自動化測試套件 (AI 模擬、輸入建議、購買部署)', 'info');
+            const difficulties = ['rookie','professional','legendary'];
+            const aiResults = {};
+            for (const d of difficulties) {
+                try {
+                    aiResults[d] = await (typeof simulateAIBehavior === 'function' ? simulateAIBehavior({ difficulty: d, ticks: 60, tickInterval: 10 }) : Promise.resolve(null));
+                } catch(e) {
+                    addTerminalLine(`[測試錯誤] AI 模擬 (${d}) 發生例外: ${e.message}`, 'error');
+                    aiResults[d] = null;
+                }
+            }
+
+            try {
+                if (typeof testInputSuggestions === 'function') testInputSuggestions();
+            } catch(e) {
+                addTerminalLine('[測試錯誤] 輸入建議測試發生例外: ' + e.message, 'error');
+            }
+
+            let buyDeployOk = false;
+            try {
+                if (typeof testBuyAndDeploy === 'function') buyDeployOk = !!testBuyAndDeploy('super_computer');
+            } catch(e) {
+                addTerminalLine('[測試錯誤] 購買並部署測試發生例外: ' + e.message, 'error');
+            }
+
+            addTerminalLine('[測試-總結] AI 模擬結果: ' + JSON.stringify(aiResults), 'info');
+            addTerminalLine('[測試-總結] 購買並部署測試: ' + (buyDeployOk ? '成功' : '失敗'), buyDeployOk ? 'success' : 'error');
+            addTerminalLine('[測試] 自動化測試套件執行完畢', 'success');
+            return { aiResults, buyDeployOk };
+        }
+
+        // 自動執行一次（頁面載入後延遲觸發）
+        if (!window.__autoTestsTriggered) {
+            window.__autoTestsTriggered = true;
+            setTimeout(() => {
+                try {
+                    if (typeof window.runAllTests === 'function') {
+                        console.log('Auto-triggering runAllTests');
+                        addTerminalLine && addTerminalLine('[自動測試] 自動觸發 runAllTests()', 'info');
+                        window.runAllTests().then(r => {
+                            console.log('AutoRunAllTests result', r);
+                            addTerminalLine && addTerminalLine('[自動測試] 已完成', 'success');
+                        }).catch(e => {
+                            console.error('AutoRunAllTests error', e);
+                            addTerminalLine && addTerminalLine('[自動測試] 自動執行失敗: ' + (e.message || e), 'error');
+                        });
+                    }
+                } catch(e) { console.error('AutoRunAllTests trigger error', e); }
+            }, 500);
         }
 
         function disconnectFromTarget() {
@@ -15398,6 +15644,7 @@ function initBudgetSystem() {
     // 設定初始預算
     GameState.playerData.law_enforcement.budget = 1000000;
     GameState.playerData.law_enforcement.purchasedEquip = [];
+    GameState.playerData.law_enforcement.deployedEquip = [];
 }
 
 function buyEquipment(equipId) {
@@ -15456,18 +15703,98 @@ function updateShopUI() {
     const le = GameState.playerData.law_enforcement;
     shopContainer.innerHTML = LE_EQUIPMENT.map(equip => {
         const isPurchased = le.purchasedEquip.includes(equip.id);
+        const isDeployed = (le.deployedEquip || []).includes(equip.id);
         return `
-            <div class="shop-item ${isPurchased ? 'purchased' : ''}" onclick="${isPurchased ? '' : `buyEquipment('${equip.id}')`}">
+            <div class="shop-item ${isPurchased ? 'purchased' : ''}">
                 <div class="shop-item-icon"><i class="fas ${equip.icon}"></i></div>
                 <div class="shop-item-info">
                     <div class="shop-item-name">${equip.name}</div>
                     <div class="shop-item-desc">${equip.desc}</div>
                 </div>
-                <div class="shop-item-cost">${isPurchased ? '已部署' : `$${(equip.cost/1000).toFixed(0)}K`}</div>
+                <div class="shop-item-actions" style="text-align:right;">
+                    <div class="shop-item-cost">${isPurchased ? (isDeployed ? '已部署' : '已購買') : `$${(equip.cost/1000).toFixed(0)}K`}</div>
+                    ${isPurchased ? (isDeployed ? `<button onclick="unequipItem('${equip.id}')" style="background:#333; color:#fff; border:none; padding:4px 8px; cursor:pointer; margin-top:6px;">卸下</button>` : `<button onclick="equipItem('${equip.id}')" style="background:#4a90d9; color:#000; border:none; padding:4px 8px; cursor:pointer; margin-top:6px;">部署</button>`) : `<button onclick="buyEquipment('${equip.id}')" style="background:#4a90d9; color:#000; border:none; padding:4px 8px; cursor:pointer; margin-top:6px;">購買</button>`}
+                </div>
             </div>
         `;
     }).join('');
-}
+
+    // 裝備部署/卸下 API
+    function getEquipSlot(equipId) {
+        switch(equipId) {
+            case 'basic_monitor': return 'accessory';
+            case 'super_computer': return 'accessory';
+            case 'city_surveillance': return 'armor';
+            case 'swat_team': return 'weapon';
+            default: return 'accessory';
+        }
+    }
+
+    window.equipItem = function(equipId) {
+        const le = GameState.playerData.law_enforcement;
+        if (!le.purchasedEquip.includes(equipId)) { showNotification('未購買', '請先購買此裝備', 'warning'); return; }
+        le.deployedEquip = le.deployedEquip || [];
+        if (le.deployedEquip.includes(equipId)) { showNotification('已部署', '該裝備已部署', 'info'); return; }
+        const slot = getEquipSlot(equipId);
+        GameState.equipmentSlots.law_enforcement[slot] = equipId;
+        le.deployedEquip.push(equipId);
+        applyEquipDeployEffect(equipId);
+        addTerminalLine(`[部署] ${equipId} 已部署於 ${slot}`, 'success');
+        updateShopUI(); updateGameStats();
+    };
+
+    window.unequipItem = function(equipId) {
+        const le = GameState.playerData.law_enforcement;
+        le.deployedEquip = le.deployedEquip || [];
+        if (!le.deployedEquip.includes(equipId)) { showNotification('未部署', '該裝備未部署', 'warning'); return; }
+        const slot = getEquipSlot(equipId);
+        GameState.equipmentSlots.law_enforcement[slot] = null;
+        le.deployedEquip = le.deployedEquip.filter(e => e !== equipId);
+        removeEquipDeployEffect(equipId);
+        addTerminalLine(`[卸下] ${equipId} 已從 ${slot} 卸下`, 'info');
+        updateShopUI(); updateGameStats();
+    };
+
+    window.applyEquipDeployEffect = function(equipId) {
+        const le = GameState.playerData.law_enforcement;
+        switch(equipId) {
+            case 'super_computer':
+                le.investigationSpeedBoost = (le.investigationSpeedBoost || 0) + 50;
+                addTerminalLine('[效果] 高運算陣列已上線，調查速度提升。', 'success');
+                break;
+            case 'city_surveillance':
+                le.identityLockProgress = Math.min(100, (le.identityLockProgress || 0) + 20);
+                addTerminalLine('[效果] 全城監控已接入，目標位置鎖定率提升。', 'success');
+                break;
+            case 'swat_team':
+                le.prosecutionReady = true;
+                addTerminalLine('[效果] SWAT 小組已進入待命狀態。', 'alert');
+                break;
+            default:
+                addTerminalLine('[效果] 裝備已部署。', 'info');
+        }
+    };
+
+    window.removeEquipDeployEffect = function(equipId) {
+        const le = GameState.playerData.law_enforcement;
+        switch(equipId) {
+            case 'super_computer':
+                le.investigationSpeedBoost = Math.max(0, (le.investigationSpeedBoost || 0) - 50);
+                addTerminalLine('[效果] 高運算陣列已卸載，調查速度恢復。', 'info');
+                break;
+            case 'city_surveillance':
+                le.identityLockProgress = Math.max(0, (le.identityLockProgress || 0) - 20);
+                addTerminalLine('[效果] 全城監控已移除，鎖定率下降。', 'info');
+                break;
+            case 'swat_team':
+                le.prosecutionReady = false;
+                addTerminalLine('[效果] SWAT 小組已回收。', 'info');
+                break;
+            default:
+                addTerminalLine('[效果] 裝備已卸載。', 'info');
+        }
+    };
+
 
     
     // 覆蓋初始化
@@ -20757,7 +21084,7 @@ if (false) {
             }
         }
     `;
-    document.head.appendChild(dashboardStyles);
+    document head.appendChild(dashboardStyles);
 
     // ===== 3. UI 生成函數 =====
 
@@ -22867,10 +23194,7 @@ const EXTRA_TOOLS = {
     openDebugConsole() {
         const debugModal = document.createElement('div');
         debugModal.id = 'debug-console-modal';
-        debugModal.style.cssText = 'position: fixed; top: 50px; right: 50px; width: 400px; height: 500px; background: rgba(0,0,0,0.9); border: 1px solid #00ff41; color: #00ff41; z-index: 10001; font-family: monospace; padding: 10px; display: flex; flex-direction: column;';
-        
-        debugModal.innerHTML = `
-            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #00ff41; padding-bottom: 5px; margin-bottom: 10px;">
+        debugModal.style.cssText = 'position: fixed; top: 50px; right: 50px; width: 400px; height: 500px; background: rgba(0,0,0,0.95); border: 1px solid #00ff41; color: #00ff41; z-index: 1000001; pointer-events: auto; font-family: monospace; padding: 10px; display: flex; flex-direction: column;';
                 <span>SYSTEM DEBUG CONSOLE</span>
                 <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #ff3e3e; cursor: pointer;">[X]</button>
             </div>
@@ -22879,11 +23203,28 @@ const EXTRA_TOOLS = {
                 <div>[${new Date().toLocaleTimeString()}] Memory usage: ${Math.floor(Math.random() * 100 + 200)}MB</div>
                 <div>[${new Date().toLocaleTimeString()}] Active connections: ${Math.floor(Math.random() * 50 + 10)}</div>
             </div>
+            <div style="display:flex; gap:8px; margin-top:8px; margin-bottom:6px;">
+                <button style="background:#051; color:#0f0; border:1px solid #0f0; padding:6px; cursor:pointer; font-size:0.8rem;" onclick="console.log('Run AI Sim (Prof) clicked'); window.simulateAIBehavior && window.simulateAIBehavior({difficulty:'professional', ticks:40, tickInterval:50})">Run AI Sim (Prof)</button>
+                <button style="background:#220; color:#ffb86b; border:1px solid #ffb86b; padding:6px; cursor:pointer; font-size:0.8rem;" onclick="console.log('Run AI Sim (Legend) clicked'); window.simulateAIBehavior && window.simulateAIBehavior({difficulty:'legendary', ticks:80, tickInterval:20})">Run AI Sim (Legend)</button>
+                <button style="background:#111; color:#0ff; border:1px solid #0ff; padding:6px; cursor:pointer; font-size:0.8rem;" onclick="console.log('Test Suggest clicked'); typeof testInputSuggestions==='function' && testInputSuggestions()">Test Suggest</button>
+                <button style="background:#111; color:#f6f; border:1px solid #f6f; padding:6px; cursor:pointer; font-size:0.8rem;" onclick="console.log('Test Buy&Deploy clicked'); typeof testBuyAndDeploy==='function' && testBuyAndDeploy()">Test Buy&Deploy</button>
+                <button style="background:#0a0; color:#002; border:1px solid #002; padding:6px; cursor:pointer; font-weight:bold; font-size:0.85rem;" onclick="console.log('Run Full Tests clicked'); window.runAllTests && window.runAllTests()">Run Full Tests</button>
+            </div>
             <div style="margin-top: 10px; border-top: 1px solid #00ff41; padding-top: 5px;">
                 <input type="text" placeholder="Enter debug command..." style="width: 100%; background: none; border: none; color: #00ff41; outline: none;">
             </div>
         `;
         document.body.appendChild(debugModal);
+        // 自動在開啟控制台時觸發一次完整測試，便於快速驗證（若不需自動觸發可移除）
+        try {
+            if (typeof window.runAllTests === 'function') {
+                console.log('openDebugConsole: auto-trigger runAllTests');
+                // 小延遲以確保 UI 已渲染，並不會阻塞 UI
+                setTimeout(() => {
+                    window.runAllTests().then(r => console.log('runAllTests on open result', r)).catch(e => console.error('runAllTests on open error', e));
+                }, 200);
+            }
+        } catch(e) { console.error('auto-run on open error', e); }
         
         // 模擬實時日誌
         const logInterval = setInterval(() => {
