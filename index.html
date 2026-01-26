@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
+    <!-- ===== 2. CSS 樣式注入 ===== -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>對戰模式第二季 • 執法對決 SEASON 2 | Cyber Attack Simulation</title>
@@ -7508,51 +7509,25 @@
             addTerminalLine(`[AI] 已將 AI 靈敏度調整為 ${level} 模式`, 'info');
         }
 
-        // 修改快捷鍵功能：不直接執行，而是跳轉到設定版面
-        function quickAction(actionId) {
-            if (!GameState.gameActive) {
-                showNotification('遊戲未開始', '請先連接到目標', 'warning');
-                return;
-            }
-
-            addTerminalLine('[導航] 進入快捷功能設定: ' + actionId, 'info');
-            
-            // 模擬跳轉到相關執行設定版面
-            const modalHtml = `
-                <div id="quick-config-modal" style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#111; border:2px solid #4a90d9; padding:20px; z-index:10000; width:400px; box-shadow:0 0 30px rgba(0,0,0,0.9);">
-                    <h3 style="color:#4a90d9; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">執行設定: ${actionId}</h3>
-                    <div style="margin-bottom:15px; font-size:0.9rem; color:#ccc;">
-                        正在為 [${actionId}] 進行執行前參數校準...
-                        <div style="margin-top:10px;">
-                            <label>執行強度: </label>
-                            <input type="range" min="1" max="100" value="50" style="width:100%;">
-                        </div>
-                        <div style="margin-top:10px;">
-                            <label>隱蔽優先級: </label>
-                            <select style="background:#222; color:#fff; width:100%;">
-                                <option>平衡模式</option>
-                                <option>極速模式</option>
-                                <option>隱匿模式</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div style="display:flex; gap:10px; justify-content:flex-end;">
-                        <button onclick="document.getElementById('quick-config-modal').remove()" style="background:#333; color:#fff; border:none; padding:8px 15px; cursor:pointer;">取消</button>
-                        <button onclick="confirmQuickAction('${actionId}')" style="background:#4a90d9; color:#000; border:none; padding:8px 15px; cursor:pointer; font-weight:bold;">確認執行</button>
-                    </div>
-                </div>
-            `;
-            
-            const div = document.createElement('div');
-            div.innerHTML = modalHtml;
-            document.body.appendChild(div.firstChild);
-        }
+    // quickAction consolidated later in the file (single canonical implementation)
 
         function confirmQuickAction(actionId) {
-            document.getElementById('quick-config-modal').remove();
+            const qcm = document.getElementById('quick-config-modal'); if (qcm) qcm.remove();
             addTerminalLine('[執行] 參數校準完成，正式啟動: ' + actionId, 'success');
             // 這裡調用原始的執行邏輯 (為了保持兼容，我們調用一個重命名的原始函數)
-            originalQuickActionExecute(actionId);
+            if (typeof originalQuickActionExecute === 'function') {
+                    if (typeof originalQuickActionExecute === 'function') {
+                        originalQuickActionExecute(actionId);
+                    } else if (typeof executeCommand === 'function') {
+                        console.warn('originalQuickActionExecute not defined, using executeCommand fallback');
+                        executeCommand(actionId);
+                    } else {
+                        console.warn('No quick action executor available for', actionId);
+                    }
+            } else {
+                console.warn('originalQuickActionExecute is not defined, fallback to executeCommand');
+                if (typeof executeCommand === 'function') executeCommand(actionId);
+            }
         }
     
         
@@ -7602,26 +7577,7 @@
         // 全局執行狀態
         let currentExecutingAction = null;
 
-        function quickAction(actionId) {
-            if (!GameState.gameActive) {
-                showNotification('遊戲未開始', '請先連接到目標', 'warning');
-                return;
-            }
-
-            // 一鍵式攻擊保持原樣
-            if (actionId === 'one_click_attack') {
-                originalQuickActionExecute(actionId);
-                return;
-            }
-
-            const config = ActionConfigs[actionId] || {
-                title: '功能執行設定',
-                options: [{ label: '執行強度', type: 'range', id: 'power', min: 1, max: 100, default: 50 }],
-                duration: 5000
-            };
-
-            showActionConfigModal(actionId, config);
-        }
+    // quickAction consolidated later in the file (single canonical implementation)
 
         function showActionConfigModal(actionId, config) {
             let optionsHtml = '';
@@ -7719,7 +7675,14 @@
                 const container = document.getElementById('progress-container');
                 if (container) container.remove();
                 addTerminalLine('[成功] 功能執行完畢: ' + actionId, 'success');
-                originalQuickActionExecute(actionId);
+                if (typeof originalQuickActionExecute === 'function') {
+                    originalQuickActionExecute(actionId);
+                } else if (typeof executeCommand === 'function') {
+                    console.warn('originalQuickActionExecute not defined, using executeCommand fallback');
+                    executeCommand(actionId);
+                } else {
+                    console.warn('No quick action executor available for', actionId);
+                }
             }, 500);
         }
     
@@ -7848,17 +7811,7 @@
             };
         }
 
-        function quickAction(actionId) {
-            if (!GameState.gameActive) {
-                showNotification('遊戲未開始', '請先連接到目標', 'warning');
-                return;
-            }
-            if (actionId === 'one_click_attack') {
-                originalQuickActionExecute(actionId);
-                return;
-            }
-            showFullscreenHub(actionId);
-        }
+    // quickAction consolidated later in the file (single canonical implementation)
     
         
         // 商店數據
@@ -7869,65 +7822,11 @@
             { id: 'ai_analyser', name: 'AI行為分析儀', price: 10000, effect: { investigation: 20 }, desc: '提升證據收集效率' }
         ];
 
-        function openShop() {
-            const config = {
-                title: '暗網物資商店 / 執法裝備庫',
-                options: [],
-                duration: 0
-            };
-            showFullscreenHub('open_shop');
-            
-            let shopHtml = `
-                <div style="margin-bottom:20px; padding:15px; background:rgba(74,144,217,0.1); border:1px solid #4a90d9;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span>當前可用資金: <span id="current-money" style="color:#00ff41; font-weight:bold;">$${GameState.playerData[GameState.currentRole].money}</span></span>
-                        <button onclick="rechargeMoney()" style="background:#ff9900; color:#000; border:none; padding:5px 15px; cursor:pointer; font-weight:bold;">充值資金</button>
-                    </div>
-                </div>
-                <div id="shop-items-list">
-                    ${ShopItems.map(item => `
-                        <div class="shop-item-card">
-                            <div>
-                                <div style="font-weight:bold; color:#fff;">${item.name}</div>
-                                <div style="font-size:0.75rem; color:#888;">${item.desc}</div>
-                            </div>
-                            <div style="text-align:right;">
-                                <div style="color:#ff9900; margin-bottom:5px;">$${item.price}</div>
-                                <button onclick="buyItem('${item.id}')" style="background:#4a90d9; color:#000; border:none; padding:4px 10px; cursor:pointer; font-size:0.8rem;">購買</button>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            document.getElementById('hub-config-content').innerHTML = shopHtml;
-            document.getElementById('hub-execute-btn').style.display = 'none'; // 商店不需要執行按鈕
-        }
+    function openShop() { ShopSystem.open(); }
 
-        function rechargeMoney() {
-            const amount = prompt("請輸入充值金額 (虛擬測試):", "10000");
-            if (amount && !isNaN(amount)) {
-                GameState.playerData[GameState.currentRole].money += parseInt(amount);
-                addTerminalLine(`[充值] 成功充值 $${amount}`, 'success');
-                openShop(); // 刷新商店
-            }
-        }
+    function rechargeMoney() { ShopSystem.open(); }
 
-        function buyItem(itemId) {
-            const item = ShopItems.find(i => i.id === itemId);
-            const role = GameState.currentRole;
-            if (GameState.playerData[role].money >= item.price) {
-                GameState.playerData[role].money -= item.price;
-                // 應用效果
-                if (item.effect.stealth) GameState.playerData[role].stealth += item.effect.stealth;
-                if (item.effect.attack) GameState.playerData[role].attackPower += item.effect.attack;
-                
-                addTerminalLine(`[購買] 成功獲得 ${item.name}，已即時部署到系統`, 'success');
-                showNotification('購買成功', item.name + ' 已啟用', 'success');
-                openShop(); // 刷新
-            } else {
-                showNotification('資金不足', '請先充值資金', 'error');
-            }
-        }
+    function buyItem(itemId) { ShopSystem.buy(itemId); }
 
         // 修改原本的 openUpgradeSystem 導向商店
         function openUpgradeSystem() {
@@ -7941,8 +7840,8 @@
         ActionConfigs['honeypot_gen'] = { title: '誘捕網絡生成器', options: [{label:'偽裝類型', type:'select', id:'type', values:['Web Server','Database','SSH Service']}], duration: 6000 };
         ActionConfigs['darknet_hub'] = { title: '暗網中介聯絡站', options: [{label:'加密頻道', type:'select', id:'channel', values:['Tor','I2P','ZeroNet']}], duration: 4000 };
     
-        // ===== 全局變量 =====
-        let GameState = {
+    // ===== 全局變量 =====
+    window.GameState = window.GameState || {
             currentRole: null,
             currentPage: 'main',
             gameActive: false,
@@ -8729,6 +8628,7 @@
                     document.getElementById('nav-season2').classList.add('active');
                     break;
             }
+    }
 
         // ===== 漢堡菜單控制 =====
         function toggleMobileMenu() {
@@ -8756,8 +8656,7 @@
                 hamburger.classList.remove('active');
                 mobileMenu.classList.remove('active');
             }
-        });
-        }
+    });
 
         // ===== 戰況地圖函數 =====
         function showBattleMap() {
@@ -12722,51 +12621,8 @@
             addTerminalLine(`[${new Date().toLocaleTimeString('zh-TW')}] [商店] ${role === 'hacker' ? '黑客' : '執法部門'}商店已打開`, 'info');
         }
 
-        function buyItem(itemId, price) {
-            const role = GameState.currentRole;
-            const player = GameState.playerData[role === 'hacker' ? 'hacker' : 'law_enforcement'];
-            const budget = role === 'hacker' ? 'money' : 'budget';
-            const budgetLabel = role === 'hacker' ? '金額' : '預算';
-            
-            if (player[budget] >= price) {
-                // 創建購買確認視窗
-                const confirmMsg = `確定要花費 $${price} 購買此物品嗎？\n現在有 $${player[budget]} ${budgetLabel}`;
-                
-                if (!confirm(confirmMsg)) return;
-                
-                // 執行購買
-                player[budget] -= price;
-                
-                // 添加到交易歷史
-                const now = new Date();
-                const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-                GameState.transactionHistory.unshift({
-                    type: `購買物品 #${itemId}`,
-                    amount: `-$${price}`,
-                    time: timeStr,
-                    details: `成功購買，當前餘額: $${player[budget]}`
-                });
-                
-                // 限制歷史記錄長度
-                if (GameState.transactionHistory.length > 50) {
-                    GameState.transactionHistory.pop();
-                }
-                
-                // 實時終端日誌
-                addTerminalLine(`[${timeStr}] [購買成功] 花費 $${price} 購買物品 #${itemId}`, 'success');
-                
-                // 顯示購買成功通知
-                showNotification('購買成功！', `已花費 $${price}，現有 $${player[budget]} ${budgetLabel}`, 'success');
-                
-                // 更新所有UI
-                updateGameStats();
-                openShop(); // 刷新商店視窗顯示
-            } else {
-                const shortage = price - player[budget];
-                showNotification('資金不足', `您缺少 $${shortage}。現有 $${player[budget]} ${budgetLabel}`, 'warning');
-                addTerminalLine(`[購買失敗] 資金不足，需要 $${price}，但只有 $${player[budget]}`, 'error');
-            }
-        }
+    // Delegate generic buy action to ShopSystem
+    function buyItem(itemId, price) { ShopSystem.buy(itemId, price); }
 
         function openTransactionHistory() {
             const historyModal = document.getElementById('history-modal');
@@ -12983,19 +12839,8 @@
             showNotification('過濾', `已切換到 ${category} 分類`, 'info');
         }
 
-        function buyShopItem(itemId, price) {
-            const role = GameState.currentRole;
-            const player = GameState.playerData[role === 'hacker' ? 'hacker' : 'law_enforcement'];
-            const budget = role === 'hacker' ? 'money' : 'budget';
-            
-            if (player[budget] >= price) {
-                player[budget] -= price;
-                showNotification('購買成功', `已購買物品 ${itemId}`, 'success');
-                updateGameStats();
-            } else {
-                showNotification('資金不足', '您的資金不足以購買此物品', 'warning');
-            }
-        }
+    // Delegate purchases to the unified ShopSystem
+    function buyShopItem(itemId, price) { ShopSystem.buy(itemId, price); }
 
         // ===== 更新導航活動狀態 =====
         function updateNavActiveExtended() {
@@ -16420,15 +16265,6 @@ function extendCommandSystemV3() {
 setTimeout(extendCommandSystemV3, 1000);
 
 
-
-
-/**
- * UI 優化與響應式修復
- * 1. 重塑暗網風格
- * 2. 修復文字遮蓋
- * 3. 手機/電腦全適配
- */
-
 function applyUIOptimizations() {
     // 1. 注入響應式與暗網風格 CSS
     const style = document.createElement('style');
@@ -17283,22 +17119,7 @@ function applyUltimateFixAndShop() {
         `;
     };
 
-    window.buyShopItem = function(itemId) {
-        const role = GameState.currentRole;
-        const item = ShopData[role].find(i => i.id === itemId);
-        const moneyField = role === 'hacker' ? 'money' : 'budget';
-        const currentMoney = GameState.playerData[role][moneyField] || (role === 'law_enforcement' ? 10000 : 0);
-
-        if (currentMoney >= item.price) {
-            GameState.playerData[role][moneyField] = currentMoney - item.price;
-            item.action();
-            updateGameStats();
-            openShop(); // 刷新商店顯示
-            showNotification('購買成功', `已獲得 ${item.name}`, 'success');
-        } else {
-            showNotification('資金不足', `你需要 $${item.price} 才能購買此物品`, 'error');
-        }
-    };
+    // delegated to ShopSystem elsewhere
 
     // 3. 修正所有彈出視窗的觸發邏輯
     window.openHackerShop = openShop;
@@ -18323,6 +18144,194 @@ function applyCombatAndEconomy() {
 
 // 執行升級
 setTimeout(applyCombatAndEconomy, 4000);
+
+</script>
+<script>
+// COMMAND version
+window.COMMAND_VERSION = '5.0';
+
+// Unified Shop System (replaces older fragmented implementations at runtime)
+window.ShopSystem = (function(){
+    const catalog = {
+        hacker: [
+            { id: 'vpn_chain', name: '高級VPN鏈', price: 20000, category: 'stealth', desc: '增加隱蔽度', icon: 'fa-link' },
+            { id: 'zero_day', name: '零日漏洞利用', price: 50000, category: 'attack', desc: '增加攻擊力', icon: 'fa-bomb' },
+            { id: 'crypto_mixer', name: '加密貨幣混合器', price: 30000, category: 'finance', desc: '混淆資金流向', icon: 'fa-coins' },
+            { id: 'identity_hider', name: '身份隱藏器', price: 55000, category: 'stealth', desc: '完全隱藏身份', icon: 'fa-user-secret' }
+        ],
+        law_enforcement: [
+            { id: 'ai_analyst', name: 'AI分析師', price: 30000, category: 'investigation', desc: '提升調查速度', icon: 'fa-robot' },
+            { id: 'forensic_suite', name: '高級鑑識套件', price: 50000, category: 'forensics', desc: '提升證據質量', icon: 'fa-search' },
+            { id: 'intercept_key', name: '合法攔截密鑰', price: 70000, category: 'decryption', desc: '解密通訊', icon: 'fa-key' },
+            { id: 'evidence_protector', name: '證據保護系統', price: 55000, category: 'defense', desc: '防止證據污染', icon: 'fa-shield-alt' }
+        ]
+    };
+
+    let activeCategory = 'all';
+    let currentRole = null;
+
+    function ensureModal() {
+        let modal = document.getElementById('shop-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.id = 'shop-modal';
+            modal.innerHTML = `<div class="modal-content shop-modal-content"><div style="display:flex;justify-content:space-between;align-items:center"><h3 id="shop-modal-title">商店</h3><button onclick="document.getElementById('shop-modal').style.display='none'">×</button></div><div id="shop-controls" style="margin:10px 0"></div><div id="shop-message"></div></div>`;
+            document.body.appendChild(modal);
+        }
+        return modal;
+    }
+
+    function formatMoney(n){ return '$' + (n||0).toLocaleString(); }
+
+    function renderControls(role){
+        const controls = document.getElementById('shop-controls');
+        if (!controls) return;
+        const cats = Array.from(new Set(['all'].concat((catalog[role]||[]).map(i=>i.category))));
+        controls.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><div style="font-weight:bold;margin-right:8px">分類:</div>` + cats.map(c=>`<button class="shop-filter-btn" data-cat="${c}" onclick="ShopSystem.filter('${c}')" style="padding:6px;border:1px solid #444;background:${c==='all'?'#222':'transparent'};color:#fff;border-radius:4px">${c}</button>`).join('') + `</div>`;
+    }
+
+    function renderItems(role){
+        const container = document.getElementById('shop-message');
+        if (!container) return;
+        const items = (catalog[role]||[]).filter(i => activeCategory === 'all' ? true : i.category === activeCategory);
+        const money = getCurrency(role);
+        const html = items.map(item => `
+            <div class="shop-item-card" style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid rgba(255,255,255,0.03)">
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div style="width:36px;height:36px;border-radius:6px;background:#111;display:flex;align-items:center;justify-content:center"><i class="fas ${item.icon}"></i></div>
+                    <div>
+                        <div style="font-weight:bold">${item.name}</div>
+                        <div style="font-size:0.85rem;color:#aaa">${item.desc}</div>
+                    </div>
+                </div>
+                <div style="text-align:right">
+                    <div style="font-weight:bold;color:#ffd700">${formatMoney(item.price)}</div>
+                    <div style="margin-top:6px"><button onclick="ShopSystem.buy('${item.id}')" style="padding:6px 10px;border-radius:6px;background:${money>=item.price?'#00aaff':'#444'};color:#000;border:none;cursor:pointer">購買</button></div>
+                </div>
+            </div>
+        `).join('');
+        container.innerHTML = `<div style="margin-bottom:8px;color:#bbb">可用資金: <span style='font-weight:bold;color:#00ff88'>${formatMoney(money)}</span></div>` + (html || '<div style="color:#999;padding:12px">無此分類商品</div>');
+    }
+
+    function getCurrency(role){
+        try{
+            if (!window.GameState || !window.GameState.playerData) return 0;
+            if (role === 'hacker') return window.GameState.playerData.hacker.darknetCredits || window.GameState.playerData.hacker.money || 0;
+            return window.GameState.playerData.law_enforcement.budget || window.GameState.playerData.law_enforcement.money || 0;
+        }catch(e){return 0}
+    }
+
+    function adjustCurrency(role, delta){
+        if (!window.GameState || !window.GameState.playerData) return;
+        if (role === 'hacker') {
+            window.GameState.playerData.hacker.darknetCredits = (window.GameState.playerData.hacker.darknetCredits||0) + delta;
+        } else {
+            window.GameState.playerData.law_enforcement.budget = (window.GameState.playerData.law_enforcement.budget||0) + delta;
+        }
+    }
+
+    function applyItemEffect(role,item){
+        // simple effect handlers (extend as needed)
+        const pd = window.GameState.playerData[role];
+        if (!pd) return;
+        pd.tools = pd.tools || [];
+        pd.tools.push(item.id);
+        if (item.category === 'stealth') pd.stealth = Math.min(100,(pd.stealth||0) + 10);
+        if (item.category === 'attack') pd.attackPower = (pd.attackPower||0) + 10;
+        if (item.category === 'defense') pd.serverHealth = Math.min(100,(pd.serverHealth||0) + 8);
+    }
+
+    return {
+        open(role){
+            currentRole = role || (window.GameState && window.GameState.currentRole) || 'hacker';
+            const modal = ensureModal();
+            document.getElementById('shop-modal-title').textContent = `${currentRole === 'hacker' ? '黑客商店' : '執法商店'} - 商店 (v${window.COMMAND_VERSION})`;
+            renderControls(currentRole);
+            renderItems(currentRole);
+            modal.style.display = 'flex';
+        },
+        filter(cat){ activeCategory = cat; renderItems(currentRole); },
+        buy(itemId){
+            const role = currentRole || (window.GameState && window.GameState.currentRole) || 'hacker';
+            const item = (catalog[role]||[]).find(i => i.id === itemId);
+            if (!item) { showNotification('購買失敗','商品不存在','error'); return; }
+            const money = getCurrency(role);
+            if (money < item.price) { showNotification('資金不足','你沒有足夠資金購買此商品','error'); return; }
+            adjustCurrency(role, -item.price);
+            applyItemEffect(role,item);
+            if (typeof addTerminalLine === 'function') addTerminalLine(`[購買] ${item.name} 已購買 (${role})`, 'success');
+            showNotification('購買成功', `${item.name} 已加入你的裝備`, 'success');
+            // analytics event
+            if (window.Analytics && typeof window.Analytics.recordEvent === 'function') {
+                window.Analytics.recordEvent('purchase', { role, itemId, price: item.price });
+            }
+            renderItems(role);
+            if (typeof updateShopUI === 'function') updateShopUI();
+            if (typeof updateGameStats === 'function') updateGameStats();
+        },
+        // expose for wiring
+        _catalog: catalog,
+        filter: function(cat){ this.filter(cat); }
+    };
+})();
+
+// override global hooks to point to unified shop
+window.openShop = function(){ ShopSystem.open(); };
+window.openHackerShop = window.openLEShop = window.openShop;
+// delegated to ShopSystem elsewhere
+
+// Lightweight Analytics upgrade: track game stats & trends
+window.Analytics = (function(){
+    const history = [];
+    function snapshot(){
+        if (!window.GameState) return;
+        const t = { time: Date.now() };
+        try{
+            t.hacker_money = window.GameState.playerData.hacker.money || 0;
+            t.hacker_darknet = window.GameState.playerData.hacker.darknetCredits || 0;
+            t.le_budget = window.GameState.playerData.law_enforcement.budget || 0;
+            t.cases_open = (window.LE_SYSTEM && window.LE_SYSTEM.cases) ? window.LE_SYSTEM.cases.length : 0;
+            t.inventory_counts = { hacker: (window.GameState.playerData.hacker.tools||[]).length, le: (window.GameState.playerData.law_enforcement.tools||[]).length };
+        }catch(e){ }
+        history.push(t);
+        if (history.length > 200) history.shift();
+    }
+
+    setInterval(snapshot, 30000); // capture every 30s
+
+    function computeSummary(){
+        if (!history.length) return {};
+        const last = history[history.length-1];
+        const first = history[0];
+        return {
+            snapshots: history.length,
+            hacker_money_delta: last.hacker_money - (first.hacker_money||0),
+            le_budget_delta: last.le_budget - (first.le_budget||0),
+            avg_hacker_money: Math.round(history.reduce((s,h)=>s+(h.hacker_money||0),0)/history.length)
+        };
+    }
+
+    function openDashboard(){
+        const id = 'analytics-dashboard-modal';
+        let modal = document.getElementById(id);
+        if (!modal) {
+            modal = document.createElement('div'); modal.id = id; modal.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:780px;max-width:95%;background:#071428;color:#fff;padding:18px;border:2px solid #4a90d9;z-index:100000;border-radius:8px;';
+            modal.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><h3>數據分析儀表板 v${window.COMMAND_VERSION}</h3><button onclick="document.getElementById('${id}').remove()">Close</button></div><div id="analytics-body" style="margin-top:12px"></div>`;
+            document.body.appendChild(modal);
+        }
+        const body = document.getElementById('analytics-body');
+        const summary = computeSummary();
+        body.innerHTML = `<div style="display:flex;gap:12px"><div style="flex:1"><h4>即時統計</h4><p>快照數: ${summary.snapshots||0}</p><p>黑客資金變化: ${summary.hacker_money_delta||0}</p><p>執法部門預算變化: ${summary.le_budget_delta||0}</p></div><div style="flex:1"><h4>趨勢圖</h4><canvas id="analytics-canvas" width="300" height="140" style="background:#021018;border:1px solid rgba(255,255,255,0.03)"></canvas></div></div>`;
+        // draw simple sparkline of hacker money
+        const c = document.getElementById('analytics-canvas'); if (c && history.length){ const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); const values = history.map(h=>h.hacker_money||0); const min=Math.min(...values); const max=Math.max(...values); const range = Math.max(1,max-min); for(let i=0;i<values.length;i++){ const x = (i/(values.length-1))*(c.width-10)+5; const y = c.height-5 - ((values[i]-min)/range)*(c.height-10); if(i===0){ ctx.beginPath(); ctx.moveTo(x,y);} else { ctx.lineTo(x,y);} } ctx.strokeStyle='#00ff88'; ctx.lineWidth=2; ctx.stroke(); }
+    }
+
+    return { recordEvent: (type,data)=>{ history.push(Object.assign({time:Date.now(),type},data)); if(history.length>400) history.shift(); }, openDashboard, _history: history };
+})();
+
+// Expose quick commands
+window.openAnalyticsDashboard = function(){ window.Analytics.openDashboard(); };
 
 </script>
     
@@ -19429,20 +19438,11 @@ window.showDarknetHub = function() {
     }
 };
 
-// 覆蓋原有的 buyShopItem
-const originalBuyShopItem = buyShopItem;
+// Hook purchases to trigger any special tool behavior after ShopSystem handles the transaction
 buyShopItem = function(itemId, price) {
-    const role = GameState.currentRole;
-    const player = GameState.playerData[role === 'hacker' ? 'hacker' : 'law_enforcement'];
-    const budget = role === 'hacker' ? 'money' : 'budget';
-    
-    if (player[budget] >= price) {
-        originalBuyShopItem(itemId, price);
-        if (['hardware_spoof', 'memory_attack', 'zero_day'].includes(itemId)) {
-            EnhancedSimulation.executeSpecialTool(itemId);
-        }
-    } else {
-        showNotification('資金不足', '您的資金不足以購買此物品', 'warning');
+    ShopSystem.buy(itemId, price);
+    if (['hardware_spoof', 'memory_attack', 'zero_day'].includes(itemId) && window.EnhancedSimulation) {
+        EnhancedSimulation.executeSpecialTool(itemId);
     }
 };
     </script>
@@ -20197,10 +20197,9 @@ if (false) {
 <!-- 修正版本：角色面板去重複且頂部狀態欄優化 -->
 <script>
 /**
- * 修正版本：角色面板去重複且頂部狀態欄優化
+ * 生成頂部狀態欄
  */
-
-(function() {
+function generateTopStatusBar() {
     // ===== 1. 頂部狀態欄 CSS =====
     
     const topStatusStyles = document.createElement('style');
@@ -20267,6 +20266,7 @@ if (false) {
             margin-top: 45px;
         }
     `;
+
     document.head.appendChild(topStatusStyles);
 
     // ===== 2. 頂部狀態欄生成函數 =====
@@ -20603,13 +20603,12 @@ if (false) {
         }
     }, 1500);
 
-})();
 
 <!-- 執法部門專業儀表分析系統 -->
 
 
 
-(function() 
+(function() {
     // ===== 1. 核心數據結構 =====
     
     window.LEDashboardData = {
@@ -20825,11 +20824,11 @@ if (false) {
             }
         ]
     
-
+        };
     // ===== 2. CSS 樣式注入 =====
-    
-    const  dashboardStyles = document.createElement('style');
-    dashboardStyles.textContent = `
+
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
         /* 主容器 */
         .le-professional-dashboard {
             margin-top: 30px;
@@ -21083,8 +21082,8 @@ if (false) {
                 grid-template-columns: 1fr;
             }
         }
-    `;
-    document head.appendChild(dashboardStyles);
+    `
+    document.head.appendChild(styleElement);
 
     // ===== 3. UI 生成函數 =====
 
@@ -21265,7 +21264,7 @@ if (false) {
         container.appendChild(commandCard);
         container.appendChild(coordCard);
         container.appendChild(serverCard);
-    };
+    }
 
     // ===== 4. 遊戲循環集成 =====
 
@@ -22778,7 +22777,7 @@ const LE_SYSTEM = {
             <div style="background: #0a0a1a; border: 2px solid #4a90d9; padding: 30px; max-width: 800px; width: 90%; border-radius: 10px; max-height: 90vh; overflow-y: auto;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2 style="color: #4a90d9; margin: 0;">📝 案件結案報告撰寫器</h2>
-                    <button onclick="document.getElementById('report-builder-modal').remove()" style="background: #ff3e3e; border: none; color: white; padding: 5px 15px; border-radius: 5px; cursor: pointer;">×</button>
+                    <button onclick="(function(){var e=document.getElementById('report-builder-modal'); if(e) e.remove();})()" style="background: #ff3e3e; border: none; color: white; padding: 5px 15px; border-radius: 5px; cursor: pointer;">×</button>
                 </div>
                 
                 <div style="background: rgba(74, 144, 217, 0.1); padding: 15px; border-radius: 5px; margin-bottom: 20px;">
@@ -23012,7 +23011,7 @@ const LE_SYSTEM = {
                     <button onclick="LE_SYSTEM.executeWarrant('${caseId}')" style="background: #d00; color: #fff; border: none; padding: 10px 30px; font-size: 1.1rem; font-weight: bold; cursor: pointer; border-radius: 5px;">執行追捕行動</button>
                 </div>
                 
-                <button onclick="document.getElementById('warrant-modal').remove()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+                <button onclick="(function(){var e=document.getElementById('warrant-modal'); if(e) e.remove();})()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
             </div>
         `;
         
@@ -23195,10 +23194,12 @@ const EXTRA_TOOLS = {
         const debugModal = document.createElement('div');
         debugModal.id = 'debug-console-modal';
         debugModal.style.cssText = 'position: fixed; top: 50px; right: 50px; width: 400px; height: 500px; background: rgba(0,0,0,0.95); border: 1px solid #00ff41; color: #00ff41; z-index: 1000001; pointer-events: auto; font-family: monospace; padding: 10px; display: flex; flex-direction: column;';
-                <span>SYSTEM DEBUG CONSOLE</span>
-                <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #ff3e3e; cursor: pointer;">[X]</button>
+        debugModal.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:bold;">SYSTEM DEBUG CONSOLE</span>
+                <button onclick="(function(el){var p=el&&el.parentElement&&el.parentElement; if(p) p.remove();})(this)" style="background: none; border: none; color: #ff3e3e; cursor: pointer;">[X]</button>
             </div>
-            <div id="debug-log-content" style="flex-grow: 1; overflow-y: auto; font-size: 0.75rem;">
+            <div id="debug-log-content" style="flex-grow: 1; overflow-y: auto; font-size: 0.75rem; margin-top:8px;">
                 <div>[${new Date().toLocaleTimeString()}] Debugger attached.</div>
                 <div>[${new Date().toLocaleTimeString()}] Memory usage: ${Math.floor(Math.random() * 100 + 200)}MB</div>
                 <div>[${new Date().toLocaleTimeString()}] Active connections: ${Math.floor(Math.random() * 50 + 10)}</div>
@@ -23235,7 +23236,8 @@ const EXTRA_TOOLS = {
             }
             const div = document.createElement('div');
             div.textContent = `[${new Date().toLocaleTimeString()}] ${['TRACE', 'DEBUG', 'INFO'][Math.floor(Math.random()*3)]}: ${Math.random().toString(36).substring(7)} packet processed.`;
-            logContent.appendChild(div);
+            logContent.appendChild(div) 
+
             logContent.scrollTop = logContent.scrollHeight;
         }, 2000);
     },
@@ -23285,8 +23287,8 @@ const EXTRA_TOOLS = {
         this.updateUI();
     },
 
-    // 4. 比較分析檢測版
-    startComparativeAnalysis() {
+
+  startComparativeAnalysis() {
         if (typeof LE_SYSTEM === 'undefined' || LE_SYSTEM.cases.length === 0) {
             showNotification('無活躍案件可供分析！', 'error');
             return;
@@ -23333,7 +23335,7 @@ const EXTRA_TOOLS = {
                 <div style="margin-top: 15px; font-size: 0.8rem; color: #888; text-align: center;">
                     * 調查進度已提升 15% | 數據已同步至 INTERPOL 全球數據庫
                 </div>
-                <button onclick="this.parentElement.remove()" style="margin-top: 15px; width: 100%; padding: 12px; background: #ffd700; border: none; color: #000; font-weight: bold; cursor: pointer; border-radius: 5px; transition: background 0.3s;">確認並歸檔報告</button>
+                <button onclick="(function(el){var p=el&&el.parentElement; if(p) p.remove();})(this)" style="margin-top: 15px; width: 100%; padding: 12px; background: #ffd700; border: none; color: #000; font-weight: bold; cursor: pointer; border-radius: 5px; transition: background 0.3s;">確認並歸檔報告</button>
             `;
             document.body.appendChild(analysisResult);
             
@@ -23445,7 +23447,7 @@ function activateResourceResupply() {
     
     setTimeout(() => {
         const amount = 500 + Math.floor(Math.random() * 1000);
-        GameState.playerData[role].coins += amount;
+    GameState.playerData[role].coins = (GameState.playerData[role].coins || 0) + amount;
         
         // 隨機增加一些屬性
         if (role === 'law_enforcement') {
@@ -23492,7 +23494,7 @@ function openEvidenceValidator() {
             </div>
             
             <div style="text-align:right; margin-top:20px;">
-                <button onclick="document.getElementById('evidence-validator-modal').remove()" 
+                <button onclick="(function(){var e=document.getElementById('evidence-validator-modal'); if(e) e.remove();})()" 
                     style="background:transparent; border:1px solid #aaa; color:#aaa; padding:8px 20px; border-radius:5px; cursor:pointer;">
                     關閉
                 </button>
@@ -24054,6 +24056,8 @@ document.addEventListener('touchend', (ev)=>{ if(!touchStartY) return; const end
 function initVoiceCommands(){ if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return; const R = window.SpeechRecognition || window.webkitSpeechRecognition; const rec = new R(); rec.continuous=false; rec.onresult = (e)=>{ const txt = e.results[0][0].transcript.toLowerCase(); if(txt.includes('evidence')) openEvidenceGraph(); if(txt.includes('defense')) openDefenseTools(); if(txt.includes('monitor')) openMonitoringPanel(); }; rec.onerror=()=>{}; return rec; }
 window.voiceRec = initVoiceCommands();
 
+}
+}
 </script>
 </body>
 </html>
