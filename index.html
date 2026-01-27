@@ -1400,7 +1400,14 @@
             background: #00ff41;
             animation: pulse 2s infinite;
         }
-
+            /* Additional styles for status indicator */
+            .status-indicator.active {
+                background: #00ff41;
+            }
+            .status-indicator.disconnected {
+                background: #ff3333;
+                animation: none;
+            }
         .status-indicator.disconnected {
             background: #ff3333;
             animation: none;
@@ -6397,6 +6404,8 @@
             <li><a onclick="showInterceptPage()" id="nav-intercept">通信攔截</a></li>
             <li><a onclick="showTrapPage()" id="nav-trap">網絡陷阱</a></li>
             <li><a onclick="showDeviceNetworkMonitor()" id="nav-monitor">📊 監控系統</a></li>
+            <li><a onclick="openTacticalOps()" id="nav-tactical">🛡️ 戰術行動</a></li>
+            <li><a onclick="openImmersiveInvestigation()" id="nav-immersive">🔍 沉浸式調查</a></li>
             <!-- 角色工具按鈕已移到角色卡片內，頂欄保留簡潔導航 -->
             <li><a onclick="showLECenter()" id="nav-le-center">執法指揮中心</a></li>
             <li><a onclick="showEvidencePage()" id="nav-evidence">證據庫</a></li>
@@ -6404,6 +6413,10 @@
             <li><a onclick="openShop()" id="nav-shop">商店</a></li>
             <li><a onclick="openTransactionHistory()" id="nav-history">交易記錄</a></li>
         </ul>
+        <!-- 全域匯出按鈕 -->
+        <div style="margin-left:12px;">
+            <button class="btn" onclick="exportFullSystemSnapshotJSON()">匯出全部快照</button>
+        </div>
         <!-- 漢堡菜單按鈕 -->
         <div class="hamburger-menu" id="hamburger-menu" onclick="toggleMobileMenu()">
             <span></span>
@@ -6427,7 +6440,7 @@
         <li><a onclick="showGuide(); closeMobileMenu()" id="nav-guide-mobile">操作指南</a></li>
         <li><a onclick="openDarknetHub(); closeMobileMenu()" id="nav-darknet-mobile">暗網聯絡站</a></li>
         <li><a onclick="openShop(); closeMobileMenu()" id="nav-shop-mobile">商店</a></li>
-        <li><a onclick="openTransactionHistory(); closeMobileMenu()" id="nav-history-mobile">交易記錄</a></li>
+    <li><a onclick="openTransactionHistory(); closeMobileMenu()" id="nav-history-mobile">交易記錄</a></li>
     </ul>
 
     <!-- 屏幕效果 -->
@@ -12547,30 +12560,37 @@
             openShop();
         }
 
-        function openShop() {
+    // global tool version
+    const TOOL_VERSION = '5.5.0';
+
+    function openShop() {
             const shopModal = document.getElementById('shop-modal');
             if (!shopModal) return;
             const role = GameState.currentRole;
             
-            // 定義角色特定的商店物品
+            // 定義角色特定的商店物品（每個工具皆標示版本）
             const shopItems = {
                 law_enforcement: [
-                    { id: 'firewall_pro', name: '企業級防火牆', price: 0, effect: '預設已購買 - 阻擋99%惡意流量', tier: 'premium' },
-                    { id: 'edm_system', name: '端點檢測與響應(EDR)', price: 0, effect: '預設已購買 - 實時威脅檢測和隔離', tier: 'premium' },
-                    { id: 'threat_intelligence', name: '威脅情報平台', price: 0, effect: '預設已購買 - 接收全球威脅數據', tier: 'premium' },
-                    { id: 'advanced_analytics', name: '大數據行為分析工具', price: 0, effect: '預設已購買 - AI驅動的異常檢測', tier: 'premium' },
-                    { id: 'forensics_toolkit', name: '數位鑑識工具包', price: 0, effect: '預設已購買 - 深度證據提取和分析', tier: 'premium' },
-                    { id: 'drone_tracking', name: '無人機追蹤系統', price: 50000, effect: '追蹤目標物理位置 - 增加定位成功率50%', tier: 'advanced' },
-                    { id: 'satellite_imaging', name: '衛星影像掃描', price: 80000, effect: '實時衛星覆蓋 - 監控大範圍區域', tier: 'advanced' }
+                    { id: 'firewall_pro', name: '企業級防火牆', price: 0, effect: '預設已購買 - 阻擋99%惡意流量', tier: 'premium', version: TOOL_VERSION },
+                    { id: 'edm_system', name: '端點檢測與響應(EDR)', price: 0, effect: '預設已購買 - 實時威脅檢測和隔離', tier: 'premium', version: TOOL_VERSION },
+                    { id: 'threat_intelligence', name: '威脅情報平台', price: 0, effect: '預設已購買 - 接收全球威脅數據', tier: 'premium', version: TOOL_VERSION },
+                    { id: 'advanced_analytics', name: '大數據行為分析工具', price: 0, effect: '預設已購買 - AI驅動的異常檢測', tier: 'premium', version: TOOL_VERSION },
+                    { id: 'forensics_toolkit', name: '數位鑑識實驗室系統', price: 0, effect: '預設已購買 - 含記憶體轉儲、硬碟映像驗證、網路封包重組等模組 (v' + TOOL_VERSION + ')', tier: 'premium', version: TOOL_VERSION, features: ['memory_dump','disk_verify','packet_reassembly','timeline_analysis','signature_verifier','legal_simulator','warrant_simulator'] },
+                    { id: 'warrant_system', name: '搜索令申請系統 (模擬)', price: 0, effect: '模擬搜索令申請、法官批准進度與法律要件檢查', tier: 'premium', version: TOOL_VERSION },
+                    { id: 'judge_approval_monitor', name: '法官批准進度系統', price: 0, effect: '追蹤搜索令與授權流程進度', tier: 'premium', version: TOOL_VERSION },
+                    { id: 'legal_checklist_tool', name: '法律要件檢查清單', price: 0, effect: '協助檢查證據鏈與程序合規性', tier: 'premium', version: TOOL_VERSION },
+                    { id: 'trial_readiness', name: '庭審準備度評估', price: 0, effect: '評估證據採納性與庭審準備狀態', tier: 'premium', version: TOOL_VERSION },
+                    { id: 'drone_tracking', name: '無人機追蹤系統', price: 50000, effect: '追蹤目標物理位置 - 增加定位成功率50%', tier: 'advanced', version: TOOL_VERSION },
+                    { id: 'satellite_imaging', name: '衛星影像掃描', price: 80000, effect: '實時衛星覆蓋 - 監控大範圍區域', tier: 'advanced', version: TOOL_VERSION }
                 ],
                 hacker: [
-                    { id: 'basic_scanner', name: '基礎網絡掃描器', price: 0, effect: '預設已購買 - 基本端口掃描', tier: 'free' },
-                    { id: 'vuln_scanner', name: '漏洞掃描工具', price: 5000, effect: '自動檢測常見漏洞', tier: 'basic' },
-                    { id: 'proxy_chain', name: '多層代理鏈工具', price: 8000, effect: '隱蔽度+30%，增加追蹤難度', tier: 'intermediate' },
-                    { id: 'exploit_kit', name: '漏洞利用框架', price: 15000, effect: '包含50個常用漏洞利用', tier: 'advanced' },
-                    { id: 'malware_builder', name: '惡意軟體生成器', price: 25000, effect: '定制化勒索軟體和木馬', tier: 'advanced' },
-                    { id: 'ddos_botnet', name: 'DDoS 殭屍網絡訪問', price: 12000, effect: '每月租賃 - 控制10萬台設備', tier: 'advanced' },
-                    { id: 'ransomware_premium', name: '頂級勒索軟體變種', price: 35000, effect: '軍事級加密 + 雙層勒索機制', tier: 'elite' }
+                    { id: 'basic_scanner', name: '基礎網絡掃描器', price: 0, effect: '預設已購買 - 基本端口掃描', tier: 'free', version: TOOL_VERSION },
+                    { id: 'vuln_scanner', name: '漏洞掃描工具', price: 5000, effect: '自動檢測常見漏洞', tier: 'basic', version: TOOL_VERSION },
+                    { id: 'proxy_chain', name: '多層代理鏈工具', price: 8000, effect: '隱蔽度+30%，增加追蹤難度', tier: 'intermediate', version: TOOL_VERSION },
+                    { id: 'exploit_kit', name: '漏洞利用框架', price: 15000, effect: '包含50個常用漏洞利用', tier: 'advanced', version: TOOL_VERSION },
+                    { id: 'malware_builder', name: '惡意軟體生成器', price: 25000, effect: '定制化勒索軟體和木馬', tier: 'advanced', version: TOOL_VERSION },
+                    { id: 'ddos_botnet', name: 'DDoS 殭屍網絡訪問', price: 12000, effect: '每月租賃 - 控制10萬台設備', tier: 'advanced', version: TOOL_VERSION },
+                    { id: 'ransomware_premium', name: '頂級勒索軟體變種', price: 35000, effect: '軍事級加密 + 雙層勒索機制', tier: 'elite', version: TOOL_VERSION }
                 ]
             };
             
@@ -12595,7 +12615,7 @@
                 const canAfford = currentBalance >= item.price;
                 const statusColor = item.price === 0 ? '#00ff41' : (canAfford ? '#4a90d9' : '#ff3333');
                 const statusText = item.price === 0 ? '已擁有' : (canAfford ? '可購買' : '資金不足');
-                
+
                 html += `
                     <div style="padding: 12px; border: 1px solid ${statusColor}; margin: 8px 0; border-radius: 4px; background: rgba(0,0,0,0.2);">
                         <div style="display: flex; justify-content: space-between; align-items: start;">
@@ -12609,6 +12629,8 @@
                             </div>
                         </div>
                         ${item.price > 0 ? `<button class="btn btn-primary" onclick="buyItem('${item.id}', ${item.price})" style="margin-top: 10px; width: 100%; padding: 8px; ${!canAfford ? 'opacity: 0.5; cursor: not-allowed;' : ''}" ${!canAfford ? 'disabled' : ''}>購買</button>` : ''}
+                        ${item.id === 'vuln_scanner' ? `<button class="btn btn-success" onclick="autoDetectVulnerabilities('${item.id}')" style="margin-top: 8px; width: 100%; padding: 8px;">啟動自動檢測</button>` : ''}
+                        ${item.id === 'forensics_toolkit' ? `<button class="btn btn-warning" onclick="openForensicsLab()" style="margin-top: 8px; width: 100%; padding: 8px;">開啟數位鑑識實驗室</button>` : ''}
                     </div>
                 `;
             });
@@ -12647,6 +12669,110 @@
         function pauseGame() {
             GameState.gameActive = false;
             showNotification('遊戲已暫停', '遊戲已暫停，點擊恢復按鈕繼續', 'warning');
+        }
+
+        // ===== 自動檢測（漏洞掃描）功能 =====
+        function autoDetectVulnerabilities(itemId) {
+            // Safe guards: ensure GameState and player ownership checks exist
+            try {
+                const role = GameState.currentRole || 'hacker';
+                const player = GameState.playerData ? (role === 'hacker' ? GameState.playerData.hacker : GameState.playerData.law_enforcement) : null;
+
+                // If player data not available, just simulate and log
+                if (!player) {
+                    addTerminalLine('[自動檢測] 找不到玩家狀態，執行模擬掃描...', 'warning');
+                    simulateScan();
+                    return;
+                }
+
+                const owns = player.inventory && player.inventory.includes(itemId) || (player.ownedItems && player.ownedItems.includes(itemId));
+                if (!owns && (player.money || player.budget) !== undefined) {
+                    // If not owned, but free item (price 0), allow; otherwise prompt purchase
+                    const isFree = (function() {
+                        try {
+                            // attempt to find item in local shop definition
+                            return false; // default: force purchase requirement if not owned
+                        } catch (e) { return false; }
+                    })();
+                    if (!isFree) {
+                        showNotification('需要購買', '請先在商店購買漏洞掃描工具，然後再啟動自動檢測', 'warning');
+                        addTerminalLine('[自動檢測] 嘗試啟動失敗：尚未購買漏洞掃描工具', 'error');
+                        return;
+                    }
+                }
+
+                // Start simulated scan UI/progress
+                showNotification('自動檢測啟動', '漏洞自動檢測已啟動，請稍候...', 'law_enforcement');
+                addTerminalLine(`[${new Date().toLocaleTimeString('zh-TW')}] [自動檢測] 已啟動漏洞掃描`, 'command');
+                simulateScan();
+
+            } catch (err) {
+                console.error('autoDetectVulnerabilities error', err);
+                addTerminalLine('[自動檢測] 發生錯誤，請查看控制台', 'error');
+            }
+        }
+
+        function simulateScan() {
+            // create a temporary modal-like progress inside shop-message if available
+            const container = document.getElementById('shop-message') || document.body;
+            const progressId = 'auto-detect-progress';
+            const existing = document.getElementById(progressId);
+            if (existing) return; // already running
+
+            const progressWrap = document.createElement('div');
+            progressWrap.id = progressId;
+            progressWrap.style.padding = '12px';
+            progressWrap.style.marginTop = '10px';
+            progressWrap.style.background = 'rgba(0,0,0,0.4)';
+            progressWrap.style.border = '1px solid #4a90d9';
+            progressWrap.style.borderRadius = '6px';
+
+            progressWrap.innerHTML = `
+                <div style="color:#4a90d9; font-weight:bold; margin-bottom:8px;">自動檢測進行中...</div>
+                <div class="progress-bar-container"><div class="progress-bar-fill" id="auto-detect-fill" style="width:0%"></div></div>
+                <div id="auto-detect-log" style="color:#ccc; margin-top:8px; font-size:0.9rem; max-height:120px; overflow:auto;"></div>
+            `;
+
+            container.appendChild(progressWrap);
+
+            const fill = document.getElementById('auto-detect-fill');
+            const log = document.getElementById('auto-detect-log');
+            let pct = 0;
+            const interval = setInterval(() => {
+                pct += Math.floor(Math.random() * 15) + 5;
+                if (pct > 100) pct = 100;
+                if (fill) fill.style.width = pct + '%';
+                if (log) {
+                    const line = document.createElement('div');
+                    line.textContent = `[${new Date().toLocaleTimeString('zh-TW')}] 掃描進度 ${pct}%`;
+                    log.appendChild(line);
+                    log.scrollTop = log.scrollHeight;
+                }
+                addTerminalLine(`[自動檢測] 進度 ${pct}%`, 'system');
+                if (pct >= 100) {
+                    clearInterval(interval);
+                    if (log) {
+                        const res = document.createElement('div');
+                        res.style.color = '#00ff41';
+                        res.textContent = `[${new Date().toLocaleTimeString('zh-TW')}] 掃描完成：發現數個低危漏洞並生成報告。`;
+                        log.appendChild(res);
+                        log.scrollTop = log.scrollHeight;
+                    }
+                    addTerminalLine('[自動檢測] 掃描完成，報告已輸出', 'success');
+                    showNotification('掃描完成', '自動檢測已完成，請查看報告', 'law_enforcement');
+                    // remove progress after short delay
+                    setTimeout(() => { try { progressWrap.remove(); } catch(e){} }, 5000);
+                }
+            }, 800);
+        }
+
+        // ensure addTerminalLine and showNotification exist; if not, provide simple fallbacks
+        if (typeof addTerminalLine !== 'function') {
+            window.addTerminalLine = function(msg, cls) { console.log('[TERM]', cls || '', msg); };
+        }
+
+        if (typeof showNotification !== 'function') {
+            window.showNotification = function(title, message, type) { console.log('[NOTIF]', title, message, type); };
         }
 
         // ===== 顯示操作指南 =====
@@ -18146,6 +18272,380 @@ function applyCombatAndEconomy() {
 setTimeout(applyCombatAndEconomy, 4000);
 
 </script>
+
+<!-- Forensics Lab Modal (SIMULATION ONLY) -->
+<div id="forensics-lab-modal" class="immersive-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="forensics-lab-title">
+    <header>
+        <div id="forensics-lab-title" style="font-weight:bold;">數位鑑識實驗室 <span class="new-badge">新功能</span></div>
+        <div><button class="close-btn" onclick="closeForensicsLab()">關閉</button></div>
+    </header>
+    <div style="display:grid; grid-template-columns: 1fr 320px; gap:12px; padding:10px;">
+        <div>
+            <div class="node-card" style="border-left:3px solid #ffd700;">
+                <div style="font-weight:bold;">專業取證工具套件</div>
+                <div style="margin-top:8px; color:#ddd;">整合更專業的模擬取證流程：磁碟映像、記憶體、日誌關聯、元數據與行動裝置（模擬）。</div>
+                <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                    <button class="btn-primary" onclick="simulateDiskImageAnalyzerDetailed()">磁碟映像分析儀</button>
+                    <button class="btn-primary" onclick="simulateMemoryForensicsDetailed()">記憶體取證工具</button>
+                    <button class="btn" onclick="simulateLogCorrelatorDetailed()">日誌關聯分析器</button>
+                    <button class="btn" onclick="simulateMobileForensics()">行動設備取證</button>
+                    <button class="btn" onclick="openAdvancedAnalysis()">開啟進階分析 v5.5.0</button>
+                </div>
+                <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+                    <label style="color:#aaa; width:86px;">上傳樣本</label>
+                    <input id="meta-file-input" type="file" class="modal-input" onchange="simulateMetadataExtractorFromFile(event)" />
+                </div>
+                <div style="margin-top:8px; color:#888; font-size:0.85rem;">提示：上傳文件僅在本地讀取以示範元數據提取，不會上傳或傳出任何內容。</div>
+            </div>
+            <div class="node-card">記憶體取證工具
+                <div style="margin-top:8px;">即時 RAM 掃描與惡意程式簽章檢測（模擬）</div>
+                <div style="margin-top:8px; display:flex; gap:8px;"><button class="btn-primary" onclick="simulateMemoryForensics()">執行記憶體分析（模擬）</button></div>
+            </div>
+
+            <div class="node-card">硬碟映像分析
+                <div style="margin-top:8px;">文件系統復原與時間線重建（模擬）</div>
+                <div style="margin-top:8px; display:flex; gap:8px;"><button class="btn-primary" onclick="simulateDiskImageAnalysis()">分析映像檔（模擬）</button>
+                    <button class="btn" onclick="simulateDetailedTimeline()">詳細時間線重建（模擬）</button></div>
+            </div>
+
+            <div class="node-card">日誌關聯分析
+                <div style="margin-top:8px;">將多來源日誌依時間與事件關聯，標註潛在證據鏈（模擬）</div>
+                <div style="margin-top:8px; display:flex; gap:8px;"><button class="btn-primary" onclick="simulateLogCorrelation()">執行日誌關聯（模擬）</button></div>
+            </div>
+
+            <div class="node-card">加密數據解碼站
+                <div style="margin-top:8px;">嘗試對常見加密演算法的破解示範（模擬）</div>
+                <div style="margin-top:8px; display:flex; gap:8px;"><button class="btn-primary" onclick="simulateCryptoCrack()">嘗試解碼（模擬）</button></div>
+            </div>
+
+            <div class="node-card">元數據提取器
+                <div style="margin-top:8px;">從文件抽取隱藏資訊（時間戳、GPS、Author 等）模擬</div>
+                <div style="margin-top:8px; display:flex; gap:8px;"><button class="btn-primary" onclick="simulateMetadataExtraction()">抽取元數據（模擬）</button></div>
+            </div>
+
+            <div class="node-card">法律與程序模擬
+                <div style="margin-top:8px;">模擬搜查令申請、證據可採性檢查與連鎖保管（chain-of-custody）流程（模擬）</div>
+                <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn-primary" onclick="simulateSearchWarrantWorkflow()">申請搜查令（模擬）</button>
+                    <button class="btn" onclick="simulateChainOfCustodyCheck()">檢查證據可採性（模擬）</button>
+                </div>
+            </div>
+
+            <div class="node-card">協作與通報
+                <div style="margin-top:8px;">與 ISP、國際執法機構的協調流程模擬（模擬不進行真實網路請求）</div>
+                <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn-primary" onclick="simulateISPRequest()">向 ISP 提出資料請求（模擬）</button>
+                    <button class="btn" onclick="simulateInternationalLiaison()">國際合作通報（模擬）</button>
+                </div>
+            </div>
+
+            <div class="node-card">分層調查策略 & 資源約束
+                <div style="margin-top:8px;">設定預算、時間與管轄權限制，系統會根據約束建議調查深度（模擬）</div>
+                <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                    <label style="width:64px;">預算</label><input id="res-budget" type="number" class="modal-input" value="50000" />
+                </div>
+                <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                    <label style="width:64px;">時間(天)</label><input id="res-days" type="number" class="modal-input" value="7" />
+                </div>
+                <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                    <label style="width:64px;">管轄</label><select id="res-jurisdiction" class="modal-input"><option>本地</option><option>國際</option></select>
+                </div>
+                <div style="margin-top:8px; display:flex; gap:8px;"><button class="btn-primary" onclick="applyResourceConstraints()">套用資源約束並建議策略</button></div>
+            </div>
+            
+            <div class="node-card">對抗性互動（攻防模擬）
+                <div style="margin-top:8px;">模擬黑客的反制（逃避、干擾偵測工具），並觀察對鑑識結果的影響（模擬）</div>
+                <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn" onclick="simulateEvasion()">模擬逃避行為（模擬）</button>
+                    <button class="btn" onclick="simulateInterference()">模擬干擾（日誌刪除/時間錯置，模擬）</button>
+                </div>
+            </div>
+
+            <div class="node-card">誤導資訊處理
+                <div style="margin-top:8px;">自動偵測與標註可能的假證據，提供可信度分數（模擬）</div>
+                <div style="margin-top:8px; display:flex; gap:8px;"><button class="btn" onclick="simulateFakeEvidenceAnalysis()">檢測假證據（模擬）</button></div>
+            </div>
+
+            <div class="node-card">時間壓力機制（證據衰減/加密）
+                <div style="margin-top:8px;">設定證據消失或加密的倒數計時（模擬）以模擬時效壓力</div>
+                <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                    <label style="width:80px;">倒數(秒)</label><input id="decay-seconds" type="number" class="modal-input" value="60" />
+                </div>
+                <div style="margin-top:8px; display:flex; gap:8px;"><button class="btn-primary" onclick="startEvidenceDecayTimer()">啟動倒數（模擬）</button>
+                    <button class="btn" onclick="stopEvidenceDecayTimer()">停止倒數</button></div>
+                <div id="decay-status" style="margin-top:8px; color:#ffcc00; font-family:monospace;"></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="node-card">鑑識實驗室日誌<div id="forensics-log" style="max-height:360px; overflow:auto; margin-top:6px;"></div></div>
+            <div class="node-card" style="margin-top:10px;">鑑識結果快照
+                <div id="forensics-results" style="margin-top:8px; font-family:monospace; font-size:0.9rem; max-height:260px; overflow:auto;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openForensicsLab(){ document.getElementById('forensics-lab-modal').style.display='block'; setTimeout(()=>{ const f=document.getElementById('forensics-lab-modal').querySelector('button'); if(f) f.focus(); },100); }
+function closeForensicsLab(){ document.getElementById('forensics-lab-modal').style.display='none'; }
+
+function appendForensicsLog(msg){ const el=document.getElementById('forensics-log'); if(!el) return; const d=document.createElement('div'); d.textContent='['+new Date().toLocaleTimeString()+'] '+msg; el.prepend(d); }
+
+window.forensicsLabData = window.forensicsLabData || {};
+
+function simulateMemoryForensics(){
+    appendForensicsLog('開始記憶體取證掃描（模擬）');
+    const findings = [
+        { type:'suspicious_process', name:'evil.exe', pid: 4242, note:'可疑行為：注入網絡連線' },
+        { type:'hooked_api', name:'NtOpenProcess', note:'疑似 API hook' }
+    ];
+    window.forensicsLabData.memory = { timestamp: Date.now(), findings };
+    document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.memory, null, 2);
+    appendForensicsLog('記憶體分析完成（模擬），發現 ' + findings.length + ' 處可疑項目');
+}
+
+function simulateDiskImageAnalysis(){
+    appendForensicsLog('開始硬碟映像分析（模擬）');
+    const recovered = [
+        { path:'/Users/victim/Documents/secret.docx', recovered:true, timestamp:'2025-08-01 10:02:12' },
+        { path:'/Users/victim/.config/evil.conf', recovered:true, timestamp:'2025-07-30 22:15:03' }
+    ];
+    window.forensicsLabData.disk = { timestamp: Date.now(), recovered };
+    document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.disk, null, 2);
+    appendForensicsLog('硬碟分析完成（模擬） - 已復原 '+recovered.length+' 個檔案');
+}
+
+function simulateCryptoCrack(){
+    appendForensicsLog('啟動加密數據解碼站（模擬）');
+    const attempts = [
+        { algo:'AES-128', status:'嘗試中', result:null },
+        { algo:'Base64', status:'成功', result:'解碼文本示例' }
+    ];
+    window.forensicsLabData.crypto = { timestamp: Date.now(), attempts };
+    document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.crypto, null, 2);
+    appendForensicsLog('加密解碼模擬：Base64 成功，AES-128 失敗（示範）');
+}
+
+function simulateMetadataExtraction(){
+    appendForensicsLog('開始元數據提取（模擬）');
+    const meta = {
+        filename:'evidence_photo.jpg',
+        author:'user@example.com',
+        gps:'22.2855,114.1577',
+        created:'2025-01-05T12:34:56Z'
+    };
+    window.forensicsLabData.metadata = { timestamp: Date.now(), meta };
+    document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.metadata, null, 2);
+    appendForensicsLog('元數據提取完成（模擬） - 檔名: '+meta.filename);
+}
+
+// --- 新增模擬功能：日誌關聯、詳細時間線、法律程序、協作與資源約束
+function simulateLogCorrelation(){
+    appendForensicsLog('開始日誌關聯分析（模擬）');
+    // mock correlated events
+    const events = [
+        { t:'2025-08-01T10:01:12Z', src:'198.51.100.23', dst:'10.0.0.5', note:'SSH login' },
+        { t:'2025-08-01T10:02:05Z', src:'198.51.100.23', dst:'10.0.0.5', note:'文件上傳: secret.docx' },
+        { t:'2025-08-01T10:03:30Z', src:'203.0.113.12', dst:'10.0.0.5', note:'疑似 C2 heartbeat' }
+    ];
+    window.forensicsLabData.logCorrelation = { timestamp: Date.now(), events };
+    document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.logCorrelation, null, 2);
+    appendForensicsLog('日誌關聯完成（模擬） - 匯出 '+events.length+' 條關聯事件');
+}
+
+function simulateDetailedTimeline(){
+    appendForensicsLog('開始詳細時間線重建（模擬）');
+    const timeline = [
+        { time:'2025-08-01 09:58:12', event:'外部掃描偵測' },
+        { time:'2025-08-01 10:01:12', event:'SSH 登入 (user: victim)' },
+        { time:'2025-08-01 10:02:05', event:'上傳 secret.docx' },
+        { time:'2025-08-01 10:05:33', event:'可疑外連到 198.51.100.0/24' }
+    ];
+    window.forensicsLabData.timeline = { timestamp: Date.now(), timeline };
+    document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.timeline, null, 2);
+    appendForensicsLog('時間線重建完成（模擬） - 生成 '+timeline.length+' 個時間點');
+}
+
+function simulateSearchWarrantWorkflow(){
+    appendForensicsLog('開始搜查令申請流程（模擬）');
+    const flow = [
+        { step:'立案', status:'完成' },
+        { step:'初步證據審查', status:'通過' },
+        { step:'向法院提出申請', status:'等待回應' }
+    ];
+    window.forensicsLabData.legal = { timestamp: Date.now(), flow };
+    document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.legal, null, 2);
+    appendForensicsLog('搜查令申請已送出（模擬） - 等待法院回應（示範，不連網）');
+}
+
+function simulateChainOfCustodyCheck(){
+    appendForensicsLog('執行證據可採性與鏈條保管檢查（模擬）');
+    const coc = { chainGood:true, notes:'掃描紀錄、MD5 hash、提取簽章完整' };
+    window.forensicsLabData.chain = { timestamp: Date.now(), coc };
+    document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.chain, null, 2);
+    appendForensicsLog('證據可採性檢查完成（模擬） - 結果: '+(coc.chainGood? '可採': '有疑慮'));
+}
+
+function simulateISPRequest(){
+    appendForensicsLog('模擬向 ISP 申請流量資料（模擬）');
+    const req = { provider:'示例ISP', requestId:'ISP-'+Math.floor(Math.random()*90000+10000), status:'已送出' };
+    window.forensicsLabData.isp = { timestamp: Date.now(), req };
+    document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.isp, null, 2);
+    appendForensicsLog('ISP 資料請求已建立（模擬） - 請求ID: '+req.requestId+'（不發出真實網路請求）');
+}
+
+function simulateInternationalLiaison(){
+    appendForensicsLog('模擬國際執法協調通報（模擬）');
+    const lia = { org:'INTERPOL', contact:'liaison@example.int', status:'已通報' };
+    window.forensicsLabData.liaison = { timestamp: Date.now(), lia };
+    document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.liaison, null, 2);
+    appendForensicsLog('已模擬通報國際單位（示範，不含實際通訊）');
+}
+
+function applyResourceConstraints(){
+    const budget = Number(document.getElementById('res-budget').value || 0);
+    const days = Number(document.getElementById('res-days').value || 0);
+    const jurisdiction = document.getElementById('res-jurisdiction').value;
+    appendForensicsLog('套用資源約束：預算='+budget+' 時間(天)='+days+' 管轄='+jurisdiction);
+    // simple decision heuristic
+    let suggestion = '建議進行初步調查(輕量)';
+    if(budget>40000 && days>3) suggestion = '建議進行深入取證（映像、記憶體、日誌重建）';
+    if(jurisdiction==='國際' && budget>60000) suggestion = '建議啟動國際合作並申請跨境資料請求';
+    window.forensicsLabData.resourceSuggestion = { timestamp: Date.now(), budget, days, jurisdiction, suggestion };
+    document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.resourceSuggestion, null, 2);
+    appendForensicsLog('資源建議已生成：'+suggestion);
+}
+
+// --- 對抗性互動 / 假證據 / 證據衰減模擬
+window._evidenceDecayTimer = window._evidenceDecayTimer || { id:null, remaining:0 };
+
+function simulateEvasion(){
+    appendForensicsLog('模擬黑客逃避行為：隱匿網路連線與程式名稱（模擬）');
+    // simulate changes to forensic findings confidence
+    if(!window.forensicsLabData.memory) window.forensicsLabData.memory = {};
+    window.forensicsLabData.memory.evasionNote = 'process names obfuscated; network artifacts TTL reduced';
+    document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.memory, null, 2);
+}
+
+function simulateInterference(){
+    appendForensicsLog('模擬干擾：日誌缺失與時間錯置（模擬）');
+    if(!window.forensicsLabData.logCorrelation) window.forensicsLabData.logCorrelation = {};
+    window.forensicsLabData.logCorrelation.interference = { missingEntries: Math.floor(Math.random()*5), timeSkew:'~2-5s' };
+    document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.logCorrelation, null, 2);
+}
+
+function simulateFakeEvidenceAnalysis(){
+    appendForensicsLog('檢測假證據（模擬） - 正在分析可信度');
+    const items = [
+        { id:'file1', type:'document', confidence: Math.random().toFixed(2) },
+        { id:'meta1', type:'metadata', confidence: Math.random().toFixed(2) }
+    ];
+    // mark those with low confidence
+    const flagged = items.filter(i=>parseFloat(i.confidence)<0.5);
+    window.forensicsLabData.fakeCheck = { timestamp: Date.now(), items, flagged };
+    document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.fakeCheck, null, 2);
+    appendForensicsLog('假證據檢測完成（模擬） - 可疑項目: '+flagged.length);
+}
+
+// --- 專業取證工具套件（模擬實作）
+function simulateDiskImageAnalyzerDetailed(){
+    appendForensicsLog('啟動磁碟映像分析儀（模擬） - 正在掛載映像...');
+    // simulate file system carving and timeline
+    setTimeout(()=>{
+        const artifacts = [
+            { path:'/home/victim/documents/secret.docx', size: '45KB', recovered:true, mtime:'2025-08-01T10:02:05Z' },
+            { path:'/home/victim/.ssh/id_rsa', size: '1.6KB', recovered:true, note:'私鑰樣本' },
+            { path:'/var/log/auth.log', size:'120KB', recovered:true }
+        ];
+        window.forensicsLabData.diskDetailed = { timestamp: Date.now(), artifacts };
+        document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.diskDetailed, null, 2);
+        appendForensicsLog('映像分析完成（模擬） - 復原項目: '+artifacts.length);
+    }, 1800);
+}
+
+function simulateMemoryForensicsDetailed(){
+    appendForensicsLog('啟動記憶體取證（模擬） - 擷取記憶體鏡像...');
+    setTimeout(()=>{
+        const processes = [
+            { pid: 4242, name:'evil.exe', cmdline:'evil.exe --stealth', suspicious:true },
+            { pid: 1337, name:'svchost.exe', cmdline:'svchost -k netsvcs', suspicious:false }
+        ];
+        const nets = [ { pid:4242, proto:'tcp', local:'10.0.0.5:443', remote:'198.51.100.23:4444' } ];
+        window.forensicsLabData.memoryDetailed = { timestamp: Date.now(), processes, nets };
+        document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.memoryDetailed, null, 2);
+        appendForensicsLog('記憶體取證完成（模擬） - 發現可疑程序: '+processes.filter(p=>p.suspicious).length);
+    }, 1500);
+}
+
+function simulateLogCorrelatorDetailed(){
+    appendForensicsLog('啟動日誌關聯分析器（模擬） - 正在聚合日誌來源...');
+    setTimeout(()=>{
+        const correlated = [
+            { time:'2025-08-01T09:58:12Z', event:'Port scan', source:'198.51.100.23' },
+            { time:'2025-08-01T10:02:05Z', event:'File upload secret.docx', source:'198.51.100.23' },
+            { time:'2025-08-01T10:05:33Z', event:'C2 heartbeat', source:'203.0.113.12' }
+        ];
+        window.forensicsLabData.logCorrelator = { timestamp: Date.now(), correlated };
+        document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.logCorrelator, null, 2);
+        appendForensicsLog('日誌關聯完成（模擬） - 已建立 '+correlated.length+' 組關聯');
+    }, 1600);
+}
+
+function simulateMobileForensics(){
+    appendForensicsLog('啟動行動設備取證（模擬） - 擷取通話記錄與應用資料...');
+    setTimeout(()=>{
+        const mobile = { imei:'356789012345678', phone:'+85291234567', contacts:5, messages:12, appData:['WhatsApp','Signal'] };
+        window.forensicsLabData.mobile = { timestamp: Date.now(), mobile };
+        document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.mobile, null, 2);
+        appendForensicsLog('行動設備取證完成（模擬） - 檢索到 '+mobile.messages+' 條訊息（模擬）');
+    }, 1400);
+}
+
+function simulateMetadataExtractorFromFile(e){
+    const f = e.target.files && e.target.files[0];
+    if(!f) return; appendForensicsLog('載入檔案以提取元數據（本地讀取，未上傳）: '+f.name);
+    const reader = new FileReader();
+    reader.onload = function(ev){
+        // mock metadata extraction using file info
+        const meta = { filename: f.name, size: f.size, type: f.type || 'unknown', extracted: { author:'unknown', created: new Date().toISOString() } };
+        window.forensicsLabData.metadataFile = { timestamp: Date.now(), meta };
+        document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.metadataFile, null, 2);
+        appendForensicsLog('元數據提取完成（模擬） - 檔名: '+f.name);
+    };
+    reader.readAsArrayBuffer(f);
+}
+
+function startEvidenceDecayTimer(){
+    const sec = Number(document.getElementById('decay-seconds').value || 60);
+    stopEvidenceDecayTimer();
+    window._evidenceDecayTimer.remaining = sec;
+    const status = document.getElementById('decay-status');
+    status.textContent = '倒數中：'+window._evidenceDecayTimer.remaining+'s';
+    appendForensicsLog('啟動證據倒數（模擬）: '+sec+' 秒');
+    window._evidenceDecayTimer.id = setInterval(()=>{
+        window._evidenceDecayTimer.remaining -= 1;
+        status.textContent = '倒數中：'+window._evidenceDecayTimer.remaining+'s';
+        if(window._evidenceDecayTimer.remaining<=0){
+            clearInterval(window._evidenceDecayTimer.id); window._evidenceDecayTimer.id = null;
+            status.textContent = '證據已衰減/被加密（模擬）';
+            // mark evidence as inaccessible
+            window.forensicsLabData.decay = { timestamp: Date.now(), status:'lost_or_encrypted' };
+            document.getElementById('forensics-results').textContent = JSON.stringify(window.forensicsLabData.decay, null, 2);
+            appendForensicsLog('證據已失效或被加密（模擬） - 部分分析結果可能不可用');
+        }
+    }, 1000);
+}
+
+function stopEvidenceDecayTimer(){
+    if(window._evidenceDecayTimer.id) clearInterval(window._evidenceDecayTimer.id);
+    window._evidenceDecayTimer.id = null; window._evidenceDecayTimer.remaining = 0;
+    const status = document.getElementById('decay-status'); if(status) status.textContent = '';
+    appendForensicsLog('已停止證據倒數（模擬）');
+}
+</script>
+
+<!-- tactical features removed as requested -->
 <script>
 // COMMAND version
 window.COMMAND_VERSION = '5.0';
@@ -18374,6 +18874,16 @@ window.openAnalyticsDashboard = function(){ window.Analytics.openDashboard(); };
                     <div style="margin-top: auto; padding: 10px; border: 1px dashed #00ff41; font-size: 0.8rem;">
                         <p>當前身份: <span style="color: #fff;">Anon_User_772</span></p>
                         <p>信用等級: <span style="color: #ffff00;">★★★★☆</span></p>
+                    </div>
+                    
+                    <div style="margin-top:12px; padding:10px; border-top:1px solid rgba(255,255,255,0.04);">
+                        <div style="font-size:0.9rem; color:#bc13fe; font-weight:bold; margin-bottom:6px;">快速監控</div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="btn" onclick="openMonitoringPanel()">監控面板</button>
+                            <button class="btn" onclick="openBattleMonitor()">對戰監控</button>
+                            <button class="btn" onclick="openForensicsLab()">鑑識實驗室</button>
+                            <button class="btn" onclick="openNetworkAdvanced()">深度網路分析</button>
+                        </div>
                     </div>
                 </div>
 
@@ -18992,6 +19502,12 @@ window.openAnalyticsDashboard = function(){ window.Analytics.openDashboard(); };
             <div class="le-grid">
                 <div class="le-panel">
                     <div class="panel-title"><i class="fas fa-puzzle-piece"></i> 瀏覽器外掛整合工具</div>
+                    <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="node-action-btn" onclick="openMonitoringPanel()">監控面板</button>
+                        <button class="node-action-btn" onclick="openBattleMonitor()">對戰監控</button>
+                        <button class="node-action-btn" onclick="openForensicsLab()">鑑識實驗室</button>
+                        <button class="node-action-btn" onclick="openNetworkAdvanced()">深度網路分析</button>
+                    </div>
                     <div class="tool-card-mini">
                         <p>整合外部威脅情報庫與瀏覽器行為分析插件。</p>
                         <button class="node-action-btn" onclick="EXTRA_TOOLS.togglePlugin('threat_intel')">啟動情報插件</button>
@@ -23904,7 +24420,10 @@ console.log('[OPTIMIZATION] AI 反饋頻率優化系統已加載');
 <div id="monitoring-modal" class="immersive-modal" style="display:none;">
     <header>
         <div style="font-weight:bold;">監控面板</div>
-        <div><button class="close-btn" onclick="closeMonitoringPanel()">關閉</button></div>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <button class="btn" onclick="openBattleMonitor()">開啟對戰監控</button>
+            <button class="close-btn" onclick="closeMonitoringPanel()">關閉</button>
+        </div>
     </header>
     <div class="monitor-grid">
         <div class="monitor-card">流量監視器<div class="canvas-spark" id="spark-traffic"></div></div>
@@ -23913,18 +24432,278 @@ console.log('[OPTIMIZATION] AI 反饋頻率優化系統已加載');
     </div>
 </div>
 
+<!-- 對戰監控：同時查看 黑客 vs 執法部門 的設備與網絡活動（模擬） -->
+<div id="battle-monitor-modal" class="immersive-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="battle-monitor-title">
+    <header>
+        <div id="battle-monitor-title" style="font-weight:bold;">對戰監控：設備與網絡狀態（模擬） <span class="new-badge">新</span></div>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <button class="btn" onclick="exportBattleSnapshotJSON()">匯出對戰快照 (JSON)</button>
+            <button class="close-btn" onclick="closeBattleMonitor()">關閉</button>
+        </div>
+    </header>
+    <div style="padding:12px;">
+        <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;">
+            <div style="font-weight:bold;">查看對象：</div>
+            <button class="btn-primary" id="view-hacker" onclick="setBattleView('hacker')">黑客</button>
+            <button class="btn-secondary" id="view-le" onclick="setBattleView('law_enforcement')">執法部門</button>
+            <button class="btn" onclick="setBattleView('both')">同時</button>
+            <div style="margin-left:auto; color:#aaa;">（模擬數據，僅用於展示）</div>
+        </div>
+
+        <div id="battle-monitor-content" style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <div id="battle-hacker-panel" class="node-card">
+                <div style="font-weight:bold; color:#00ff41;">黑客 - 設備狀態</div>
+                <div id="hacker-devices" style="margin-top:8px;"></div>
+                <div style="margin-top:8px;">網絡活動<div id="hacker-activity" style="max-height:140px; overflow:auto; margin-top:6px;"></div></div>
+            </div>
+
+            <div id="battle-le-panel" class="node-card">
+                <div style="font-weight:bold; color:#4a90d9;">執法部門 - 設備狀態</div>
+                <div id="le-devices" style="margin-top:8px;"></div>
+                <div style="margin-top:8px;">網絡活動<div id="le-activity" style="max-height:140px; overflow:auto; margin-top:6px;"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Battle monitor simulation data
+window.battleMonitor = window.battleMonitor || { view: 'both', hacker: [], law_enforcement: [] };
+
+function openBattleMonitor(){ document.getElementById('battle-monitor-modal').style.display='block'; setTimeout(()=>{ updateBattleUI(); },100); }
+function closeBattleMonitor(){ document.getElementById('battle-monitor-modal').style.display='none'; }
+
+function setBattleView(v){ window.battleMonitor.view = v; document.getElementById('view-hacker').classList.toggle('btn-primary', v==='hacker'); document.getElementById('view-le').classList.toggle('btn-primary', v==='law_enforcement'); renderBattlePanels(); }
+
+// init sample devices
+function initBattleDevices(){
+    window.battleMonitor.hacker = [
+        { id:'h1', name:'H-PC-01', cpu: Math.floor(10+Math.random()*50), mem: Math.floor(10+Math.random()*60), status:'online' },
+        { id:'h2', name:'H-VM-02', cpu: Math.floor(5+Math.random()*40), mem: Math.floor(5+Math.random()*60), status:'compromised' }
+    ];
+    window.battleMonitor.law_enforcement = [
+        { id:'l1', name:'LE-WS-01', cpu: Math.floor(10+Math.random()*50), mem: Math.floor(10+Math.random()*60), status:'online' },
+        { id:'l2', name:'LE-NODE-02', cpu: Math.floor(5+Math.random()*40), mem: Math.floor(5+Math.random()*60), status:'monitoring' }
+    ];
+}
+
+function renderBattlePanels(){
+    const hv = document.getElementById('hacker-devices'); const lv = document.getElementById('le-devices'); hv.innerHTML=''; lv.innerHTML='';
+    const showH = window.battleMonitor.view === 'hacker' || window.battleMonitor.view === 'both';
+    const showL = window.battleMonitor.view === 'law_enforcement' || window.battleMonitor.view === 'both';
+    document.getElementById('battle-hacker-panel').style.display = showH ? 'block' : 'none';
+    document.getElementById('battle-le-panel').style.display = showL ? 'block' : 'none';
+
+    window.battleMonitor.hacker.forEach(d=>{ const card=document.createElement('div'); card.className='device-card hacked'; card.style.marginBottom='8px'; card.innerHTML = '<div style="font-weight:bold;color:#00ff41">'+d.name+'</div><div>CPU: <strong>'+d.cpu+'%</strong>  記憶體: <strong>'+d.mem+'%</strong></div><div>狀態: '+d.status+'</div>'; hv.appendChild(card); });
+    window.battleMonitor.law_enforcement.forEach(d=>{ const card=document.createElement('div'); card.className='device-card'; card.style.marginBottom='8px'; card.innerHTML = '<div style="font-weight:bold;color:#4a90d9">'+d.name+'</div><div>CPU: <strong>'+d.cpu+'%</strong>  記憶體: <strong>'+d.mem+'%</strong></div><div>狀態: '+d.status+'</div>'; lv.appendChild(card); });
+}
+
+function appendBattleActivity(side, msg){ const el=document.getElementById(side==='hacker' ? 'hacker-activity' : 'le-activity'); if(!el) return; const d=document.createElement('div'); d.className='command-entry'; d.textContent='['+new Date().toLocaleTimeString()+'] '+msg; el.prepend(d); }
+
+function updateBattleSimulation(){
+    // mutate device stats slightly and generate activities
+    (window.battleMonitor.hacker||[]).forEach(d=>{ d.cpu = Math.max(1, Math.min(99, d.cpu + Math.floor(Math.random()*11-5))); d.mem = Math.max(1, Math.min(99, d.mem + Math.floor(Math.random()*9-4))); if(Math.random()>0.96) appendBattleActivity('hacker','可疑外連: '+d.name+' -> 198.51.100.'+Math.floor(Math.random()*200)); });
+    (window.battleMonitor.law_enforcement||[]).forEach(d=>{ d.cpu = Math.max(1, Math.min(99, d.cpu + Math.floor(Math.random()*11-5))); d.mem = Math.max(1, Math.min(99, d.mem + Math.floor(Math.random()*9-4))); if(Math.random()>0.95) appendBattleActivity('law_enforcement','攔截到異常連線: '+d.name+' <- 203.0.113.'+Math.floor(Math.random()*200)); });
+    renderBattlePanels();
+}
+
+// start simulation
+initBattleDevices();
+setInterval(updateBattleSimulation, 2000);
+
+// helper to open battle monitor from other UI
+function openBattleFromMonitor(){ openBattleMonitor(); }
+
+// export current battle monitor snapshot as JSON
+function exportBattleSnapshotJSON(){
+    try{
+        const data = JSON.stringify(window.battleMonitor || {}, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'battle_snapshot_'+Date.now()+'.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        console.log('已匯出對戰快照');
+    }catch(e){ console.error('匯出失敗', e); alert('匯出失敗: '+e.message); }
+}
+
+function exportNetworkSnapshotJSON(){
+    try{
+        const data = JSON.stringify(window.networkMonitoringData || {}, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'network_snapshot_'+Date.now()+'.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        console.log('已匯出網路快照');
+    }catch(e){ console.error('匯出失敗', e); alert('匯出失敗: '+e.message); }
+}
+
+function exportFullSystemSnapshotJSON(){
+    try{
+        const full = {
+            forensics: window.forensicsLabData || {},
+            network: window.networkMonitoringData || {},
+            battle: window.battleMonitor || {}
+        };
+        const data = JSON.stringify(full, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'full_system_snapshot_'+Date.now()+'.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        console.log('已匯出完整系統快照');
+    }catch(e){ console.error('匯出失敗', e); alert('匯出失敗: '+e.message); }
+}
+</script>
+
+<!-- Advanced Network Monitoring (SIMULATION ONLY) -->
+<div id="network-advanced-modal" class="immersive-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="net-adv-title">
+    <header>
+        <div id="net-adv-title" style="font-weight:bold;">網路監控升級 • 深度分析（模擬） <span class="new-badge">新功能</span></div>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <button class="btn" onclick="exportNetworkSnapshotJSON()">匯出網路快照 (JSON)</button>
+            <button class="close-btn" onclick="closeNetworkAdvanced()">關閉</button>
+        </div>
+    </header>
+    <div style="padding:12px; display:grid; grid-template-columns: 2fr 1fr; gap:12px;">
+        <div>
+            <div class="node-card">深度封包檢測 (DPI) • 可視化流量內容分析
+                <div style="margin-top:8px;">顯示封包摘要、協議分布與示例 payload（僅模擬示範，無解碼真正封包）</div>
+                <div style="margin-top:8px;" id="dpi-visual"></div>
+                <div style="margin-top:8px; display:flex; gap:8px;"><button class="btn-primary" onclick="simulateDPI()">執行 DPI（模擬）</button></div>
+            </div>
+
+            <div class="node-card" style="margin-top:10px;">異常行為分析 (AI)
+                <div style="margin-top:8px;">AI 驅動的異常模式檢測模擬，顯示異常分數與可疑連線</div>
+                <div style="margin-top:8px; display:flex; gap:8px;"><button class="btn-primary" onclick="simulateAIAnomaly()">執行 AI 檢測（模擬）</button></div>
+                <div id="ai-anomaly-results" style="margin-top:10px; font-family:monospace; font-size:0.9rem;"></div>
+            </div>
+
+            <div class="node-card" style="margin-top:10px;">攻擊歸因分析
+                <div style="margin-top:8px;">將可疑來源做地理定位與技術指紋比對（模擬）</div>
+                <div style="margin-top:8px; display:flex; gap:8px; align-items:center;"><input id="attrib-ip" class="modal-input" placeholder="輸入可疑 IP（例如 203.0.113.45）" /><button class="btn-primary" onclick="simulateAttribution()">執行歸因（模擬）</button></div>
+                <div id="attrib-results" style="margin-top:8px; font-family:monospace; font-size:0.9rem;"></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="node-card">威脅情整合 • 情報匯流（模擬）
+                <div style="margin-top:8px;">模擬連接到外部威脅情報資料庫並顯示合併結果（實際不發起外部呼叫）</div>
+                <div style="margin-top:8px; display:flex; gap:8px;"><button class="btn-primary" onclick="simulateThreatIntel()">取得威脅情報（模擬）</button></div>
+                <div id="threat-feed" style="margin-top:8px; max-height:340px; overflow:auto; font-family:monospace; font-size:0.9rem;"></div>
+            </div>
+
+            <div class="node-card" style="margin-top:10px;">操作日誌<div id="network-adv-log" style="max-height:200px; overflow:auto; margin-top:6px;"></div></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Simulated network monitoring data store
+window.networkMonitoringData = window.networkMonitoringData || {};
+
+function openNetworkAdvanced(){ document.getElementById('network-advanced-modal').style.display='block'; setTimeout(()=>{ const el=document.getElementById('network-advanced-modal').querySelector('button'); if(el) el.focus(); },100); }
+function closeNetworkAdvanced(){ document.getElementById('network-advanced-modal').style.display='none'; }
+
+function netLog(msg){ const el=document.getElementById('network-adv-log'); if(!el) return; const d=document.createElement('div'); d.textContent='['+new Date().toLocaleTimeString()+'] '+msg; el.prepend(d); }
+
+function simulateDPI(){
+    netLog('執行 DPI 模擬掃描');
+    const protocols = [ 'HTTP', 'TLS', 'DNS', 'SSH', 'ICMP' ];
+    const protoDist = protocols.map(p=>({ proto:p, pct: Math.floor(5+Math.random()*40) }));
+    // normalize to 100
+    let sum = protoDist.reduce((s,i)=>s+i.pct,0); protoDist.forEach(i=>i.pct = Math.round(i.pct*100/sum));
+    window.networkMonitoringData.dpi = { timestamp: Date.now(), protoDist };
+    const container = document.getElementById('dpi-visual'); container.innerHTML = '';
+    protoDist.forEach(p=>{
+        const row = document.createElement('div'); row.style.display='flex'; row.style.alignItems='center'; row.style.gap='8px'; row.style.margin='6px 0';
+        const label = document.createElement('div'); label.textContent = p.proto; label.style.width='60px';
+        const barWrap = document.createElement('div'); barWrap.style.flex='1'; barWrap.style.background='#222'; barWrap.style.borderRadius='6px'; barWrap.style.overflow='hidden';
+        const bar = document.createElement('div'); bar.style.height='18px'; bar.style.width = p.pct + '%'; bar.style.background = p.proto==='HTTP'? '#4a90d9' : p.proto==='TLS'? '#00ff41' : '#ff9900'; bar.style.display='flex'; bar.style.alignItems='center'; bar.style.justifyContent='center'; bar.style.color='#000'; bar.textContent = p.pct + '%';
+        barWrap.appendChild(bar); row.appendChild(label); row.appendChild(barWrap); container.appendChild(row);
+    });
+    // show example payloads
+    const payloads = [
+        {proto:'HTTP', sample:'GET /login HTTP/1.1\nHost: example.com\nUser-Agent: ...'},
+        {proto:'DNS', sample:'Query: attacker.example -> A 203.0.113.5'},
+        {proto:'TLS', sample:'ClientHello (SNI: victim.example)'}
+    ];
+    const ex = document.createElement('pre'); ex.style.marginTop='10px'; ex.style.background='rgba(0,0,0,0.6)'; ex.style.padding='8px'; ex.textContent = payloads.map(p=>p.proto+':\n'+p.sample).join('\n\n'); container.appendChild(ex);
+    netLog('DPI 模擬完成 - 已產生協議分布與示例 payload（僅示範）');
+}
+
+function simulateAIAnomaly(){
+    netLog('啟動 AI 異常行為分析（模擬）');
+    // generate mock connections with anomaly scores
+    const conns = Array.from({length:6}).map((_,i)=>({ src:'192.0.2.'+(10+i), dst:'10.0.0.'+(5+i), bytes: Math.floor(200+Math.random()*5000), anomalyScore: Math.random().toFixed(2) }));
+    const flagged = conns.filter(c=>parseFloat(c.anomalyScore)>0.75);
+    window.networkMonitoringData.ai = { timestamp: Date.now(), conns, flagged };
+    const out = document.getElementById('ai-anomaly-results'); out.innerHTML = '';
+    conns.forEach(c=>{ const d=document.createElement('div'); d.className='command-entry'; d.innerHTML = '<strong>'+c.src+' → '+c.dst+'</strong> bytes:'+c.bytes+' score:'+c.anomalyScore; if(parseFloat(c.anomalyScore)>0.8) d.style.color='#ff3333'; out.appendChild(d); });
+    netLog('AI 模擬完成，發現可疑連線數: '+flagged.length+'（模擬）');
+}
+
+function simulateThreatIntel(){
+    netLog('整合威脅情報（模擬）');
+    // local fake threat DB
+    const fakeDB = [ {indicator:'203.0.113.5', type:'IP', severity:'高', note:'已知惡意 C2'},{indicator:'example-malware', type:'HASH', severity:'中', note:'疑似惡意樣本'} ];
+    // simulate enrichment of existing findings
+    const feed = fakeDB.map(f=>({ ...f, seenAt: new Date(Date.now()-Math.floor(Math.random()*86400000)).toLocaleString() }));
+    window.networkMonitoringData.threat = { timestamp: Date.now(), feed };
+    const el = document.getElementById('threat-feed'); el.innerHTML = '';
+    feed.forEach(f=>{ const d=document.createElement('div'); d.className='intel-item'; d.innerHTML = '<div><strong>'+f.type+': '+f.indicator+'</strong> <span style="color:#ffaa00;">'+f.severity+'</span></div><div style="font-size:0.85rem;color:#ccc;">'+f.note+' — 探測時間: '+f.seenAt+'</div>'; el.appendChild(d); });
+    netLog('威脅情模擬整合完成（僅示範）');
+}
+
+function simulateAttribution(){
+    const ip = (document.getElementById('attrib-ip').value || '203.0.113.5').trim();
+    netLog('開始攻擊歸因模擬 for '+ip);
+    // mock geo mapping and fingerprint
+    const geoMap = { '203.0.113.5': { country:'香港', city:'香港島' }, '198.51.100.10': { country:'台灣', city:'台北' } };
+    const fp = { os:'Linux', tools:['curl','nmap'], fingerprintScore: Math.floor(50+Math.random()*50) };
+    const geo = geoMap[ip] || { country:'未知', city:'未知' };
+    const result = { ip, geo, fingerprint: fp, timestamp: Date.now() };
+    window.networkMonitoringData.attribution = result;
+    const out = document.getElementById('attrib-results'); out.textContent = JSON.stringify(result, null, 2);
+    netLog('攻擊歸因模擬完成（模擬地理定位: '+geo.country+'）');
+}
+
+// expose open function on monitoring panel
+function openAdvancedFromMonitoring(){ openNetworkAdvanced(); }
+</script>
+
 <div id="legal-modal" class="immersive-modal" style="display:none;">
     <header>
         <div style="font-weight:bold;">法律工具</div>
         <div><button class="close-btn" onclick="closeLegalTools()">關閉</button></div>
     </header>
-    <div class="legal-form">
-        <label>案件編號 <input id="le-case-id" /></label>
-        <label>受害者 <input id="le-victim" /></label>
-        <label>說明 <textarea id="le-desc"></textarea></label>
-        <div class="action-row">
-            <button class="btn-primary" onclick="generateArrestWarrant()">生成逮捕令 (PDF)</button>
-            <button class="btn-primary" onclick="verifyEvidenceHash()">驗證證據完整性</button>
+    <div class="legal-form" style="display:grid; grid-template-columns: 1fr 360px; gap:12px;">
+        <div>
+            <div style="margin-bottom:8px;"><strong>搜查令申請 (模擬)</strong></div>
+            <label>申請人 <input id="warrant-applicant" class="modal-input" placeholder="調查員或單位" /></label>
+            <label>被申請對象 <input id="warrant-target" class="modal-input" placeholder="目標 (IP/帳號/地點)" /></label>
+            <label>理由 (probable cause) <textarea id="warrant-reason" class="modal-input" placeholder="說明可疑事實與證據摘要"></textarea></label>
+            <label>範圍 (search scope) <input id="warrant-scope" class="modal-input" placeholder="例如：特定伺服器、電子郵件帳戶" /></label>
+            <label>預計執行地點/管轄 <input id="warrant-jurisdiction" class="modal-input" placeholder="國家/地區" /></label>
+            <div style="margin-top:8px; display:flex; gap:8px;">
+                <button class="btn-primary" onclick="submitWarrantApplication()">申請搜查令（模擬送出）</button>
+                <button class="btn" onclick="complianceCheck()">程序合法性檢查</button>
+            </div>
+
+            <hr style="margin:12px 0; border-color: rgba(255,255,255,0.05);" />
+
+            <div style="margin-bottom:8px;"><strong>法庭證據提交</strong></div>
+            <label>證據名稱 <input id="evidence-name" class="modal-input" placeholder="例如: secret.docx" /></label>
+            <label>證據類型 <input id="evidence-type" class="modal-input" placeholder="文件/封包/截圖" /></label>
+            <label style="display:flex; gap:8px; align-items:center;"><input type="checkbox" id="evidence-critical" /> <span>標記為關鍵證據</span></label>
+            <div style="margin-top:8px; display:flex; gap:8px;"><button class="btn-primary" onclick="addEvidenceToPackage()">加入證據包</button>
+                <button class="btn" onclick="submitEvidencePackage()">提交至法庭（模擬）</button></div>
+
+        </div>
+
+        <div>
+            <div style="font-weight:bold;">法律工具結果</div>
+            <div id="legal-results" style="margin-top:8px; font-family:monospace; font-size:0.9rem; max-height:420px; overflow:auto; background:rgba(0,0,0,0.4); padding:8px; border-radius:6px;"></div>
+            <div style="margin-top:10px; display:flex; gap:8px;">
+                <button class="btn" onclick="analyzeJurisdiction()">管轄權分析</button>
+                <button class="btn" onclick="requestInternationalAssistance()">國際協助請求</button>
+                <button class="btn" onclick="generateArrestWarrant()">匯出逮捕/搜查令 (模擬 PDF)</button>
+            </div>
         </div>
     </div>
 </div>
@@ -23963,6 +24742,181 @@ function renderMonitoring(){
 function generateArrestWarrant(){ alert('生成逮捕令：暫時為示例。'); }
 function verifyEvidenceHash(){ alert('驗證完成（模擬）'); }
 
+// --- 法律流程模擬函數（模擬）
+window.legalWorkflow = window.legalWorkflow || { evidencePackage: [] };
+
+function submitWarrantApplication(){
+    const app = {
+        applicant: document.getElementById('warrant-applicant').value || 'Unknown',
+        target: document.getElementById('warrant-target').value || 'Unknown',
+        reason: document.getElementById('warrant-reason').value || '',
+        scope: document.getElementById('warrant-scope').value || '',
+        jurisdiction: document.getElementById('warrant-jurisdiction').value || '本地',
+        timestamp: Date.now()
+    };
+    // mock judicial review
+    appendForensicsLog('提交搜查令申請（模擬） by '+app.applicant+' 目標: '+app.target);
+    document.getElementById('legal-results').textContent = '申請已送出，等待法院審核（模擬）...';
+    setTimeout(()=>{
+        const granted = Math.random() > 0.25; // 75% chance
+        const res = { granted, judge:'Judge Chen', notes: granted? '核准搜查令' : '理由不足，請補充證據', timestamp: Date.now() };
+        window.legalWorkflow.lastWarrant = { app, res };
+        document.getElementById('legal-results').textContent = JSON.stringify(window.legalWorkflow.lastWarrant, null, 2);
+        appendForensicsLog('法院審核完成（模擬） - 結果: '+(granted? '核准':'駁回'));
+    }, 2200);
+}
+
+function complianceCheck(){
+    appendForensicsLog('執行法律合規檢查（模擬）');
+    // mock checks
+    const checks = { warrantsPresent: !!window.legalWorkflow.lastWarrant, policyMatch: Math.random()>0.2, privacyRisk: Math.random()>0.7 };
+    const summary = { timestamp: Date.now(), checks, verdict: checks.warrantsPresent && checks.policyMatch && !checks.privacyRisk ? '合法' : '有風險' };
+    document.getElementById('legal-results').textContent = JSON.stringify(summary, null, 2);
+    appendForensicsLog('合規檢查完成（模擬） - 結論: '+summary.verdict);
+}
+
+function addEvidenceToPackage(){
+    const name = document.getElementById('evidence-name').value || 'unnamed';
+    const type = document.getElementById('evidence-type').value || 'unknown';
+    const critical = document.getElementById('evidence-critical').checked;
+    const e = { id: 'ev-'+Math.floor(Math.random()*90000+10000), name, type, critical, timestamp: Date.now() };
+    window.legalWorkflow.evidencePackage.push(e);
+    appendForensicsLog('已加入證據包（模擬）: '+name);
+    document.getElementById('legal-results').textContent = JSON.stringify(window.legalWorkflow.evidencePackage, null, 2);
+}
+
+function submitEvidencePackage(){
+    appendForensicsLog('提交證據包至法庭（模擬） - 正在整理...');
+    const pkg = window.legalWorkflow.evidencePackage || [];
+    setTimeout(()=>{
+        const receipt = { pkgCount: pkg.length, submittedAt: Date.now(), docketId: 'D-'+Math.floor(Math.random()*90000+10000) };
+        window.legalWorkflow.lastSubmission = receipt;
+        document.getElementById('legal-results').textContent = JSON.stringify(receipt, null, 2);
+        appendForensicsLog('證據包提交完成（模擬） - 案卷號: '+receipt.docketId);
+    }, 1800);
+}
+
+function analyzeJurisdiction(){
+    appendForensicsLog('執行管轄權分析（模擬）');
+    const jur = document.getElementById('warrant-jurisdiction').value || '本地';
+    const advice = jur.includes('國') || jur === 'International' ? '可能需要跨境請求與國際協助' : '本地管轄可執行';
+    const out = { jurisdiction: jur, advice, timestamp: Date.now() };
+    document.getElementById('legal-results').textContent = JSON.stringify(out, null, 2);
+    appendForensicsLog('管轄分析完成（模擬） - 建議: '+advice);
+}
+
+function requestInternationalAssistance(){
+    appendForensicsLog('發起國際協助請求（模擬）');
+    // open step modal for selecting agency
+    openStepModal('國際協助請求（模擬）', [
+        { name:'選擇協作機構', type:'select', options:[{label:'INTERPOL',value:'interpol'},{label:'Europol',value:'europol'},{label:'Bilateral MLAT',value:'mlat'}] },
+        { name:'發送請求', type:'progress', duration: 3000 },
+        { name:'回應', type:'result', content: '回應已收到（模擬） - 進一步執行跨境協調' }
+    ], (result)=>{
+        appendForensicsLog('國際協助流程完成（模擬） - 機構: '+result.selectedValue);
+        document.getElementById('legal-results').textContent = '國際協助：'+result.selectedValue+' 已回應（模擬）';
+    });
+}
+
+function generateArrestWarrant(){
+    const last = window.legalWorkflow.lastWarrant || null;
+    const data = last ? last : { note:'沒有最新申請，生成範本（模擬）' };
+    document.getElementById('legal-results').textContent = JSON.stringify({ generated: true, data, timestamp: Date.now() }, null, 2);
+    appendForensicsLog('已生成逮捕/搜查令範本（模擬）');
+}
+
+</script>
+
+<!-- Advanced Analysis Modal v5.5.0 (SIMULATION ONLY) -->
+<div id="advanced-analysis-modal" class="immersive-modal" style="display:none;">
+    <header>
+        <div style="font-weight:bold;">進階分析工具 v5.5.0 <span class="new-badge">v5.5.0</span></div>
+        <div><button class="close-btn" onclick="closeAdvancedAnalysis()">關閉</button></div>
+    </header>
+    <div style="padding:12px; display:grid; grid-template-columns:1fr 320px; gap:12px;">
+        <div>
+            <div class="node-card">行為模式分析
+                <div style="margin-top:8px;">識別黑客操作習慣、常用工具與攻擊序列（模擬）</div>
+                <div style="margin-top:8px;"><button class="btn-primary" onclick="simulateBehaviorAnalysis()">執行行為分析</button></div>
+            </div>
+
+            <div class="node-card" style="margin-top:10px;">社交網絡分析
+                <div style="margin-top:8px;">關聯帳戶、通訊列表與潛在合作夥伴（模擬）</div>
+                <div style="margin-top:8px;"><button class="btn-primary" onclick="simulateSocialNetworkAnalysis()">執行社交網絡分析</button></div>
+            </div>
+
+            <div class="node-card" style="margin-top:10px;">時間線重建工具
+                <div style="margin-top:8px;">使用多來源事件重建攻擊順序（模擬）</div>
+                <div style="margin-top:8px;"><button class="btn-primary" onclick="simulateTimelineReconstruction()">重建時間線</button></div>
+            </div>
+
+            <div class="node-card" style="margin-top:10px;">數據關聯引擎
+                <div style="margin-top:8px;">發現隱藏關聯模式與可疑指標（模擬）</div>
+                <div style="margin-top:8px;"><button class="btn-primary" onclick="simulateDataCorrelationEngine()">運行關聯引擎</button></div>
+            </div>
+
+            <div class="node-card" style="margin-top:10px;">AI 輔助分析
+                <div style="margin-top:8px;">使用 AI 模型自動識別異常模式（模擬）</div>
+                <div style="margin-top:8px;"><button class="btn-primary" onclick="simulateAIAssistedAnalysis()">啟動 AI 分析</button></div>
+            </div>
+        </div>
+
+        <div>
+            <div style="font-weight:bold;">進階分析結果</div>
+            <div id="advanced-analysis-results" style="margin-top:8px; font-family:monospace; font-size:0.9rem; max-height:420px; overflow:auto; background:rgba(0,0,0,0.4); padding:8px; border-radius:6px;"></div>
+            <div style="margin-top:10px; color:#aaa; font-size:0.85rem;">註：所有分析為示範性模擬，並不執行真實外部查詢或模型推理。</div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openAdvancedAnalysis(){ document.getElementById('advanced-analysis-modal').style.display='block'; }
+function closeAdvancedAnalysis(){ document.getElementById('advanced-analysis-modal').style.display='none'; }
+
+function simulateBehaviorAnalysis(){
+    appendForensicsLog('進階行為分析啟動（模擬）');
+    setTimeout(()=>{
+        const result = { patterns:[{ tactic:'lateral_movement', freq:12 }, { tactic:'privilege_escalation', freq:4 }], summary:'發現常見動作模式：側移、持久化、憑證收集'};
+        document.getElementById('advanced-analysis-results').textContent = JSON.stringify(result, null, 2);
+        appendForensicsLog('行為分析完成（模擬）');
+    }, 1500);
+}
+
+function simulateSocialNetworkAnalysis(){
+    appendForensicsLog('社交網絡分析執行（模擬）');
+    setTimeout(()=>{
+        const map = { nodes: [{id:'acct1',score:0.9},{id:'acct2',score:0.76}], edges:[['acct1','acct2']] };
+        document.getElementById('advanced-analysis-results').textContent = JSON.stringify(map, null, 2);
+        appendForensicsLog('社交網絡分析完成（模擬） - 發現高關聯帳戶');
+    }, 1600);
+}
+
+function simulateTimelineReconstruction(){
+    appendForensicsLog('時間線重建啟動（模擬）');
+    setTimeout(()=>{
+        const timeline = [ '2025-08-01T09:58:12 - 扫描', '2025-08-01T10:01:12 - SSH 登入', '2025-08-01T10:02:05 - 上傳 secret.docx' ];
+        document.getElementById('advanced-analysis-results').textContent = JSON.stringify({ timeline }, null, 2);
+        appendForensicsLog('時間線重建完成（模擬）');
+    }, 1300);
+}
+
+function simulateDataCorrelationEngine(){
+    appendForensicsLog('數據關聯引擎運行（模擬）');
+    setTimeout(()=>{
+        const correlations = [{ a:'IP 198.51.100.23', b:'Email ghost@onion' , score:0.82 }];
+        document.getElementById('advanced-analysis-results').textContent = JSON.stringify({ correlations }, null, 2);
+        appendForensicsLog('關聯引擎完成（模擬） - 發現隱藏關聯');
+    }, 1700);
+}
+
+function simulateAIAssistedAnalysis(){
+    appendForensicsLog('AI 輔助分析啟動（模擬）');
+    setTimeout(()=>{
+        const ai = { anomalies:[{ id:'conn-123', score:0.95, reason:'異常大型外連' }], recommendation:'優先調查 conn-123' };
+        document.getElementById('advanced-analysis-results').textContent = JSON.stringify(ai, null, 2);
+        appendForensicsLog('AI 分析完成（模擬） - 已標註高風險事件');
+    }, 2200);
+}
 </script>
 
 <!-- Defense & Darknet prototypes -->
@@ -24006,6 +24960,99 @@ function verifyEvidenceHash(){ alert('驗證完成（模擬）'); }
         </div>
     </div>
 </div>
+
+<!-- Tactical Operations (SIMULATION ONLY) -->
+<div id="tactical-ops-modal" class="immersive-modal" style="display:none;">
+    <header>
+        <div style="font-weight:bold;">戰術行動工具（模擬）</div>
+        <div><button class="close-btn" onclick="closeTacticalOps()">關閉</button></div>
+    </header>
+    <div style="padding:12px; display:grid; grid-template-columns:1fr 320px; gap:12px;">
+        <div>
+            <div class="node-card">🎭 誘捕系統（蜜罐）
+                <div style="margin-top:8px;">在受控環境中模擬蜜罐部署與流量回報（僅示範）</div>
+                <div style="margin-top:8px; display:flex; gap:8px;"><button class="btn-primary" onclick="simulateDeployHoneypot()">模擬部署蜜罐</button></div>
+            </div>
+
+            <div class="node-card" style="margin-top:10px;">📍 地理定位工具（IP → 位置 模擬）
+                <div style="margin-top:8px;">輸入 IP 以模擬回傳位置資訊（不連網、不查實）</div>
+                <div style="margin-top:8px; display:flex; gap:8px;"><input id="tactical-ip-input" class="modal-input" placeholder="範例: 198.51.100.23" /><button class="btn" onclick="simulateGeoLocateIP()">模擬定位</button></div>
+            </div>
+
+                        <!-- 全網圍捕協作模式已整合 -->
+                        <!-- 舊有戰術/沉浸式模擬功能已移除或停用 -->
+                </div>
+
+                <div>
+                        <div style="font-weight:bold;">協作儀表板</div>
+                        <div id="roundup-placeholder" style="margin-top:8px; font-family:monospace; font-size:0.9rem; max-height:340px; overflow:auto; background:rgba(0,0,0,0.35); padding:8px; border-radius:6px;">全網圍捕功能已啟用。可從右下角或工具區觸發行動。</div>
+                </div>
+        </div>
+</div>
+
+<script>
+// 全網圍捕（Cooperative Net Roundup）模組
+(function(){
+        const UNITS = [
+            { id:'cyber_police', name:'網警', color:'#4a90d9', resources:5 },
+            { id:'special_forces', name:'特警', color:'#ff3333', resources:3 },
+            { id:'forensics', name:'鑑識科', color:'#ff9900', resources:4 }
+        ];
+
+        function createModal(){
+            if(document.getElementById('net-roundup-modal')) return;
+            const html = `
+            <div id="net-roundup-modal" class="modal-overlay" style="display:none;">
+                <div class="modal-box">
+                    <div class="modal-title">全網圍捕協作模式</div>
+                    <div class="modal-message">
+                        <div style="display:flex; gap:12px;">
+                            <div style="flex:1;">
+                                <div style="font-weight:bold; margin-bottom:8px;">協作單位</div>
+                                <div id="roundup-units" style="display:flex; flex-direction:column; gap:8px;"></div>
+                                <div style="margin-top:12px;"><label>觸發門檻(證據數): <input id="roundup-threshold" type="number" value="5" style="width:60px;"/></label>
+                                    <button class="btn btn-primary" onclick="triggerRoundupFromUI()" style="margin-left:8px;">手動觸發</button></div>
+                            </div>
+                            <div style="width:260px;">
+                                <div style="font-weight:bold; margin-bottom:8px;">資源調度</div>
+                                <div id="roundup-resources" style="background:rgba(0,0,0,0.35); padding:8px; border-radius:6px; min-height:180px; font-family:monospace;"></div>
+                                <div style="margin-top:12px; font-weight:bold;">實時進度</div>
+                                <div id="roundup-progress" style="margin-top:8px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-buttons"><button class="modal-btn modal-btn-cancel" onclick="closeNetRoundup()">關閉</button></div>
+                </div>
+            </div>`;
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+
+        function renderUnits(){ const el=document.getElementById('roundup-units'); if(!el) return; el.innerHTML=''; UNITS.forEach(u=>{ const div=document.createElement('div'); div.style.display='flex'; div.style.justifyContent='space-between'; div.style.alignItems='center'; div.style.padding='6px'; div.style.border='1px solid rgba(255,255,255,0.04)'; div.innerHTML = `<div><strong style="color:${u.color}">${u.name}</strong><div style="font-size:0.85rem;color:#aaa;">可用單位: <span id="res-${u.id}">${u.resources}</span></div></div><div><button class="btn" onclick="dispatchUnit('${u.id}')">調度</button></div>`; el.appendChild(div); }); }
+
+        function renderResourcesLog(msg){ const el=document.getElementById('roundup-resources'); if(!el) return; const d=document.createElement('div'); d.textContent='['+new Date().toLocaleTimeString('zh-TW')+'] '+msg; el.prepend(d); }
+
+        window.dispatchUnit = function(unitId){ const u = UNITS.find(x=>x.id===unitId); if(!u) return; if(u.resources<=0){ renderResourcesLog(u.name+' 無可用資源'); return; } u.resources--; const rEl = document.getElementById('res-'+u.id); if(rEl) rEl.textContent = u.resources; renderResourcesLog('已調度 '+u.name+' 一組單位'); startRoundupProgress(); };
+
+        let roundupInProgress = false;
+        function startRoundupProgress(){ if(roundupInProgress) return; roundupInProgress = true; const progEl=document.getElementById('roundup-progress'); if(!progEl) return; progEl.innerHTML=''; UNITS.forEach(u=>{ const wrap=document.createElement('div'); wrap.style.marginBottom='8px'; wrap.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;"><div style="color:${u.color}"><strong>${u.name}</strong></div><div style="font-size:0.85rem;color:#aaa;">進度: <span id="p-${u.id}">0%</span></div></div><div class="progress-bar-container"><div class="progress-bar-fill" id="f-${u.id}" style="width:0%; background: linear-gradient(90deg, ${u.color}, #ffffff)"></div></div>`; progEl.appendChild(wrap); });
+            const timer = setInterval(()=>{
+                let done = true;
+                UNITS.forEach(u=>{ const fill = document.getElementById('f-'+u.id); const pctEl = document.getElementById('p-'+u.id); if(!fill) return; const cur = parseInt(fill.style.width)||0; const inc = Math.floor(Math.random()*20)+5; const next = Math.min(100, cur + inc); fill.style.width = next+'%'; if(pctEl) pctEl.textContent = next+'%'; if(next<100) done = false; });
+                if(done){ clearInterval(timer); roundupInProgress=false; renderResourcesLog('全網圍捕行動完成（模擬）'); addTerminalLine && addTerminalLine('[全網圍捕] 行動完成','success'); }
+            }, 800);
+        }
+
+        window.triggerRoundupFromUI = function(){ const thr = parseInt(document.getElementById('roundup-threshold').value) || 5; const evidenceCount = (window.reports && window.reports.currentEvidenceCount) || (window.GameState && GameState.evidenceCount) || 0; if(evidenceCount >= thr){ document.getElementById('net-roundup-modal').style.display='flex'; renderUnits(); renderResourcesLog('基於證據閾值('+evidenceCount+')，觸發全網圍捕（模擬）'); startRoundupProgress(); } else { renderResourcesLog('證據不足：目前 '+evidenceCount+'，門檻 '+thr); addTerminalLine && addTerminalLine('[全網圍捕] 證據未達門檻','warning'); } };
+
+        window.triggerRoundup = function(evidenceCount){ window.reports = window.reports || {}; window.reports.currentEvidenceCount = evidenceCount; createModal(); document.getElementById('net-roundup-modal').style.display='flex'; renderUnits(); renderResourcesLog('由系統事件觸發全網圍捕（模擬），證據: '+evidenceCount); startRoundupProgress(); };
+
+        window.closeNetRoundup = function(){ const m=document.getElementById('net-roundup-modal'); if(m) m.style.display='none'; };
+
+        // create quick-launch button
+        try{ if(!document.getElementById('roundup-quick-btn')){ const btn = document.createElement('div'); btn.id='roundup-quick-btn'; btn.style.position='fixed'; btn.style.right='18px'; btn.style.bottom='80px'; btn.style.zIndex='100000'; btn.innerHTML = '<button class="btn btn-warning" title="全網圍捕" onclick="createModal(); document.getElementById(\'net-roundup-modal\').style.display=\'flex\'; renderUnits();">全網圍捕</button>'; document.body.appendChild(btn); } }catch(e){}
+
+})();
+</script>
 
 <script>
 function openDefenseTools(){ document.getElementById('defense-modal').style.display='block'; }
@@ -24059,5 +25106,131 @@ window.voiceRec = initVoiceCommands();
 }
 }
 </script>
+</script>
+
+<!-- Forensics Lab Modal (執法部門 數位鑑識實驗室) -->
+<div id="forensics-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-title">數位鑑識實驗室系統 (v<span id="forensics-version">5.5.0</span>)</div>
+        <div class="modal-message" style="display:block;">
+            <div style="display:grid; grid-template-columns: 1fr 260px; gap:12px;">
+                <div>
+                    <div style="font-weight:bold; margin-bottom:8px;">工具模組</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <button class="btn btn-primary" onclick="runMemoryDumpAnalysis()">記憶體轉儲分析</button>
+                        <button class="btn btn-primary" onclick="verifyDiskImage()">硬碟映像驗證</button>
+                        <button class="btn btn-primary" onclick="reassemblePackets()">網路封包重組</button>
+                        <button class="btn btn-primary" onclick="openTimelineAnalyzer()">時間線分析介面</button>
+                        <button class="btn btn-primary" onclick="verifyDigitalSignature()">數位章驗證器</button>
+                        <button class="btn btn-primary" onclick="openLegalSimulator()">法院與法律程序模擬</button>
+                        <button class="btn btn-primary" onclick="startWarrantWorkflow()">搜索令申請模擬</button>
+                    </div>
+                </div>
+                <div>
+                    <div style="font-weight:bold; margin-bottom:8px;">任務與法務流程</div>
+                    <div id="forensics-side" style="background:rgba(0,0,0,0.35); padding:10px; border-radius:6px; max-height:420px; overflow:auto; font-family:monospace; font-size:0.95rem;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-buttons" style="margin-top:12px;">
+            <button class="modal-btn modal-btn-cancel" onclick="closeForensicsLab()">關閉</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Forensics Lab handlers (simulated)
+function openForensicsLab(){
+    const m = document.getElementById('forensics-modal'); if(!m) return; document.getElementById('forensics-version').textContent = typeof TOOL_VERSION !== 'undefined' ? TOOL_VERSION : '5.5.0'; m.classList.add('active'); m.style.display='flex'; renderForensicsSide('系統已啟動。可選擇任一模組進行模擬操作。');
+}
+function closeForensicsLab(){ const m = document.getElementById('forensics-modal'); if(!m) return; m.classList.remove('active'); m.style.display='none'; }
+
+function renderForensicsSide(msg){ const el = document.getElementById('forensics-side'); if(!el) return; const d = document.createElement('div'); d.className='report-line'; d.textContent = '['+new Date().toLocaleTimeString('zh-TW')+'] '+msg; el.prepend(d); }
+
+function appendForensicsLog(msg){ renderForensicsSide(msg); addTerminalLine && addTerminalLine('[鑑識] '+msg, 'system'); }
+
+function runMemoryDumpAnalysis(){ appendForensicsLog('開始記憶體轉儲分析（模擬）...'); simulateProgress('記憶體分析', (res)=>{ appendForensicsLog('記憶體分析完成：發現可疑注入跡象與執行緒異常'); }); }
+
+function verifyDiskImage(){ appendForensicsLog('開始硬碟映像驗證（模擬）...'); simulateProgress('映像驗證', (res)=>{ appendForensicsLog('映像驗證完成：SHA256 校驗一致，映像未被篡改（模擬）'); }); }
+
+function reassemblePackets(){ appendForensicsLog('開始網路封包重組（模擬），這可能會生成 pcap 片段'); simulateProgress('封包重組', (res)=>{ appendForensicsLog('封包重組完成：已重組 HTTP 與 TLS 流量片段，生成 traffic_report.pcap（模擬）'); }); }
+
+function openTimelineAnalyzer(){ appendForensicsLog('打開時間線分析介面（模擬）'); alert('時間線分析介面（模擬）已開啟 — 可視化時間序列與事件關聯。'); }
+
+function verifyDigitalSignature(){ appendForensicsLog('執行數位章驗證（模擬）'); simulateProgress('數位章驗證', (res)=>{ appendForensicsLog('數位章驗證結果：部份文件簽章無效，列入證據鏈審查名單。'); }); }
+
+function openLegalSimulator(){ appendForensicsLog('啟動法院與法律程序模擬（模擬）'); alert('法律程序模擬啟動：可檢視法院流程、證據可採性檢查與庭審準備度評估（模擬）。'); }
+
+function startWarrantWorkflow(){ appendForensicsLog('啟動搜索令申請模擬'); // simulate steps
+    renderForensicsSide('申請：已送出搜索令（待法官批准）');
+    setTimeout(()=>{ renderForensicsSide('法官：已審查，要求補充法律要件（清單）'); }, 1800);
+    setTimeout(()=>{ renderForensicsSide('法官：已批准搜索令。可執行現場取證（模擬）'); appendForensicsLog('搜索令已獲准（模擬）'); }, 4200);
+}
+
+function simulateProgress(title, cb){ const id = 'forensics-prog-'+Math.floor(Math.random()*9000+1000); renderForensicsSide(title+'：進行中...'); let pct=0; const t = setInterval(()=>{ pct += Math.floor(Math.random()*20)+10; if(pct>100) pct=100; renderForensicsSide(title+' 進度 '+pct+'%'); addTerminalLine && addTerminalLine('[鑑識] '+title+' 進度 '+pct+'%', 'system'); if(pct>=100){ clearInterval(t); renderForensicsSide(title+'：完成'); cb && cb(true); } }, 600); }
+
+// Expose an action to the shop/button so clicking the forensics_toolkit can open the lab
+if(typeof window.openForensicsLab === 'undefined') window.openForensicsLab = openForensicsLab;
+</script>
+
+<!-- Quick-launch floating panel for LE tools -->
+<style>
+        #le-quick-panel { position: fixed; right: 18px; bottom: 18px; width: 220px; background: rgba(10,10,20,0.95); border: 1px solid rgba(74,144,217,0.25); border-radius: 10px; padding: 8px; z-index: 99999; box-shadow: 0 8px 30px rgba(0,0,0,0.6); }
+        #le-quick-panel .panel-header { display:flex; justify-content:space-between; align-items:center; }
+        #le-quick-panel h4 { margin:0; color:#4a90d9; font-size:0.95rem; }
+        #le-quick-panel .close-btn { background:transparent; border:none; color:#ccc; cursor:pointer; }
+        #le-quick-panel button { width:100%; margin-top:6px; }
+        #le-quick-reopen { position: fixed; right: 18px; bottom: 18px; z-index:100000; display:none; }
+</style>
+<div id="le-quick-panel" aria-hidden="true">
+    <div class="panel-header"><h4>執法快速啟動</h4><button class="close-btn" id="le-panel-close">✕</button></div>
+    <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+        <button class="btn btn-warning" id="btn-open-forensics">開啟 數位鑑識室</button>
+        <button class="btn btn-primary" id="btn-open-warrant">開啟 搜索令系統</button>
+        <button class="btn btn-secondary" id="btn-gen-summary">產生摘要</button>
+    </div>
+</div>
+
+<!-- small reopen button shown when panel closed -->
+<div id="le-quick-reopen">
+    <button class="btn btn-warning" id="btn-reopen">執法快速啟動</button>
+</div>
+
+<script>
+// Show panel only for law enforcement role
+function showLEPanelIfAllowed(){
+    try{
+        const role = (window.GameState && GameState.currentRole) || 'hacker';
+        const panel = document.getElementById('le-quick-panel');
+        const reopen = document.getElementById('le-quick-reopen');
+        if(!panel) return;
+        if(role === 'law_enforcement'){
+            panel.style.display = 'block'; panel.setAttribute('aria-hidden','false'); if(reopen) reopen.style.display='none';
+        } else {
+            panel.style.display = 'none'; panel.setAttribute('aria-hidden','true'); if(reopen) reopen.style.display='none';
+        }
+    }catch(e){ console.error(e); }
+}
+
+// Hook up buttons
+document.getElementById('btn-open-forensics').addEventListener('click', ()=>{ openForensicsLab && openForensicsLab(); });
+document.getElementById('btn-open-warrant').addEventListener('click', ()=>{ openWarrantSystem && openWarrantSystem(); });
+document.getElementById('btn-gen-summary').addEventListener('click', ()=>{ renderForensicsSide && renderForensicsSide('快速面板：產生執法摘要（模擬）'); });
+
+// close/reopen behavior
+document.getElementById('le-panel-close').addEventListener('click', ()=>{ const p=document.getElementById('le-quick-panel'); if(!p) return; p.style.display='none'; p.setAttribute('aria-hidden','true'); const r=document.getElementById('le-quick-reopen'); if(r) r.style.display='block'; });
+document.getElementById('btn-reopen').addEventListener('click', ()=>{ showLEPanelIfAllowed(); });
+
+// ensure removed tactical/immersive functions are inert no-ops
+['openTacticalOps','closeTacticalOps','openImmersiveInvestigation','closeImmersiveInvestigation','simulateStartCovertMonitor','simulateStopCovertMonitor','simulateDeployHoneypot','simulateGeoLocateIP','simulateShareIntel','createFolder','populateSampleEvidence','renderEvidenceTimeline','openEvidenceRoom','addChatMessage','assignTask'].forEach(fn=>{ if(typeof window[fn] !== 'function'){ window[fn] = function(){ console.warn(fn+' 已被移除或停用'); addTerminalLine && addTerminalLine('已停用：'+fn,'warning'); }; } });
+
+// init on load and whenever GameState.currentRole changes (best-effort)
+window.addEventListener('load', ()=>{ showLEPanelIfAllowed(); });
+// poll for role changes in case GameState is set later
+let lastRole = (window.GameState && GameState.currentRole) || null;
+setInterval(()=>{ const role = (window.GameState && GameState.currentRole) || null; if(role !== lastRole){ lastRole = role; showLEPanelIfAllowed(); } }, 1000);
+</script>
+
 </body>
 </html>
+
