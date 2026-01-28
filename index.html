@@ -17,13 +17,13 @@
         }
 
         body {
-            background: #000;
+            background: radial-gradient(ellipse at center, #0a0a0a 0%, #000000 100%);
             color: #fff;
             overflow-x: hidden;
             min-height: 100vh;
             position: relative;
-            background: radial-gradient(ellipse at center, #0a0a0a 0%, #000000 100%);
         }
+        
 
         /* ===== 終端動效與新樣式 ===== */
         .terminal-line {
@@ -6369,14 +6369,10 @@
 .dossier-body { padding: 15px; }
 
 /* Ensure tools panel stays above special skills and avoid overlap */
-.left-panel > .tools-panel { position: relative !important; z-index: 1200 !important; }
-.left-panel > .special-skills-panel { position: relative !important; z-index: 1000 !important; }
+.left-panel > .tools-panel { position: relative !important; z-index: 1500 !important; pointer-events: auto; }
+.left-panel > .special-skills-panel { position: relative !important; z-index: 1100 !important; pointer-events: auto; }
 /* Wider rule to catch any special skills cards placed later */
 .special-skills-panel, .special-skills-panel * { z-index: 1000 !important; }
-
-        /* 強制工具面板置於最上層，避免特殊技能面板遮蔽 */
-        .left-panel > .tools-panel { position: relative !important; z-index: 1500 !important; pointer-events: auto; }
-        .left-panel > .special-skills-panel { position: relative !important; z-index: 1100 !important; pointer-events: auto; }
 
         /* 響應式：在窄螢幕時，改為一欄排列 darknet 佈局 */
         @media (max-width: 900px) {
@@ -6562,6 +6558,30 @@
             <div class="status-item">
                 <span class="status-label">情報更新:</span>
                 <span class="status-value" id="map-intel-updates">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 進階調查工具包彈窗 -->
+    <div id="investigation-toolkit-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <div class="modal-title">
+                <i class="fas fa-toolbox"></i> 進階調查工具包
+            </div>
+            <div class="modal-content" id="investigation-toolkit-content">
+                <div class="toolkit-tabs">
+                    <button class="btn btn-secondary" onclick="showToolkitTab('overview')">總覽</button>
+                    <button class="btn btn-secondary" onclick="showToolkitTab('timeline')">時間軸</button>
+                    <button class="btn btn-secondary" onclick="showToolkitTab('sna')">社交網絡</button>
+                    <button class="btn btn-secondary" onclick="showToolkitTab('geo')">地理定位</button>
+                    <button class="btn btn-secondary" onclick="showToolkitTab('sandbox')">沙箱</button>
+                </div>
+                <div id="toolkit-body" style="margin-top:12px;">
+                    <!-- 動態內容由 JS 注入 -->
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="closeInvestigationToolkit()">關閉</button>
             </div>
         </div>
     </div>
@@ -10717,7 +10737,7 @@
                                 <div class="terminal-header">
                                     <div class="terminal-title">
                                         <i class="fas fa-terminal"></i>
-                                        <span>${GameState.currentRole === 'hacker' ? 'DARKNET TERMINAL v4.0' : 'LAW ENFORCEMENT COMMAND v3.0'}</span>
+                                        <span>${GameState.currentRole === 'hacker' ? 'CMD COMMAND Prompt 6.6.0' : 'LAW ENFORCEMENT COMMAND v3.0'}</span>
                                     </div>
                                     <div class="terminal-status">
                                         <i class="fas fa-clock"></i>
@@ -10727,7 +10747,7 @@
                                 <div class="terminal-body">
                                     <div class="terminal-output" id="terminal-output"></div>
                                     <div class="terminal-input-container">
-                                        <div class="terminal-prompt">${GameState.currentRole === 'hacker' ? 'root@shadow:~#' : 'investigator@le:~#'}</div>
+                                        <div class="terminal-prompt">${GameState.currentRole === 'hacker' ? 'C:\\>' : 'investigator@le:~#'}</div>
                                         <input type="text" class="terminal-input" id="terminal-input" placeholder="輸入指令或使用工具...">
                                     </div>
                                     <div class="input-suggestions" id="input-suggestions">
@@ -10939,6 +10959,16 @@
                         <div class="quick-action-group le-advanced-group" id="le-advanced-group" style="display: none;">
                             <div class="group-title"><i class="fas fa-hammer"></i> 高級工具 / LE Advanced Tools</div>
                             <div class="group-btns">
+                                <!-- 執法快速啟動功能 -->
+                                <button class="quick-btn le-only" onclick="quickAction('open_forensics', this)">
+                                    <i class="fas fa-magnifying-glass-chart"></i> 數位鑑識室
+                                </button>
+                                <button class="quick-btn le-only" onclick="quickAction('open_warrant', this)">
+                                    <i class="fas fa-file-contract"></i> 搜索令系統
+                                </button>
+                                <button class="quick-btn le-only" onclick="quickAction('gen_summary', this)">
+                                    <i class="fas fa-clipboard"></i> 產生執法摘要
+                                </button>
                                 <button class="quick-btn le-only" onclick="quickAction('encryption_analysis', this)">
                                     <i class="fas fa-microchip"></i> 高級數據加密分析
                                 </button>
@@ -10950,6 +10980,56 @@
                                 </button>
                                 <button class="quick-btn le-only" onclick="quickAction('vuln_scanner', this)">
                                     <i class="fas fa-search"></i> 跨平台漏洞掃描器
+                                </button>
+                                <button class="quick-btn le-only" onclick="quickAction('timeline_analyzer', this)">
+                                    <i class="fas fa-stream"></i> 時間軸分析器
+                                </button>
+                                <button class="quick-btn le-only" onclick="quickAction('social_network_analysis', this)">
+                                    <i class="fas fa-project-diagram"></i> 社交網絡分析
+                                </button>
+                                <button class="quick-btn le-only" onclick="quickAction('geoip_mapping', this)">
+                                    <i class="fas fa-map-marker-alt"></i> 地理定位追蹤
+                                </button>
+                                <button class="quick-btn le-only" onclick="quickAction('tls_decode', this)">
+                                    <i class="fas fa-lock-open"></i> 加密流量解碼模擬
+                                </button>
+                                <button class="quick-btn le-only" onclick="quickAction('threat_intel_panel', this)">
+                                    <i class="fas fa-bell"></i> 實時威脅情報面板
+                                </button>
+                                <button class="quick-btn le-only" onclick="quickAction('cve_lookup', this)">
+                                    <i class="fas fa-book"></i> CVE 查詢
+                                </button>
+                                <button class="quick-btn le-only" onclick="quickAction('sandbox_analyze', this)">
+                                    <i class="fas fa-flask"></i> 惡意軟體沙箱
+                                </button>
+                                <button class="quick-btn le-only" onclick="quickAction('ai_attack_match', this)">
+                                    <i class="fas fa-robot"></i> AI 攻擊模式匹配
+                                </button>
+                                <!-- 缺失的執法專業工具 -->
+                                <button class="quick-btn le-only" onclick="quickAction('forensic_toolkit', this)">
+                                    <i class="fas fa-microchip"></i> 數位鑑識工具套件
+                                </button>
+                                <button class="quick-btn le-only" onclick="quickAction('chain_of_custody', this)">
+                                    <i class="fas fa-link"></i> 取證鏈管理系統
+                                </button>
+                                <button class="quick-btn le-only" onclick="quickAction('legal_doc_gen', this)">
+                                    <i class="fas fa-file-pdf"></i> 法律文書生成器
+                                </button>
+                                <button class="quick-btn le-only" onclick="quickAction('witness_mgmt', this)">
+                                    <i class="fas fa-users"></i> 證人/線人管理系統
+                                </button>
+                                <!-- 調查流程功能 -->
+                                <button class="quick-btn le-only" onclick="quickAction('case_management', this)">
+                                    <i class="fas fa-folder-open"></i> 案件管理系統
+                                </button>
+                                <button class="quick-btn le-only" onclick="quickAction('task_dispatch', this)">
+                                    <i class="fas fa-tasks"></i> 任務分派機制
+                                </button>
+                                <button class="quick-btn le-only" onclick="quickAction('timeline_viz', this)">
+                                    <i class="fas fa-chart-gantt"></i> 調查時間線視覺化
+                                </button>
+                                <button class="quick-btn le-only" onclick="quickAction('report_template', this)">
+                                    <i class="fas fa-file-alt"></i> 報告模板庫
                                 </button>
                             </div>
                         </div>
@@ -13259,7 +13339,7 @@
             
             // 權限攔截邏輯
             const hackerOnly = ['one_click_attack', 'auto_attack', 'direct_attack', 'progressive_attack', 'zombie_attack', 'signal_jammer', 'emergency_erase', 'encrypt_file', 'decrypt_file', 'honeypot_gen', 'darknet_hub'];
-            const leOnly = ['case_details', 'case_report', 'inter_dept_report', 'target_intel', 'encryption_analysis', 'behavior_analysis', 'instant_tracker', 'vuln_scanner'];
+            const leOnly = ['case_details', 'case_report', 'inter_dept_report', 'target_intel', 'encryption_analysis', 'behavior_analysis', 'instant_tracker', 'vuln_scanner', 'timeline_analyzer', 'social_network_analysis', 'geoip_mapping', 'tls_decode', 'threat_intel_panel', 'cve_lookup', 'sandbox_analyze', 'ai_attack_match', 'open_forensics', 'open_warrant', 'gen_summary', 'forensic_toolkit', 'chain_of_custody', 'legal_doc_gen', 'witness_mgmt', 'case_management', 'task_dispatch', 'timeline_viz', 'report_template'];
             
             if (hackerOnly.includes(actionId) && role !== 'hacker') {
                 showNotification('權限不足', '此功能僅限黑客使用', 'error');
@@ -13315,7 +13395,26 @@
                 'encryption_analysis': '高級數據加密分析工具 - 分析加密算法與破解點',
                 'behavior_analysis': '智能行為分析系統 - AI預測攻擊行為與時間',
                 'instant_tracker': '瞬時網絡追蹤器 - 追蹤目標真實地理位置',
-                'vuln_scanner': '跨平台漏洞掃描器 - 掃描系統漏洞與CVE'
+                'vuln_scanner': '跨平台漏洞掃描器 - 掃描系統漏洞與CVE',
+                'timeline_analyzer': '時間軸分析器 - 關聯事件的時間順序和因果關係',
+                'social_network_analysis': '社交網絡分析 - 分析目標的社交關係網絡',
+                'geoip_mapping': '地理定位追蹤 - 地圖上追蹤IP地址位置',
+                'tls_decode': '加密流量解碼模擬 - 分析和模擬TLS/SSL加密解碼',
+                'threat_intel_panel': '實時威脅情報面板 - 實時顯示網絡威脅信息',
+                'cve_lookup': 'CVE查詢 - 查詢已知的漏洞數據庫',
+                'sandbox_analyze': '惡意軟體沙箱 - 在隔離環境中分析惡意軟體',
+                'ai_attack_match': 'AI攻擊模式匹配 - 使用AI識別已知攻擊模式',
+                'open_forensics': '數位鑑識室 - 打開數位鑑識分析工具',
+                'open_warrant': '搜索令系統 - 打開法律搜索令申請系統',
+                'gen_summary': '產生執法摘要 - 生成案件執法摘要報告',
+                'forensic_toolkit': '數位鑑識工具套件 - 硬碟映像、記憶體轉儲分析',
+                'chain_of_custody': '取證鏈管理系統 - 證據監管鏈記錄',
+                'legal_doc_gen': '法律文書生成器 - 搜索令、法院文件自動生成',
+                'witness_mgmt': '證人/線人管理系統 - 管理證人訊息和線人資料',
+                'case_management': '案件管理系統 - 案件編號、優先級分配和進度跟蹤',
+                'task_dispatch': '任務分派機制 - 為團隊成員分派和管理調查任務',
+                'timeline_viz': '調查時間線視覺化 - 甘特圖式進度追蹤和事件關聯',
+                'report_template': '報告模板庫 - 標準調查報告格式和自動生成'
             };
             const desc = actionDescriptions[actionId] || '執行快捷功能';
             addTerminalLine(`[說明] ${desc}`, 'info');
@@ -13365,6 +13464,63 @@
                             break;
                         case 'vuln_scanner':
                             showVulnerabilityScanner();
+                            break;
+                        case 'timeline_analyzer':
+                            showTimelineAnalyzer();
+                            break;
+                        case 'social_network_analysis':
+                            showSocialNetworkAnalysis();
+                            break;
+                        case 'geoip_mapping':
+                            showGeoIPMapping();
+                            break;
+                        case 'tls_decode':
+                            showTLSDecoder();
+                            break;
+                        case 'threat_intel_panel':
+                            showThreatIntelPanel();
+                            break;
+                        case 'cve_lookup':
+                            showCVELookup();
+                            break;
+                        case 'sandbox_analyze':
+                            showSandboxAnalyzer();
+                            break;
+                        case 'ai_attack_match':
+                            showAIAttackMatcher();
+                            break;
+                        case 'open_forensics':
+                            openForensicsLab && openForensicsLab();
+                            break;
+                        case 'open_warrant':
+                            openWarrantSystem && openWarrantSystem();
+                            break;
+                        case 'gen_summary':
+                            renderForensicsSide && renderForensicsSide('快速面板：產生執法摘要（模擬）');
+                            break;
+                        case 'forensic_toolkit':
+                            showForensicToolkit();
+                            break;
+                        case 'chain_of_custody':
+                            showChainOfCustody();
+                            break;
+                        case 'legal_doc_gen':
+                            showLegalDocGenerator();
+                            break;
+                        case 'witness_mgmt':
+                            showWitnessManagement();
+                            break;
+                        case 'case_management':
+                            showCaseManagement();
+                            break;
+                        case 'task_dispatch':
+                            showTaskDispatch();
+                            break;
+                        case 'timeline_viz':
+                            showTimelineVisualization();
+                            break;
+                        case 'report_template':
+                            showReportTemplate();
                             break;
                         case 'scan_target':
                             useTool('network_scanner', {name: '網絡掃描', cost: 500, cooldown: 10});
@@ -14484,6 +14640,950 @@
                 updateGameStats();
                 showNotification('掃描完成', '已識別並生成修補計劃', 'success');
             }, 2000);
+        }
+
+        function showTimelineAnalyzer() {
+            const content = `
+                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: #4a90d9; font-weight: bold; margin-bottom: 15px;">
+                        📅 時間軸分析器
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">選擇事件類型</label>
+                        <select class="setting-input" id="timeline-type">
+                            <option value="attack">攻擊事件</option>
+                            <option value="network">網絡活動</option>
+                            <option value="financial">金融交易</option>
+                            <option value="communication">通訊記錄</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">時間範圍</label>
+                        <input type="date" class="setting-input" id="timeline-start" value="2025-01-01">
+                        <input type="date" class="setting-input" id="timeline-end" value="2025-01-28">
+                    </div>
+                    <div class="terminal-output" style="color: #4a90d9; font-size: 0.85rem; margin-top: 15px; margin-bottom: 15px;">
+                        [準備] 時間軸數據尚未加載，請點擊「分析」開始
+                    </div>
+                </div>
+            `;
+            showStepModal('時間軸分析器 📅', content, [
+                {text: '分析', onclick: 'analyzeTimeline()'},
+                {text: '取消', onclick: 'closeStepModal()'}
+            ]);
+        }
+
+        function analyzeTimeline() {
+            const type = document.getElementById('timeline-type')?.value || 'attack';
+            const start = document.getElementById('timeline-start')?.value || '';
+            const end = document.getElementById('timeline-end')?.value || '';
+            closeStepModal();
+            addTerminalLine(`[時間軸] 分析 ${type} 事件 (${start} 至 ${end})...`, 'command');
+            setTimeout(() => {
+                GameState.playerData.law_enforcement.investigationProgress += 20;
+                addTerminalLine('[✓] 已建立事件時間軸', 'success');
+                addTerminalLine('[關聯] 發現 7 個相關事件', 'success');
+                addTerminalLine('[因果] 確認攻擊發生順序', 'success');
+                updateGameStats();
+                showNotification('分析完成', '時間軸已建立', 'success');
+            }, 2200);
+        }
+
+        function showSocialNetworkAnalysis() {
+            const content = `
+                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: #4a90d9; font-weight: bold; margin-bottom: 15px;">
+                        🕸️ 社交網絡分析
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">目標用戶或組織</label>
+                        <input type="text" class="setting-input" id="target-username" placeholder="輸入用戶名或組織代碼" value="hacker_group_2025">
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">分析深度</label>
+                        <select class="setting-input" id="network-depth">
+                            <option value="1">一層 (直接聯繫)</option>
+                            <option value="2" selected>兩層 (朋友的朋友)</option>
+                            <option value="3">三層 (完整網絡)</option>
+                        </select>
+                    </div>
+                    <div class="terminal-output" style="color: #4a90d9; font-size: 0.85rem; margin-top: 15px;">
+                        [準備] 網絡數據尚未加載，請點擊「掃描」開始
+                    </div>
+                </div>
+            `;
+            showStepModal('社交網絡分析 🕸️', content, [
+                {text: '掃描', onclick: 'scanSocialNetwork()'},
+                {text: '取消', onclick: 'closeStepModal()'}
+            ]);
+        }
+
+        function scanSocialNetwork() {
+            const username = document.getElementById('target-username')?.value || 'unknown';
+            const depth = document.getElementById('network-depth')?.value || '2';
+            closeStepModal();
+            addTerminalLine(`[網絡] 掃描 "${username}" 的社交網絡 (深度: ${depth}層)...`, 'command');
+            setTimeout(() => {
+                GameState.playerData.law_enforcement.investigationProgress += 18;
+                addTerminalLine('[✓] 已映射社交網絡', 'success');
+                addTerminalLine('[節點] 發現 23 個關聯用戶', 'success');
+                addTerminalLine('[關鍵] 發現 3 個核心成員', 'success');
+                updateGameStats();
+                showNotification('掃描完成', '社交網絡已映射', 'success');
+            }, 2300);
+        }
+
+        function showGeoIPMapping() {
+            const content = `
+                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: #4a90d9; font-weight: bold; margin-bottom: 15px;">
+                        🗺️ 地理定位追蹤
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">IP 地址或範圍</label>
+                        <input type="text" class="setting-input" id="geoip-address" placeholder="e.g. 192.168.1.1" value="203.0.113.45">
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">包含歷史軌跡</label>
+                        <input type="checkbox" class="setting-input" id="geoip-history" checked style="width: auto;">
+                    </div>
+                    <div class="terminal-output" style="color: #4a90d9; font-size: 0.85rem; margin-top: 15px;">
+                        [準備] 地理位置數據尚未加載
+                    </div>
+                </div>
+            `;
+            showStepModal('地理定位追蹤 🗺️', content, [
+                {text: '追蹤', onclick: 'trackGeoIP()'},
+                {text: '取消', onclick: 'closeStepModal()'}
+            ]);
+        }
+
+        function trackGeoIP() {
+            const address = document.getElementById('geoip-address')?.value || 'unknown';
+            closeStepModal();
+            addTerminalLine(`[地理] 追蹤 IP: ${address}...`, 'command');
+            addTerminalLine('[查詢] 連接到地理數據庫...', 'info');
+            setTimeout(() => {
+                GameState.playerData.law_enforcement.investigationProgress += 16;
+                addTerminalLine('[✓] 位置已確定: 香港', 'success');
+                addTerminalLine('[詳情] 座標: 22.3193°N, 114.1694°E', 'success');
+                addTerminalLine('[ISP] 服務商: 香港寬頻', 'success');
+                updateGameStats();
+                showNotification('追蹤成功', '地理位置已確定', 'success');
+            }, 2200);
+        }
+
+        function showTLSDecoder() {
+            const content = `
+                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: #4a90d9; font-weight: bold; margin-bottom: 15px;">
+                        🔐 加密流量解碼模擬
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">加密協議</label>
+                        <select class="setting-input" id="tls-protocol">
+                            <option value="tls12">TLS 1.2</option>
+                            <option value="tls13" selected>TLS 1.3</option>
+                            <option value="ssl3">SSL 3.0 (已棄用)</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">加密演算法</label>
+                        <select class="setting-input" id="cipher-suite">
+                            <option value="aes256">AES-256-GCM</option>
+                            <option value="aes128">AES-128-GCM</option>
+                            <option value="chacha">ChaCha20-Poly1305</option>
+                        </select>
+                    </div>
+                    <div class="terminal-output" style="color: #4a90d9; font-size: 0.85rem; margin-top: 15px;">
+                        [準備] 流量解碼模擬已就緒
+                    </div>
+                </div>
+            `;
+            showStepModal('加密流量解碼模擬 🔐', content, [
+                {text: '開始分析', onclick: 'analyzeTLSTraffic()'},
+                {text: '取消', onclick: 'closeStepModal()'}
+            ]);
+        }
+
+        function analyzeTLSTraffic() {
+            const protocol = document.getElementById('tls-protocol')?.value || 'tls13';
+            const cipher = document.getElementById('cipher-suite')?.value || 'aes256';
+            closeStepModal();
+            addTerminalLine(`[TLS] 分析 ${protocol} 流量 (${cipher})...`, 'command');
+            addTerminalLine('[握手] 監聽 TLS 握手過程...', 'info');
+            setTimeout(() => {
+                GameState.playerData.law_enforcement.investigationProgress += 17;
+                addTerminalLine('[✓] 已捕獲加密握手', 'success');
+                addTerminalLine('[分析] 識別密鑰交換方法', 'success');
+                addTerminalLine('[模擬] 流量簽名分析完成', 'success');
+                updateGameStats();
+                showNotification('分析完成', 'TLS 流量已分析', 'success');
+            }, 2400);
+        }
+
+        function showThreatIntelPanel() {
+            const content = `
+                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: #ff4444; font-weight: bold; margin-bottom: 15px;">
+                        🚨 實時威脅情報面板
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <div style="background: rgba(255, 68, 68, 0.1); border-left: 3px solid #ff4444; padding: 10px; margin-bottom: 10px;">
+                            <strong style="color: #ff4444;">【致命】DDoS 攻擊</strong>
+                            <div style="font-size: 0.85rem; margin-top: 5px; color: #aaa;">進行中 | 目標: API 伺服器 | 強度: 250Gbps</div>
+                        </div>
+                        <div style="background: rgba(255, 165, 0, 0.1); border-left: 3px solid #ffaa00; padding: 10px; margin-bottom: 10px;">
+                            <strong style="color: #ffaa00;">【高度】勒索軟體活動</strong>
+                            <div style="font-size: 0.85rem; margin-top: 5px; color: #aaa;">檢測到 | 變種: LockBit 3.0 | 受害組織: 5</div>
+                        </div>
+                        <div style="background: rgba(0, 200, 100, 0.1); border-left: 3px solid #00c864; padding: 10px;">
+                            <strong style="color: #00c864;">【已修復】暗網市場關閉</strong>
+                            <div style="font-size: 0.85rem; margin-top: 5px; color: #aaa;">已監控 | 市場名稱: Black Market 2.0 | 已破獲</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            showStepModal('實時威脅情報面板 🚨', content, [
+                {text: '刷新', onclick: 'refreshThreatIntel()'},
+                {text: '關閉', onclick: 'closeStepModal()'}
+            ]);
+        }
+
+        function refreshThreatIntel() {
+            addTerminalLine('[威脅] 刷新實時威脅情報...', 'command');
+            setTimeout(() => {
+                GameState.playerData.law_enforcement.investigationProgress += 10;
+                addTerminalLine('[✓] 威脅情報已更新', 'success');
+                updateGameStats();
+                showNotification('更新完成', '威脅情報已更新', 'success');
+                showThreatIntelPanel();
+            }, 1200);
+        }
+
+        function showCVELookup() {
+            const content = `
+                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: #4a90d9; font-weight: bold; margin-bottom: 15px;">
+                        📚 CVE 查詢
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">搜尋 CVE 編號或關鍵字</label>
+                        <input type="text" class="setting-input" id="cve-search" placeholder="e.g. CVE-2023-44487 或 Log4j" value="CVE-2023-44487">
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">最小嚴重程度</label>
+                        <select class="setting-input" id="cve-severity">
+                            <option value="all">全部</option>
+                            <option value="low">低度</option>
+                            <option value="medium">中度</option>
+                            <option value="high" selected>高度</option>
+                            <option value="critical">致命</option>
+                        </select>
+                    </div>
+                    <div class="terminal-output" style="color: #4a90d9; font-size: 0.85rem; margin-top: 15px;">
+                        [準備] CVE 數據庫已連接
+                    </div>
+                </div>
+            `;
+            showStepModal('CVE 查詢 📚', content, [
+                {text: '搜尋', onclick: 'searchCVE()'},
+                {text: '取消', onclick: 'closeStepModal()'}
+            ]);
+        }
+
+        function searchCVE() {
+            const search = document.getElementById('cve-search')?.value || 'unknown';
+            const severity = document.getElementById('cve-severity')?.value || 'all';
+            closeStepModal();
+            addTerminalLine(`[CVE] 搜尋: "${search}" (嚴重程度: ${severity})...`, 'command');
+            setTimeout(() => {
+                GameState.playerData.law_enforcement.investigationProgress += 15;
+                addTerminalLine('[✓] 找到 3 個相關漏洞', 'success');
+                addTerminalLine('[詳情] CVE-2023-44487 - HTTP/2 快速重置攻擊 [高]', 'success');
+                addTerminalLine('[詳情] CVE-2023-39615 - Nginx 內存洩露 [中]', 'success');
+                updateGameStats();
+                showNotification('查詢完成', '已找到相關漏洞', 'success');
+            }, 1800);
+        }
+
+        function showSandboxAnalyzer() {
+            const content = `
+                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: #4a90d9; font-weight: bold; margin-bottom: 15px;">
+                        🏜️ 惡意軟體沙箱
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">上傳檔案名稱</label>
+                        <input type="text" class="setting-input" id="sandbox-filename" placeholder="e.g. malware.exe" value="suspicious_payload.exe">
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">沙箱環境</label>
+                        <select class="setting-input" id="sandbox-os">
+                            <option value="win10">Windows 10</option>
+                            <option value="win11" selected>Windows 11</option>
+                            <option value="linux">Linux Ubuntu 22.04</option>
+                        </select>
+                    </div>
+                    <div class="terminal-output" style="color: #4a90d9; font-size: 0.85rem; margin-top: 15px;">
+                        [準備] 沙箱環境已就緒
+                    </div>
+                </div>
+            `;
+            showStepModal('惡意軟體沙箱 🏜️', content, [
+                {text: '執行分析', onclick: 'analyzeMalware()'},
+                {text: '取消', onclick: 'closeStepModal()'}
+            ]);
+        }
+
+        function analyzeMalware() {
+            const filename = document.getElementById('sandbox-filename')?.value || 'malware.exe';
+            const os = document.getElementById('sandbox-os')?.value || 'win11';
+            closeStepModal();
+            addTerminalLine(`[沙箱] 上傳 "${filename}" 至 ${os} 沙箱...`, 'command');
+            addTerminalLine('[執行] 啟動樣本分析...', 'info');
+            setTimeout(() => {
+                GameState.playerData.law_enforcement.investigationProgress += 22;
+                addTerminalLine('[✓] 樣本已執行', 'success');
+                addTerminalLine('[行為] 檢測到檔案系統修改', 'warning');
+                addTerminalLine('[行為] 檢測到網絡連接嘗試', 'warning');
+                addTerminalLine('[結論] 惡意軟體 - 分類: Trojan.Win32.Generic', 'alert');
+                updateGameStats();
+                showNotification('分析完成', '惡意軟體已分類', 'success');
+            }, 2600);
+        }
+
+        function showAIAttackMatcher() {
+            const content = `
+                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: #4a90d9; font-weight: bold; margin-bottom: 15px;">
+                        🤖 AI 攻擊模式匹配
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">攻擊指標 (IOC)</label>
+                        <textarea class="setting-input" id="ai-ioc" style="height: 80px;" placeholder="輸入 IP、域名或文件哈希">203.0.113.45
+example-malware.com
+d41d8cd98f00b204e9800998ecf8427e</textarea>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">攻擊框架</label>
+                        <select class="setting-input" id="ai-framework">
+                            <option value="mitre">MITRE ATT&CK</option>
+                            <option value="kill">Kill Chain</option>
+                            <option value="cyber" selected>網絡殺傷鏈</option>
+                        </select>
+                    </div>
+                    <div class="terminal-output" style="color: #4a90d9; font-size: 0.85rem; margin-top: 15px;">
+                        [準備] AI 模型已加載
+                    </div>
+                </div>
+            `;
+            showStepModal('AI 攻擊模式匹配 🤖', content, [
+                {text: '匹配', onclick: 'matchAttackPattern()'},
+                {text: '取消', onclick: 'closeStepModal()'}
+            ]);
+        }
+
+        function matchAttackPattern() {
+            closeStepModal();
+            addTerminalLine('[AI] 啟動攻擊模式匹配...', 'command');
+            addTerminalLine('[ML] 分析 IOC 指標...', 'info');
+            setTimeout(() => {
+                GameState.playerData.law_enforcement.investigationProgress += 21;
+                addTerminalLine('[✓] 已識別攻擊類型', 'success');
+                addTerminalLine('[模式] 匹配到已知 APT 攻擊組織', 'warning');
+                addTerminalLine('[評分] 相似度: 89.7%', 'success');
+                addTerminalLine('[推薦] 可能與 APT28 相關', 'alert');
+                updateGameStats();
+                showNotification('匹配完成', '攻擊模式已識別', 'success');
+            }, 2500);
+        }
+
+        function showForensicToolkit() {
+            const content = `
+                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: #4a90d9; font-weight: bold; margin-bottom: 15px;">
+                        🖥️ 數位鑑識工具套件
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">選擇鑑識方法</label>
+                        <select class="setting-input" id="forensic-method">
+                            <option value="disk">硬碟映像取證</option>
+                            <option value="memory" selected>記憶體轉儲分析</option>
+                            <option value="network">網絡封包分析</option>
+                            <option value="registry">系統登錄分析</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">目標裝置</label>
+                        <input type="text" class="setting-input" id="forensic-device" placeholder="e.g. /dev/sda1 或 C:" value="E:">
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">輸出格式</label>
+                        <select class="setting-input" id="forensic-format">
+                            <option value="dd">DD 格式 (.dd)</option>
+                            <option value="ewf" selected>EWF 格式 (.E01)</option>
+                            <option value="raw">Raw 格式 (.raw)</option>
+                        </select>
+                    </div>
+                    <div class="terminal-output" style="color: #4a90d9; font-size: 0.85rem; margin-top: 15px;">
+                        [準備] 鑑識工具套件已加載
+                    </div>
+                </div>
+            `;
+            showStepModal('數位鑑識工具套件 🖥️', content, [
+                {text: '開始採集', onclick: 'startForensicCollection()'},
+                {text: '取消', onclick: 'closeStepModal()'}
+            ]);
+        }
+
+        function startForensicCollection() {
+            const method = document.getElementById('forensic-method')?.value || 'memory';
+            const device = document.getElementById('forensic-device')?.value || 'unknown';
+            const format = document.getElementById('forensic-format')?.value || 'ewf';
+            closeStepModal();
+            addTerminalLine(`[鑑識] 開始 ${method} 採集 (裝置: ${device}, 格式: ${format})...`, 'command');
+            addTerminalLine('[準備] 正在初始化採集引擎...', 'info');
+            setTimeout(() => {
+                GameState.playerData.law_enforcement.investigationProgress += 25;
+                addTerminalLine('[✓] 採集完成', 'success');
+                addTerminalLine(`[大小] 採集文件: forensic_image_${Date.now()}.${format.toLowerCase()}`, 'success');
+                addTerminalLine('[哈希] SHA-256: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6', 'success');
+                addTerminalLine('[狀態] 證據完整性已驗證', 'success');
+                updateGameStats();
+                showNotification('採集完成', '數位證據已採集', 'success');
+            }, 3000);
+        }
+
+        function showChainOfCustody() {
+            const content = `
+                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: #4a90d9; font-weight: bold; margin-bottom: 15px;">
+                        🔗 取證鏈管理系統
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">證據編號</label>
+                        <input type="text" class="setting-input" id="evidence-number" placeholder="自動生成" readonly value="EV-${Math.floor(Math.random()*900000+100000)}">
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">證據描述</label>
+                        <textarea class="setting-input" id="evidence-description" style="height: 80px;" placeholder="詳細記錄證據信息">硬碟映像檔案 - 懷疑包含非法活動證據</textarea>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">移交人</label>
+                        <input type="text" class="setting-input" id="custody-handler" placeholder="例: Officer Smith" value="法醫技術員">
+                    </div>
+                    <div class="terminal-output" style="color: #4a90d9; font-size: 0.85rem; margin-top: 15px;">
+                        [系統] 取證鏈記錄系統已準備就緒
+                    </div>
+                </div>
+            `;
+            showStepModal('取證鏈管理系統 🔗', content, [
+                {text: '建檔', onclick: 'createCustodyRecord()'},
+                {text: '查詢記錄', onclick: 'queryCustodyLog()'},
+                {text: '取消', onclick: 'closeStepModal()'}
+            ]);
+        }
+
+        function createCustodyRecord() {
+            const evidNum = document.getElementById('evidence-number')?.value || 'unknown';
+            const desc = document.getElementById('evidence-description')?.value || '';
+            const handler = document.getElementById('custody-handler')?.value || 'unknown';
+            closeStepModal();
+            addTerminalLine(`[取證鏈] 建檔證據: ${evidNum}...`, 'command');
+            addTerminalLine(`[描述] ${desc}`, 'info');
+            setTimeout(() => {
+                GameState.playerData.law_enforcement.investigationProgress += 12;
+                addTerminalLine('[✓] 取證鏈記錄已建檔', 'success');
+                addTerminalLine(`[編號] 證據編號: ${evidNum}`, 'success');
+                addTerminalLine(`[移交人] ${handler} | 時間: ${new Date().toLocaleString('zh-HK')}`, 'success');
+                addTerminalLine('[狀態] 完整性鏈已生成', 'success');
+                updateGameStats();
+                showNotification('記錄建檔', '取證鏈記錄已完成', 'success');
+            }, 1800);
+        }
+
+        function queryCustodyLog() {
+            closeStepModal();
+            addTerminalLine('[查詢] 正在檢索取證鏈記錄...', 'command');
+            setTimeout(() => {
+                addTerminalLine('[記錄 1] EV-284756 - 硬碟映像 | 2025-01-28 14:30 | 採集者: Tech Team', 'info');
+                addTerminalLine('[記錄 2] EV-284756 - 轉移至鑑識部門 | 2025-01-28 15:00 | 移交人: Officer Chen', 'info');
+                addTerminalLine('[記錄 3] EV-284756 - 法庭提交 | 2025-01-28 16:30 | 提交人: Attorney Lee', 'success');
+                addTerminalLine('[✓] 所有操作已審計記錄', 'success');
+                showNotification('查詢完成', '取證鏈記錄已顯示', 'success');
+            }, 1500);
+        }
+
+        function showLegalDocGenerator() {
+            const content = `
+                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: #4a90d9; font-weight: bold; margin-bottom: 15px;">
+                        📋 法律文書生成器
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">文書類型</label>
+                        <select class="setting-input" id="doc-type">
+                            <option value="warrant" selected>搜索令申請書</option>
+                            <option value="arrest">逮捕令</option>
+                            <option value="affidavit">誓詞書 (Affidavit)</option>
+                            <option value="subpoena">傳票 (Subpoena)</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">申請人</label>
+                        <input type="text" class="setting-input" id="applicant-name" placeholder="例: Detective Smith" value="警官陳">
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">案件編號</label>
+                        <input type="text" class="setting-input" id="case-number" placeholder="例: CASE-2025-001" value="CASE-2025-001">
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">理由/依據</label>
+                        <textarea class="setting-input" id="doc-reason" style="height: 80px;" placeholder="詳細說明申請理由">懷疑嫌疑人進行非法網絡活動，需要搜索其電子設備以獲取證據</textarea>
+                    </div>
+                    <div class="terminal-output" style="color: #4a90d9; font-size: 0.85rem; margin-top: 15px;">
+                        [系統] 法律文書模板已加載
+                    </div>
+                </div>
+            `;
+            showStepModal('法律文書生成器 📋', content, [
+                {text: '生成文書', onclick: 'generateLegalDocument()'},
+                {text: '取消', onclick: 'closeStepModal()'}
+            ]);
+        }
+
+        function generateLegalDocument() {
+            const docType = document.getElementById('doc-type')?.value || 'warrant';
+            const applicant = document.getElementById('applicant-name')?.value || 'unknown';
+            const caseNum = document.getElementById('case-number')?.value || 'unknown';
+            closeStepModal();
+            
+            const docTypeLabel = {warrant: '搜索令', arrest: '逮捕令', affidavit: '誓詞書', subpoena: '傳票'}[docType];
+            addTerminalLine(`[生成] 正在生成 ${docTypeLabel}...`, 'command');
+            setTimeout(() => {
+                GameState.playerData.law_enforcement.investigationProgress += 18;
+                const docName = `${docType}_${caseNum}_${Date.now()}.pdf`;
+                addTerminalLine('[✓] 文書已生成', 'success');
+                addTerminalLine(`[檔案] ${docName}`, 'success');
+                addTerminalLine(`[申請人] ${applicant}`, 'success');
+                addTerminalLine('[狀態] 文書已準備好提交法院', 'success');
+                updateGameStats();
+                showNotification('生成完成', `${docTypeLabel}已生成`, 'success');
+            }, 2200);
+        }
+
+        function showWitnessManagement() {
+            const content = `
+                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: #4a90d9; font-weight: bold; margin-bottom: 15px;">
+                        👥 證人/線人管理系統
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">管理操作</label>
+                        <select class="setting-input" id="witness-action">
+                            <option value="add" selected>新增證人/線人</option>
+                            <option value="view">查詢記錄</option>
+                            <option value="schedule">安排作證</option>
+                            <option value="protection">證人保護計劃</option>
+                        </select>
+                    </div>
+                    <div id="witness-form" style="display: block;">
+                        <div class="setting-group">
+                            <label class="setting-label">姓名</label>
+                            <input type="text" class="setting-input" id="witness-name" placeholder="例: John Doe">
+                        </div>
+                        <div class="setting-group">
+                            <label class="setting-label">身份</label>
+                            <select class="setting-input" id="witness-type">
+                                <option value="witness">目擊證人</option>
+                                <option value="informant">線人</option>
+                                <option value="expert">專家證人</option>
+                            </select>
+                        </div>
+                        <div class="setting-group">
+                            <label class="setting-label">聯絡方式</label>
+                            <input type="text" class="setting-input" id="witness-contact" placeholder="電話或電郵">
+                        </div>
+                        <div class="setting-group">
+                            <label class="setting-label">案件關聯</label>
+                            <input type="text" class="setting-input" id="witness-case" placeholder="案件編號" value="CASE-2025-001">
+                        </div>
+                    </div>
+                    <div class="terminal-output" style="color: #4a90d9; font-size: 0.85rem; margin-top: 15px;">
+                        [系統] 證人管理系統已初始化
+                    </div>
+                </div>
+            `;
+            showStepModal('證人/線人管理系統 👥', content, [
+                {text: '提交', onclick: 'submitWitnessInfo()'},
+                {text: '取消', onclick: 'closeStepModal()'}
+            ]);
+        }
+
+        function submitWitnessInfo() {
+            const action = document.getElementById('witness-action')?.value || 'add';
+            const name = document.getElementById('witness-name')?.value || 'unknown';
+            const type = document.getElementById('witness-type')?.value || 'witness';
+            const contact = document.getElementById('witness-contact')?.value || 'unknown';
+            const caseNum = document.getElementById('witness-case')?.value || 'unknown';
+            
+            closeStepModal();
+            
+            if (action === 'add') {
+                addTerminalLine(`[註冊] 新增 ${type === 'witness' ? '證人' : type === 'informant' ? '線人' : '專家證人'}: ${name}...`, 'command');
+                setTimeout(() => {
+                    GameState.playerData.law_enforcement.investigationProgress += 14;
+                    const witnessId = 'WIT-' + Math.floor(Math.random()*900000+100000);
+                    addTerminalLine('[✓] 證人已登記', 'success');
+                    addTerminalLine(`[編號] ${witnessId}`, 'success');
+                    addTerminalLine(`[案件] ${caseNum}`, 'success');
+                    addTerminalLine('[狀態] 記錄已加入系統', 'success');
+                    updateGameStats();
+                    showNotification('登記完成', '證人/線人已登記', 'success');
+                }, 1800);
+            } else if (action === 'view') {
+                addTerminalLine('[查詢] 檢索證人記錄...', 'command');
+                setTimeout(() => {
+                    addTerminalLine('[記錄 1] WIT-512847 - John Doe (目擊證人) | CASE-2025-001', 'info');
+                    addTerminalLine('[記錄 2] WIT-512848 - Jane Smith (線人) | CASE-2025-001', 'info');
+                    addTerminalLine('[✓] 共 2 筆相關記錄', 'success');
+                    showNotification('查詢完成', '證人記錄已顯示', 'success');
+                }, 1200);
+            } else if (action === 'schedule') {
+                addTerminalLine('[安排] 為證人安排作證時間...', 'command');
+                setTimeout(() => {
+                    addTerminalLine('[法庭] 香港高等法院 - 法庭 3 號', 'success');
+                    addTerminalLine('[日期] 2025-02-15 10:00 AM', 'success');
+                    addTerminalLine('[通知] 已發送傳票至證人', 'success');
+                    showNotification('安排完成', '作證時間已排定', 'success');
+                }, 1500);
+            } else if (action === 'protection') {
+                addTerminalLine('[保護] 啟動證人保護計劃...', 'command');
+                setTimeout(() => {
+                    addTerminalLine('[安排] 臨時住所已預訂', 'success');
+                    addTerminalLine('[警衛] 24小時安全護衛已部署', 'success');
+                    addTerminalLine('[身份] 臨時身份已準備', 'success');
+                    showNotification('保護就位', '證人保護計劃已啟動', 'success');
+                }, 1800);
+            }
+        }
+
+        function showCaseManagement() {
+            const content = `
+                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: #4a90d9; font-weight: bold; margin-bottom: 15px;">
+                        📁 案件管理系統
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">操作類型</label>
+                        <select class="setting-input" id="case-operation">
+                            <option value="create" selected>建檔新案件</option>
+                            <option value="view">查詢案件</option>
+                            <option value="update">更新進度</option>
+                            <option value="reassign">重新分配優先級</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">案件名稱/編號</label>
+                        <input type="text" class="setting-input" id="case-name" placeholder="e.g. 網絡詐騙案件-2025" value="CASE-2025-001">
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">優先級</label>
+                        <select class="setting-input" id="case-priority">
+                            <option value="low">低 (3 天內結案)</option>
+                            <option value="medium" selected>中 (24 小時內結案)</option>
+                            <option value="high">高 (立即行動)</option>
+                            <option value="critical">致命 (總監直接監督)</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">主要調查員</label>
+                        <input type="text" class="setting-input" id="case-lead" placeholder="例: Detective Chen" value="Detective Chen">
+                    </div>
+                    <div class="terminal-output" style="color: #4a90d9; font-size: 0.85rem; margin-top: 15px;">
+                        [系統] 案件管理系統已初始化
+                    </div>
+                </div>
+            `;
+            showStepModal('案件管理系統 📁', content, [
+                {text: '提交', onclick: 'submitCaseManagement()'},
+                {text: '取消', onclick: 'closeStepModal()'}
+            ]);
+        }
+
+        function submitCaseManagement() {
+            const operation = document.getElementById('case-operation')?.value || 'create';
+            const caseName = document.getElementById('case-name')?.value || 'unknown';
+            const priority = document.getElementById('case-priority')?.value || 'medium';
+            const lead = document.getElementById('case-lead')?.value || 'unknown';
+            closeStepModal();
+            
+            if (operation === 'create') {
+                addTerminalLine(`[案件] 建檔新案件: ${caseName}...`, 'command');
+                addTerminalLine(`[優先級] ${priority.toUpperCase()}`, 'info');
+                setTimeout(() => {
+                    GameState.playerData.law_enforcement.investigationProgress += 10;
+                    const caseId = 'CASE-' + Math.floor(Math.random()*900000+100000);
+                    addTerminalLine('[✓] 案件已建檔', 'success');
+                    addTerminalLine(`[編號] ${caseId}`, 'success');
+                    addTerminalLine(`[主控] ${lead}`, 'success');
+                    updateGameStats();
+                    showNotification('建檔完成', '新案件已建檔', 'success');
+                }, 1500);
+            } else if (operation === 'view') {
+                addTerminalLine('[查詢] 檢索案件列表...', 'command');
+                setTimeout(() => {
+                    addTerminalLine('[案件 1] CASE-2025-001 - 網絡詐騙 | 優先級: 高 | 進度: 75%', 'info');
+                    addTerminalLine('[案件 2] CASE-2025-002 - 駭客入侵 | 優先級: 致命 | 進度: 90%', 'info');
+                    addTerminalLine('[案件 3] CASE-2025-003 - 數據竊取 | 優先級: 中 | 進度: 40%', 'info');
+                    addTerminalLine('[✓] 共 3 筆活躍案件', 'success');
+                    showNotification('查詢完成', '案件清單已顯示', 'success');
+                }, 1200);
+            } else if (operation === 'update') {
+                addTerminalLine(`[更新] 更新 ${caseName} 進度...`, 'command');
+                setTimeout(() => {
+                    GameState.playerData.law_enforcement.investigationProgress += 8;
+                    addTerminalLine('[✓] 進度已更新: 85%', 'success');
+                    addTerminalLine('[狀態] 等待法庭審裁', 'success');
+                    updateGameStats();
+                    showNotification('更新完成', '案件進度已更新', 'success');
+                }, 1300);
+            } else if (operation === 'reassign') {
+                addTerminalLine(`[重新分配] 優先級改為: ${priority}...`, 'command');
+                setTimeout(() => {
+                    addTerminalLine('[✓] 優先級已變更', 'success');
+                    addTerminalLine('[通知] 已通知所有相關人員', 'success');
+                    showNotification('分配完成', '優先級已重新分配', 'success');
+                }, 1200);
+            }
+        }
+
+        function showTaskDispatch() {
+            const content = `
+                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: #4a90d9; font-weight: bold; margin-bottom: 15px;">
+                        ✓ 任務分派機制
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">任務類型</label>
+                        <select class="setting-input" id="task-type">
+                            <option value="evidence">證據蒐集</option>
+                            <option value="interview" selected>證人訊問</option>
+                            <option value="surveillance">監視跟蹤</option>
+                            <option value="analysis">數據分析</option>
+                            <option value="report">報告撰寫</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">分配給</label>
+                        <select class="setting-input" id="task-assignee">
+                            <option value="chen">陳警官</option>
+                            <option value="lee" selected>李警官</option>
+                            <option value="wang">王警官</option>
+                            <option value="team">專案小組</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">截止日期</label>
+                        <input type="date" class="setting-input" id="task-deadline" value="2025-02-15">
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">優先級</label>
+                        <select class="setting-input" id="task-priority">
+                            <option value="low">低</option>
+                            <option value="medium" selected>中</option>
+                            <option value="high">高</option>
+                        </select>
+                    </div>
+                    <div class="terminal-output" style="color: #4a90d9; font-size: 0.85rem; margin-top: 15px;">
+                        [系統] 任務分派系統已準備就緒
+                    </div>
+                </div>
+            `;
+            showStepModal('任務分派機制 ✓', content, [
+                {text: '分派', onclick: 'submitTaskDispatch()'},
+                {text: '查詢任務', onclick: 'queryTasks()'},
+                {text: '取消', onclick: 'closeStepModal()'}
+            ]);
+        }
+
+        function submitTaskDispatch() {
+            const taskType = document.getElementById('task-type')?.value || 'analysis';
+            const assignee = document.getElementById('task-assignee')?.value || 'lee';
+            const deadline = document.getElementById('task-deadline')?.value || '';
+            closeStepModal();
+            addTerminalLine(`[分派] 分派 ${taskType} 任務給 ${assignee}...`, 'command');
+            setTimeout(() => {
+                GameState.playerData.law_enforcement.investigationProgress += 12;
+                const taskId = 'TASK-' + Math.floor(Math.random()*900000+100000);
+                addTerminalLine('[✓] 任務已分派', 'success');
+                addTerminalLine(`[編號] ${taskId}`, 'success');
+                addTerminalLine(`[截止] ${deadline}`, 'success');
+                addTerminalLine('[通知] 已發送任務通知', 'success');
+                updateGameStats();
+                showNotification('分派完成', '任務已分派', 'success');
+            }, 1600);
+        }
+
+        function queryTasks() {
+            closeStepModal();
+            addTerminalLine('[查詢] 檢索進行中的任務...', 'command');
+            setTimeout(() => {
+                addTerminalLine('[任務 1] TASK-512847 - 證人訊問 | 指派: 李警官 | 進度: 60%', 'info');
+                addTerminalLine('[任務 2] TASK-512848 - 監視跟蹤 | 指派: 陳警官 | 進度: 40%', 'info');
+                addTerminalLine('[任務 3] TASK-512849 - 數據分析 | 指派: 王警官 | 進度: 80%', 'info');
+                addTerminalLine('[✓] 共 3 筆進行中任務', 'success');
+                showNotification('查詢完成', '任務清單已顯示', 'success');
+            }, 1300);
+        }
+
+        function showTimelineVisualization() {
+            const content = `
+                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: #4a90d9; font-weight: bold; margin-bottom: 15px;">
+                        📊 調查時間線視覺化
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">檢視方式</label>
+                        <select class="setting-input" id="timeline-view">
+                            <option value="gantt" selected>甘特圖</option>
+                            <option value="timeline">時間軸</option>
+                            <option value="milestone">里程碑</option>
+                            <option value="dependency">任務依賴</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">時間範圍</label>
+                        <select class="setting-input" id="timeline-range">
+                            <option value="week">本週</option>
+                            <option value="month" selected>本月</option>
+                            <option value="quarter">本季</option>
+                            <option value="custom">自訂範圍</option>
+                        </select>
+                    </div>
+                    <div style="background: rgba(74, 144, 217, 0.1); border-left: 3px solid #4a90d9; padding: 10px; margin-top: 15px;">
+                        <div style="font-size: 0.85rem; color: #aaa;">
+                            <div style="margin-bottom: 8px;">📅 <strong>時間軸示例:</strong></div>
+                            <div>▓▓▓▓▓░░ 證據蒐集 (2025-01-28 ~ 2025-02-05) 75%</div>
+                            <div>░░░░░░░░ 證人訊問 (2025-02-06 ~ 2025-02-15) 0%</div>
+                            <div>░░░░░░░░ 數據分析 (2025-02-16 ~ 2025-02-28) 0%</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            showStepModal('調查時間線視覺化 📊', content, [
+                {text: '生成視圖', onclick: 'generateTimelineView()'},
+                {text: '導出報告', onclick: 'exportTimeline()'},
+                {text: '取消', onclick: 'closeStepModal()'}
+            ]);
+        }
+
+        function generateTimelineView() {
+            const view = document.getElementById('timeline-view')?.value || 'gantt';
+            closeStepModal();
+            addTerminalLine(`[視覺化] 生成 ${view} 視圖...`, 'command');
+            setTimeout(() => {
+                GameState.playerData.law_enforcement.investigationProgress += 14;
+                addTerminalLine('[✓] 視圖已生成', 'success');
+                addTerminalLine('[進度] 整體案件進度: 65%', 'success');
+                addTerminalLine('[關鍵路徑] 證人訊問為下一個關鍵步驟', 'success');
+                updateGameStats();
+                showNotification('生成完成', '時間線視圖已生成', 'success');
+            }, 1800);
+        }
+
+        function exportTimeline() {
+            closeStepModal();
+            addTerminalLine('[導出] 正在導出時間線報告...', 'command');
+            setTimeout(() => {
+                addTerminalLine('[✓] 報告已生成', 'success');
+                addTerminalLine('[檔案] investigation_timeline_' + Date.now() + '.pdf', 'success');
+                addTerminalLine('[大小] 2.3 MB', 'success');
+                showNotification('導出完成', '時間線報告已導出', 'success');
+            }, 1500);
+        }
+
+        function showReportTemplate() {
+            const content = `
+                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
+                    <div style="color: #4a90d9; font-weight: bold; margin-bottom: 15px;">
+                        📋 報告模板庫
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">報告類型</label>
+                        <select class="setting-input" id="report-type">
+                            <option value="investigation" selected>調查報告</option>
+                            <option value="summary">案件摘要</option>
+                            <option value="forensic">鑑識報告</option>
+                            <option value="court">法庭陳述書</option>
+                            <option value="progress">進度報告</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">案件編號</label>
+                        <input type="text" class="setting-input" id="report-case" placeholder="e.g. CASE-2025-001" value="CASE-2025-001">
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">起草人</label>
+                        <input type="text" class="setting-input" id="report-author" placeholder="例: Detective Chen" value="Detective Chen">
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">包含內容</label>
+                        <div style="margin-top: 8px;">
+                            <label style="display: block; margin: 5px 0;">
+                                <input type="checkbox" checked style="margin-right: 5px;"> 案件背景
+                            </label>
+                            <label style="display: block; margin: 5px 0;">
+                                <input type="checkbox" checked style="margin-right: 5px;"> 調查過程
+                            </label>
+                            <label style="display: block; margin: 5px 0;">
+                                <input type="checkbox" checked style="margin-right: 5px;"> 證據清單
+                            </label>
+                            <label style="display: block; margin: 5px 0;">
+                                <input type="checkbox" style="margin-right: 5px;"> 建議措施
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            `;
+            showStepModal('報告模板庫 📋', content, [
+                {text: '生成報告', onclick: 'generateReport()'},
+                {text: '查詢範本', onclick: 'queryTemplates()'},
+                {text: '取消', onclick: 'closeStepModal()'}
+            ]);
+        }
+
+        function generateReport() {
+            const reportType = document.getElementById('report-type')?.value || 'investigation';
+            const caseNum = document.getElementById('report-case')?.value || 'unknown';
+            const author = document.getElementById('report-author')?.value || 'unknown';
+            closeStepModal();
+            addTerminalLine(`[報告] 生成 ${reportType} 類型報告...`, 'command');
+            addTerminalLine(`[案件] ${caseNum} | [作者] ${author}`, 'info');
+            setTimeout(() => {
+                GameState.playerData.law_enforcement.investigationProgress += 16;
+                const reportId = 'RPT-' + Math.floor(Math.random()*900000+100000);
+                addTerminalLine('[✓] 報告已生成', 'success');
+                addTerminalLine(`[編號] ${reportId}`, 'success');
+                addTerminalLine('[格式] PDF | Word | 列印版本', 'success');
+                addTerminalLine('[狀態] 準備簽核和提交', 'success');
+                updateGameStats();
+                showNotification('生成完成', '調查報告已生成', 'success');
+            }, 2000);
+        }
+
+        function queryTemplates() {
+            closeStepModal();
+            addTerminalLine('[查詢] 檢索可用報告模板...', 'command');
+            setTimeout(() => {
+                addTerminalLine('[模板 1] 標準調查報告 (10 頁) - 適用於大多數案件', 'info');
+                addTerminalLine('[模板 2] 快速摘要 (2 頁) - 用於初步報告', 'info');
+                addTerminalLine('[模板 3] 法庭陳述書 (15 頁) - 用於訴訟', 'info');
+                addTerminalLine('[模板 4] 進度報告 (5 頁) - 用於定期更新', 'info');
+                addTerminalLine('[✓] 共 4 個標準模板可用', 'success');
+                showNotification('查詢完成', '模板清單已顯示', 'success');
+            }, 1400);
         }
 
         // ===== 共用功能實作 =====
@@ -24665,6 +25765,47 @@ function simulateAttribution(){
 
 // expose open function on monitoring panel
 function openAdvancedFromMonitoring(){ openNetworkAdvanced(); }
+
+// 定义缺失的函数处理器
+function launchTimelineAnalyzer(){
+    console.log('時間線分析器已啟動（模擬）');
+    appendForensicsLog && appendForensicsLog('時間線分析器已啟動');
+}
+
+function runSocialNetworkAnalysis(){
+    console.log('社交網絡分析已執行（模擬）');
+    appendForensicsLog && appendForensicsLog('社交網絡分析已執行');
+}
+
+function openGeoIPMap(){
+    console.log('GeoIP 地圖已開啟（模擬）');
+    appendForensicsLog && appendForensicsLog('GeoIP 地圖已開啟');
+}
+
+function simulateTLSDecode(){
+    console.log('TLS 解碼模擬已啟動（模擬）');
+    appendForensicsLog && appendForensicsLog('TLS 解碼模擬已啟動');
+}
+
+function openThreatIntelPanel(){
+    console.log('威脅情報面板已開啟（模擬）');
+    appendForensicsLog && appendForensicsLog('威脅情報面板已開啟');
+}
+
+function cveLookupPrompt(){
+    console.log('CVE 查詢已啟動（模擬）');
+    appendForensicsLog && appendForensicsLog('CVE 查詢已啟動');
+}
+
+function sandboxAnalyzePrompt(){
+    console.log('沙盒分析已啟動（模擬）');
+    appendForensicsLog && appendForensicsLog('沙盒分析已啟動');
+}
+
+function openAIAttackMatcher(){
+    console.log('AI 攻擊匹配器已開啟（模擬）');
+    appendForensicsLog && appendForensicsLog('AI 攻擊匹配器已開啟');
+}
 </script>
 
 <div id="legal-modal" class="immersive-modal" style="display:none;">
@@ -24720,6 +25861,12 @@ function closeMonitoringPanel(){ document.getElementById('monitoring-modal').sty
 
 function openLegalTools(){ document.getElementById('legal-modal').style.display='block'; }
 function closeLegalTools(){ document.getElementById('legal-modal').style.display='none'; }
+
+function openWarrantSystem(){
+    const modal = document.getElementById('legal-modal');
+    if(modal) modal.style.display='block';
+    appendForensicsLog && appendForensicsLog('搜索令系統已開啟（模擬）');
+}
 
 function renderEvidenceGraph(){
     const el = document.getElementById('evidence-graph');
