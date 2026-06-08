@@ -7,6 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>對戰模式第二季 • 執法對決 SEASON 2 | Cyber Attack Simulation</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS for Excel export and jsPDF for PDF export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <style>
         :root {
             --z-overlay: 10500;
@@ -37,6 +40,51 @@
             border-right: .15em solid transparent;
             animation: typing 1.5s steps(40, end);
         }
+
+        /* Forensic Center theme: 深藍 + 螢光青色 */
+        .forensic-modal {
+            background: linear-gradient(180deg, #021025 0%, #001229 100%);
+            color: #bfefff;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 160, 150, 0.12);
+            padding: 18px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .forensic-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr 320px;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .forensic-panel {
+            background: rgba(0,18,36,0.55);
+            border-left: 4px solid rgba(0,240,209,0.14);
+            padding: 12px;
+            border-radius: 8px;
+            min-height: 120px;
+        }
+
+        .forensic-panel .panel-title {
+            color: #9eeff0;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .forensic-btn {
+            background: linear-gradient(90deg,#003046,#004e68);
+            color: #bffaf0;
+            border: 1px solid rgba(0,240,209,0.12);
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right:8px;
+        }
+
+        .forensic-btn.ghost { background: transparent; border: 1px solid rgba(191,250,240,0.06); color:#9eeff0; }
+        .forensic-note { color:#86dfe0; font-size:0.9rem; }
+
 
         @keyframes typing {
             from { width: 0 }
@@ -6385,6 +6433,17 @@
             .darknet-layout { grid-template-columns: 1fr !important; height: auto !important; }
         }
 
+        /* Glassmorphism nav */
+        nav#navbar { background: rgba(6,12,24,0.6); backdrop-filter: blur(6px) saturate(120%); }
+
+        /* Button scan flicker animation */
+        @keyframes scanFlash {
+            0% { box-shadow: 0 0 0 rgba(255,255,255,0); }
+            50% { box-shadow: 0 0 12px rgba(191,250,240,0.18); }
+            100% { box-shadow: 0 0 0 rgba(255,255,255,0); }
+        }
+        .forensic-btn:active { animation: scanFlash 420ms ease-in-out; }
+
 /* mode-card select button: prettier and animated */
 .mode-card .select-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); cursor: pointer; transition: transform 180ms cubic-bezier(.2,.9,.3,1), box-shadow 180ms; }
 .mode-card .select-btn i { transform: translateY(0); transition: transform 180ms; }
@@ -6400,20 +6459,8 @@
             <i class="fas fa-gavel"></i> 執法對決 SEASON 2
         </div>
         <ul class="nav-menu">
-            <li><a onclick="goToMainPage()" id="nav-home">主頁</a></li>
-            <li><a onclick="showSetupPage()" id="nav-season2">開始第二季對戰</a></li>
-            <li><a onclick="showBattleMap()" id="nav-battlemap">戰況地圖</a></li>
-            <li><a onclick="showInterceptPage()" id="nav-intercept">通信攔截</a></li>
-            <li><a onclick="showTrapPage()" id="nav-trap">網絡陷阱</a></li>
-            <li><a onclick="showDeviceNetworkMonitor()" id="nav-monitor">📊 監控系統</a></li>
-            <li><a onclick="openTacticalOps()" id="nav-tactical">🛡️ 戰術行動</a></li>
-            <li><a onclick="openImmersiveInvestigation()" id="nav-immersive">🔍 沉浸式調查</a></li>
-            <!-- 角色工具按鈕已移到角色卡片內，頂欄保留簡潔導航 -->
-            <li><a onclick="showLECenter()" id="nav-le-center">執法指揮中心</a></li>
-            <li><a onclick="showEvidencePage()" id="nav-evidence">證據庫</a></li>
-            <li><a onclick="showGuide()" id="nav-guide">操作指南</a></li>
-            <li><a onclick="openShop()" id="nav-shop">商店</a></li>
-            <li><a onclick="openTransactionHistory()" id="nav-history">交易記錄</a></li>
+            <li><a id="nav-le-advanced">高級工具</a></li>
+            <li><a id="nav-forensics">數位鑑識中心</a></li>
         </ul>
         <!-- 全域匯出按鈕 -->
         <div style="margin-left:12px;">
@@ -6429,20 +6476,8 @@
 
     <!-- 移動端菜單 -->
     <ul class="nav-menu-mobile" id="nav-menu-mobile">
-        <li><a onclick="goToMainPage(); closeMobileMenu()" id="nav-home-mobile">主頁</a></li>
-        <li><a onclick="showSetupPage(); closeMobileMenu()" id="nav-season2-mobile">開始第二季對戰</a></li>
-        <li><a onclick="showBattleMap(); closeMobileMenu()" id="nav-battlemap-mobile">戰況地圖</a></li>
-        <li><a onclick="showInterceptPage(); closeMobileMenu()" id="nav-intercept-mobile">通信攔截</a></li>
-        <li><a onclick="showTrapPage(); closeMobileMenu()" id="nav-trap-mobile">網絡陷阱</a></li>
-        <li><a onclick="showDeviceNetworkMonitor(); closeMobileMenu()" id="nav-monitor-mobile">📊 監控系統</a></li>
-        <li><a onclick="showTargetIntelligence(); closeMobileMenu()" id="nav-intelligence-mobile">🎯 目標情報(執法)</a></li>
-        <li><a onclick="showDarknetMarketplace(); closeMobileMenu()" id="nav-marketplace-mobile">🕵️ 暗網市場(黑客)</a></li>
-        <li><a onclick="showLECenter(); closeMobileMenu()" id="nav-le-center-mobile">執法指揮中心</a></li>
-        <li><a onclick="showEvidencePage(); closeMobileMenu()" id="nav-evidence-mobile">證據庫</a></li>
-        <li><a onclick="showGuide(); closeMobileMenu()" id="nav-guide-mobile">操作指南</a></li>
-        <li><a onclick="openDarknetHub(); closeMobileMenu()" id="nav-darknet-mobile">暗網聯絡站</a></li>
-        <li><a onclick="openShop(); closeMobileMenu()" id="nav-shop-mobile">商店</a></li>
-    <li><a onclick="openTransactionHistory(); closeMobileMenu()" id="nav-history-mobile">交易記錄</a></li>
+        <li><a id="nav-le-advanced-mobile">高級工具</a></li>
+        <li><a id="nav-forensics-mobile">數位鑑識中心</a></li>
     </ul>
 
     <!-- 屏幕效果 -->
@@ -7894,6 +7929,9 @@
             },
             gameMode: 'season2',
             currentStepTask: null,
+            publicIP: null,
+            privateIP: null,
+            serverRack: null,
             logs: { system: [], security: [], communication: [] },
             missionSteps: {},
             topologyNodes: [],
@@ -8439,6 +8477,89 @@
             }
         };
 
+        // ===== Compatibility & safety shims (early) =====
+        // Ensure safeGet is available early to avoid TDZ errors
+        if (typeof window.safeGet !== 'function') {
+            window.safeGet = function(id){ try{ return document.getElementById(id)||null; }catch(e){ return null; } };
+        }
+
+        // Interval registry to avoid leaked timers. Wrap setInterval/clearInterval.
+        (function(){
+            if (!window.GameState.registeredIntervals) window.GameState.registeredIntervals = [];
+            try {
+                const _origSetInterval = window.setInterval.bind(window);
+                const _origClearInterval = window.clearInterval.bind(window);
+                window.setInterval = function(fn, ms){
+                    const id = _origSetInterval(fn, ms);
+                    try { window.GameState.registeredIntervals.push(id); } catch(e){}
+                    return id;
+                };
+                window.clearInterval = function(id){
+                    try { window.GameState.registeredIntervals = (window.GameState.registeredIntervals||[]).filter(x=>x!==id); } catch(e){}
+                    return _origClearInterval(id);
+                };
+            } catch(e) { console.warn('Interval wrapping failed', e); }
+
+            window.clearAllRegisteredIntervals = function(){
+                try {
+                    const list = window.GameState.registeredIntervals || [];
+                    list.forEach(id => { try{ clearInterval(id); }catch(e){} });
+                    window.GameState.registeredIntervals = [];
+                } catch(e) { console.warn('clearAllRegisteredIntervals failed', e); }
+            };
+        })();
+
+        // Currency compatibility: proxy window.globalCoins to GameState.playerData.hacker.money
+        try {
+            if (typeof window.globalCoins === 'undefined') {
+                Object.defineProperty(window, 'globalCoins', {
+                    configurable: true,
+                    enumerable: true,
+                    get: function(){ try { return (window.GameState && window.GameState.playerData && window.GameState.playerData.hacker && typeof window.GameState.playerData.hacker.money !== 'undefined') ? window.GameState.playerData.hacker.money : 0; } catch(e){ return 0; } },
+                    set: function(v){ try { if (window.GameState && window.GameState.playerData && window.GameState.playerData.hacker) window.GameState.playerData.hacker.money = Number(v)||0; } catch(e){} }
+                });
+            }
+        } catch(e) { console.warn('globalCoins proxy failed', e); }
+
+        // Safe hook API for updateGameStats to avoid repeated monkey-patching
+        (function(){
+            if (!window._updateGameStatsHooks) window._updateGameStatsHooks = [];
+            window.addUpdateGameStatsHook = function(fn){
+                if (typeof fn !== 'function') return;
+                if (window._updateGameStatsHooks.indexOf(fn) !== -1) return;
+                window._updateGameStatsHooks.push(fn);
+            };
+
+            // Ensure a single consolidated updateGameStats executor
+            if (typeof window.updateGameStats !== 'function' || !window._updateGameStatsWrapped) {
+                const orig = window.updateGameStats && typeof window.updateGameStats === 'function' ? window.updateGameStats.bind(window) : function(){};
+                window.updateGameStats = function(){
+                    try { orig(); } catch(e){ console.warn('original updateGameStats failed', e); }
+                    try { (window._updateGameStatsHooks||[]).forEach(h => { try{ h(); }catch(e){ console.warn('updateGameStats hook error', e); } }); } catch(e){}
+                };
+                window._updateGameStatsWrapped = true;
+            }
+        })();
+
+            // Diagnostic helper: list CSS rules that contain !important so maintainers can refactor safely
+            function listImportantStyles() {
+                try {
+                    const sheets = Array.from(document.styleSheets || []);
+                    const matches = [];
+                    sheets.forEach(s => {
+                        let rules = [];
+                        try { rules = s.cssRules ? Array.from(s.cssRules) : []; } catch(e) { return; }
+                        rules.forEach(r => { try{ if (r.cssText && r.cssText.indexOf('!important') !== -1) matches.push({sheet: s.href||'inline', rule: r.cssText}); }catch(e){} });
+                    });
+                    if (matches.length === 0) { console.info('No !important styles found'); return matches; }
+                    console.warn('Found !important styles:', matches.length, matches.slice(0,20));
+                    return matches;
+                } catch(e) { console.warn('listImportantStyles failed', e); return []; }
+            }
+
+            // call once on load for diagnostics
+            try { setTimeout(() => { listImportantStyles(); }, 800); } catch(e){}
+
         // ===== 頁面導航函數 =====
         function goToMainPage() {
             showPage('main-page');
@@ -8612,6 +8733,8 @@
         }
 
         function showPage(pageId) {
+            // Clear any registered intervals to avoid leaking timers when switching pages
+            try { if (typeof clearAllRegisteredIntervals === 'function') clearAllRegisteredIntervals(); } catch(e){}
             const pages = document.querySelectorAll('.page');
             pages.forEach(page => {
                 page.classList.remove('active');
@@ -8641,6 +8764,15 @@
                 }
             }
     }
+
+        // show LE Advanced Tools page
+        function showLEAdvancedTools() {
+            GameState.currentPage = 'le-advanced';
+            showPage('le-advanced-page');
+            // update nav active state if nav item exists
+            const nav = document.getElementById('nav-le-advanced'); if(nav) { document.querySelectorAll('.nav-menu li a').forEach(i=>i.classList.remove('active')); nav.classList.add('active'); }
+            closeMobileMenu();
+        }
 
         // ===== 漢堡菜單控制 =====
         function toggleMobileMenu() {
@@ -8861,7 +8993,8 @@
             
             let messageIndex = 0;
             const streamContent = safeGet('stream-messages');
-            
+            const MAX_STREAM_MESSAGES = 100; // cap to avoid unbounded DOM growth
+
             const addMessage = () => {
                 if (messageIndex < messages.length) {
                     const msg = messages[messageIndex];
@@ -8871,13 +9004,20 @@
                         <div class="message-time">${new Date().toLocaleTimeString()}</div>
                         <div class="message-content">${msg.content}</div>
                     `;
-                    if(streamContent){ streamContent.appendChild(messageEl); streamContent.scrollTop = streamContent.scrollHeight; }
+                    if (streamContent) {
+                        streamContent.appendChild(messageEl);
+                        // enforce cap
+                        while (streamContent.childNodes.length > MAX_STREAM_MESSAGES) {
+                            streamContent.removeChild(streamContent.firstChild);
+                        }
+                        streamContent.scrollTop = streamContent.scrollHeight;
+                    }
                     messageIndex++;
-                    
+
                     setTimeout(addMessage, 2000 + Math.random() * 3000);
                 }
             };
-            
+
             addMessage();
         }
 
@@ -9272,6 +9412,15 @@
             output.appendChild(line);
             output.scrollTop = output.scrollHeight;
 
+            // Limit terminal DOM nodes to avoid rendering/memory blowup
+            try{
+                const MAX_TERMINAL_LINES = 120; // cap
+                const TRIM_BATCH = 10; // remove this many when exceeded
+                while(output.children.length > MAX_TERMINAL_LINES){
+                    for(let i=0;i<TRIM_BATCH && output.firstChild;i++) output.removeChild(output.firstChild);
+                }
+            }catch(e){ /* fail silently - best-effort trimming */ }
+
             if (hasProgress) {
                 const fill = line.querySelector('.progress-bar-fill');
                 setTimeout(() => { fill.style.width = '100%'; }, 100);
@@ -9450,56 +9599,63 @@
             renderStep();
         }
 
-        // 新增: 簡化的模態框顯示函數
+        // Delegate to the safe modal implementation added earlier to avoid eval and DOM leaks.
         function showStepModal(title, content, buttons = []) {
-            const modal = document.getElementById('step-modal');
-            const titleEl = document.getElementById('step-modal-title');
-            const contentEl = document.getElementById('step-modal-content');
-            const buttonsEl = document.getElementById('step-modal-buttons');
-            
-            // 設置標題
-            titleEl.innerText = title;
-            
-            // 設置內容
-            if (typeof content === 'string') {
-                contentEl.innerHTML = content;
-            } else {
-                contentEl.appendChild(content);
-            }
-            
-            // 設置按鈕
-            buttonsEl.innerHTML = '';
-            buttons.forEach(btn => {
-                const btnEl = document.createElement('button');
-                btnEl.className = 'modal-btn modal-btn-confirm';
-                btnEl.innerText = btn.text;
-                btnEl.onclick = () => {
-                    if (typeof btn.onclick === 'string') {
-                        eval(btn.onclick);
-                    } else if (typeof btn.onclick === 'function') {
-                        btn.onclick();
+            try {
+                // sanitize buttons: convert {text, onclick: 'funcName()' } to real callbacks when safe
+                const safeButtons = (buttons || []).map(b => {
+                    const nb = { text: b.text || b.label || '按鈕' };
+                    // prefer an explicit callback
+                    if (typeof b.callback === 'function') nb.callback = b.callback;
+                    else if (typeof b.onclick === 'function') nb.callback = b.onclick;
+                    else if (typeof b.onclick === 'string') {
+                        const m = b.onclick.match(/^\s*([a-zA-Z0-9_\$]+)\s*(\(.*\))?\s*$/);
+                        if (m) {
+                            const fnName = m[1];
+                            nb.callback = function(){ const f = window[fnName]; if (typeof f === 'function') return f(); };
+                        }
                     }
-                };
-                buttonsEl.appendChild(btnEl);
-            });
-            
-            // 如果沒有按鈕，添加默認的關閉按鈕
-            if (buttons.length === 0) {
-                const closeBtn = document.createElement('button');
-                closeBtn.className = 'modal-btn modal-btn-confirm';
-                closeBtn.innerText = '關閉';
-                closeBtn.onclick = closeStepModal;
-                buttonsEl.appendChild(closeBtn);
-            }
-            
-            // 顯示模態框
-            modal.classList.add('active');
+                    return nb;
+                });
+
+                // If there are no buttons, provide a default close button that clears current step task.
+                if (!safeButtons.length) safeButtons.push({ text: '關閉', callback: function(){ if (window.closeStepModal) window.closeStepModal(); } });
+
+                // Prefer the globally added safe modal implementation
+                if (window.showStepModal && window.showStepModal !== showStepModal) {
+                    // global safe implementation exists (from earlier IIFE); call it
+                    return window.showStepModal(title, content, safeButtons.map(b => ({ text: b.text, callback: b.callback })));
+                }
+
+                // Fallback: basic DOM manipulation (kept minimal and safe)
+                const modal = document.getElementById('step-modal');
+                const titleEl = document.getElementById('step-modal-title');
+                const contentEl = document.getElementById('step-modal-content');
+                const buttonsEl = document.getElementById('step-modal-buttons');
+                if (titleEl) titleEl.innerText = title;
+                if (contentEl) {
+                    contentEl.innerHTML = '';
+                    if (typeof content === 'string') contentEl.innerHTML = content; else if (content instanceof Node) contentEl.appendChild(content);
+                }
+                if (buttonsEl) {
+                    buttonsEl.innerHTML = '';
+                    safeButtons.forEach(b => {
+                        const btnEl = document.createElement('button'); btnEl.className='modal-btn modal-btn-confirm'; btnEl.innerText = b.text;
+                        btnEl.onclick = function(){ try{ if (typeof b.callback === 'function') return b.callback(); }catch(e){console.warn('modal button callback failed', e);} };
+                        buttonsEl.appendChild(btnEl);
+                    });
+                }
+                if (modal) modal.classList.add('active');
+            } catch(e){ console.error('showStepModal wrapper error', e); }
         }
 
         function closeStepModal() {
+            try {
+                if (window.closeStepModal && window.closeStepModal !== closeStepModal) return window.closeStepModal();
+            } catch(e){}
             const _stepModal = safeGet ? safeGet('step-modal') : document.getElementById('step-modal');
             if(_stepModal) _stepModal.classList.remove('active');
-            GameState.currentStepTask = null;
+            try { GameState.currentStepTask = null; } catch(e){}
         }
 
         // ===== 全螢幕戰況地圖函數 =====
@@ -9660,22 +9816,22 @@
             
             if (role === 'hacker') {
                 if (node.type === 'target' || node.type === 'law-enforcement') {
-                    actionsHtml += `<button class="node-action-btn" onclick="executeNodeAction('${node.id}', 'scan')">掃描漏洞</button>`;
-                    actionsHtml += `<button class="node-action-btn" onclick="executeNodeAction('${node.id}', 'attack')">發動攻擊</button>`;
+                        actionsHtml += `<button class="node-action-btn" data-action="node-action" data-op="scan" data-node="${node.id}">掃描漏洞</button>`;
+                        actionsHtml += `<button class="node-action-btn" data-action="node-action" data-op="attack" data-node="${node.id}">發動攻擊</button>`;
                 } else if (node.type === 'hacker') {
-                    actionsHtml += `<button class="node-action-btn" onclick="executeNodeAction('${node.id}', 'defend')">加固防禦</button>`;
+                    actionsHtml += `<button class="node-action-btn" data-action="node-action" data-op="defend" data-node="${node.id}">加固防禦</button>`;
                 }
             } else {
                 if (node.type === 'hacker' || node.type === 'target') {
-                    actionsHtml += `<button class="node-action-btn" onclick="executeNodeAction('${node.id}', 'investigate')">收集證據</button>`;
-                    actionsHtml += `<button class="node-action-btn" onclick="executeNodeAction('${node.id}', 'track')">追蹤來源</button>`;
+                    actionsHtml += `<button class="node-action-btn" data-action="node-action" data-op="investigate" data-node="${node.id}">收集證據</button>`;
+                    actionsHtml += `<button class="node-action-btn" data-action="node-action" data-op="track" data-node="${node.id}">追蹤來源</button>`;
                 } else if (node.type === 'law-enforcement') {
-                    actionsHtml += `<button class="node-action-btn" onclick="executeNodeAction('${node.id}', 'defend')">系統維護</button>`;
+                    actionsHtml += `<button class="node-action-btn" data-action="node-action" data-op="defend" data-node="${node.id}">系統維護</button>`;
                 }
             }
             actionsHtml += '</div>';
             
-            showStepModal(`節點詳情: ${node.label}`, `<pre>${details}</pre>${actionsHtml}`, [{text: '關閉', onclick: 'closeStepModal()'}]);
+            showStepModal(`節點詳情: ${node.label}`, `<pre>${details}</pre>${actionsHtml}`, [{text: '關閉', callback: closeStepModal}]);
         }
 
         function executeNodeAction(nodeId, actionType) {
@@ -9687,6 +9843,10 @@
                 const toolData = { name: actionType.toUpperCase(), cooldown: 5, cost: 100, effect: actionType };
                 implementToolEffect(actionType, toolData, GameState.playerData[GameState.currentRole], GameState.playerData[GameState.currentRole === 'hacker' ? 'law_enforcement' : 'hacker']);
                 updateGameStats();
+                try {
+                    const resSummary = `Executed ${actionType} on ${node ? node.label : nodeId}`;
+                    logAction(nodeId, actionType, resSummary, { details: JSON.stringify(toolData) });
+                } catch(e){}
             }, 2000);
         }
 
@@ -10221,7 +10381,7 @@
                             ${options.map(opt => `<button class="node-action-btn" onclick="selectBranch('${opt.id}')">${opt.text}</button>`).join('')}
                         </div>
                     `;
-                    showStepModal('戰略分支選擇', content, []);
+                            showStepModal('戰略分支選擇', content, []);
                 }
             }
         }
@@ -10397,6 +10557,14 @@
                             <button class="btn-primary" onclick="openLegalTools()">法律工具</button>
                             <button class="btn-primary" onclick="openDefenseTools()">防禦與隱匿</button>
                             <button class="btn-primary" onclick="openDarknetOps()">暗網操作</button>
+                            ${GameState.currentRole === 'law_enforcement' ? `
+                                <button class="btn-primary" onclick="showLECenter()">指揮中心</button>
+                                <button class="btn-primary" onclick="showCellebritePage()">Cellebrite 儀表板</button>
+                                <button class="btn-primary" onclick="performCellebriteUpgrade()">升級 Cellebrite</button>
+                                <button class="btn-primary" onclick="upgradeLECenter()">升級 指揮中心</button>
+                                <button class="btn-primary" onclick="showAllDashboards()">顯示所有儀表板</button>
+                                <button class="btn-primary" onclick="upgradeAllDashboards()">升級所有儀表板</button>
+                            ` : ''}
                         </div>
                     </div>
                     
@@ -10820,6 +10988,18 @@
                             <div class="packet-sniffer" id="packet-sniffer">
                                 <div class="packet-line">[系統] 封包分析器已啟動...</div>
                             </div>
+                            <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                                <input id="sniffer-filter-ip" placeholder="Filter IP (e.g. 192.168.1.)" style="padding:6px; border-radius:6px; background:#00141b; color:#bfefff; border:1px solid rgba(191,250,240,0.04);" />
+                                <select id="sniffer-filter-proto" style="padding:6px; border-radius:6px; background:#00141b; color:#bfefff; border:1px solid rgba(191,250,240,0.04);">
+                                    <option value="">All</option>
+                                    <option value="HTTP">HTTP</option>
+                                    <option value="SSH">SSH</option>
+                                    <option value="DNS">DNS</option>
+                                    <option value="TCP">TCP</option>
+                                    <option value="UDP">UDP</option>
+                                </select>
+                                <button class="btn forensic-btn" id="btn-apply-sniffer-filter">Apply</button>
+                            </div>
                         </div>
                     </div>
     
@@ -10918,9 +11098,12 @@
                                 <button class="quick-btn le-only" onclick="quickAction('ai_attack_match', this)">
                                     <i class="fas fa-robot"></i> AI 攻擊模式匹配
                                 </button>
-                                <!-- 缺失的執法專業工具 -->
+                                <!-- 執法專務高級工具：數位鑑識工具中心 & Cellebrite -->
                                 <button class="quick-btn le-only" onclick="quickAction('forensic_toolkit', this)">
-                                    <i class="fas fa-microchip"></i> 數位鑑識工具套件
+                                    <i class="fas fa-microchip"></i> 數位鑑識工具中心
+                                </button>
+                                <button class="quick-btn le-only" onclick="showCellebritePage()">
+                                    <i class="fas fa-toolbox"></i> Cellebrite 儀表板
                                 </button>
                                 <button class="quick-btn le-only" onclick="quickAction('chain_of_custody', this)">
                                     <i class="fas fa-link"></i> 取證鏈管理系統
@@ -12218,6 +12401,57 @@
         // ===== 終端命令執行 =====
         function executeCommand(command) {
             addTerminalLine('$ ' + command, 'command');
+            const parts = command.trim().split(/\s+/);
+            const base = parts[0].toLowerCase();
+
+            // handle nmap-like invocation
+            if (base === 'nmap' || base === 'sudo' && parts[1] && parts[1].toLowerCase() === 'nmap') {
+                // reconstruct target args
+                const args = command.slice(command.indexOf('nmap') + 4).trim();
+                // prefer advanced output panel if present
+                if (document.getElementById('cellebrite-nmap-output-adv')) {
+                    simulateNmapScan(args || GameState.opponentIP, 'cellebrite-nmap-output-adv');
+                } else {
+                    simulateNmapScan(args || GameState.opponentIP, 'cellebrite-nmap-output');
+                }
+                if (typeof updateInputSuggestions === 'function') updateInputSuggestions('');
+                return;
+            }
+
+            if (base === 'public_ip' || command.toLowerCase() === 'public_ip') {
+                const ip = getPublicIP();
+                const el = document.getElementById('cellebrite-public-ip-adv') || document.getElementById('cellebrite-public-ip');
+                if (el) el.textContent = ip;
+                addTerminalLine(`[network] Public IP: ${ip}`, 'response');
+                return;
+            }
+
+            if (base === 'private_ip' || command.toLowerCase() === 'private_ip') {
+                const ip = getPrivateIP();
+                const el = document.getElementById('cellebrite-private-ip-adv') || document.getElementById('cellebrite-private-ip');
+                if (el) el.textContent = ip;
+                addTerminalLine(`[network] Private IP: ${ip}`, 'response');
+                return;
+            }
+
+            if (base === 'show_server_rack' || command.toLowerCase() === 'show_server_rack') {
+                showServerRack();
+                return;
+            }
+
+            if (command.toLowerCase() === 'upgrade_cellebrite') {
+                performCellebriteUpgrade();
+                return;
+            }
+
+            if (command.toLowerCase() === 'set_enable_password' || base === 'set_enable_password') {
+                const pwd = parts.slice(1).join(' ') || '';
+                if (!pwd) { addTerminalLine('[error] 請提供密碼: set_enable_password <password>', 'error'); return; }
+                setEnablePassword(pwd);
+                addTerminalLine('[system] 已設定 enable 密碼', 'success');
+                return;
+            }
+
             if (command.toLowerCase() === 'help') {
                 addTerminalLine('可用指令: scan, attack, defend, status, tools', 'response');
             } else if (command.toLowerCase() === 'status') {
@@ -12228,6 +12462,195 @@
             }
             // 執行完畢後清除即時建議
             if (typeof updateInputSuggestions === 'function') updateInputSuggestions('');
+        }
+
+        // ===== Nmap 模擬 =====
+        function simulateNmapScan(args, outputId) {
+            outputId = outputId || 'cellebrite-nmap-output';
+            const out = document.getElementById(outputId);
+            if (!out) return;
+            out.innerHTML = '';
+            addTerminalLine('[nmap] 開始掃描: ' + args, 'info');
+            const lines = [];
+            // fake parsing
+            lines.push('Starting Nmap 7.80 ( https://nmap.org ) at ' + new Date().toLocaleString());
+            lines.push('Nmap scan report for ' + (args || GameState.opponentIP));
+            lines.push('Host is up (0.012s latency).');
+            const ports = [22,80,443,8080,3306];
+            ports.forEach(p => {
+                const state = Math.random() > 0.4 ? 'open' : 'filtered';
+                const svc = (p===22?'ssh':p===80?'http':p===443?'https':p===3306?'mysql':'http-proxy');
+                lines.push(`${p}/tcp ${state} ${svc}`);
+            });
+            lines.push('Nmap done: 1 IP address (1 host up) scanned in 2.12 seconds');
+
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i >= lines.length) { clearInterval(interval); addTerminalLine('[nmap] 掃描完成', 'success'); return; }
+                const l = document.createElement('div'); l.textContent = lines[i++]; out.appendChild(l); out.scrollTop = out.scrollHeight;
+            }, 220);
+        }
+
+        // ===== IP helpers (simulated) =====
+        function getPublicIP() {
+            if (!GameState.publicIP) GameState.publicIP = '203.0.113.' + Math.floor(Math.random() * 200 + 1);
+            return GameState.publicIP;
+        }
+
+        function getPrivateIP() {
+            if (!GameState.privateIP) GameState.privateIP = '10.0.0.' + Math.floor(Math.random() * 200 + 2);
+            return GameState.privateIP;
+        }
+
+        // ===== Persistence helpers =====
+        function saveGameStateToStorage() {
+            try {
+                const snap = {
+                    serverRack: GameState.serverRack,
+                    publicIP: GameState.publicIP,
+                    privateIP: GameState.privateIP
+                };
+                localStorage.setItem('sim_game_state', JSON.stringify(snap));
+            } catch(e) { console.warn('存儲失敗', e); }
+        }
+
+        function loadGameStateFromStorage() {
+            try {
+                const raw = localStorage.getItem('sim_game_state');
+                if (!raw) return;
+                const snap = JSON.parse(raw);
+                if (snap.serverRack) GameState.serverRack = snap.serverRack;
+                if (snap.publicIP) GameState.publicIP = snap.publicIP;
+                if (snap.privateIP) GameState.privateIP = snap.privateIP;
+            } catch(e) { console.warn('讀取存儲失敗', e); }
+        }
+
+        // load on script init
+        try { loadGameStateFromStorage(); } catch(e) {}
+
+        // ===== Server Rack & Enable Password =====
+        function showServerRack() {
+            const sec = document.getElementById('server-rack-section');
+            if (!sec) return;
+            sec.style.display = sec.style.display === 'none' ? 'block' : 'block';
+            const list = document.getElementById('server-rack-list');
+            if (!list) return;
+            if (!GameState.serverRack) {
+                GameState.serverRack = [
+                    { name: 'ufed1', ip: '192.168.100.11', enablePwd: null },
+                    { name: 'phys-analyzer', ip: '192.168.100.12', enablePwd: null },
+                    { name: 'genesis-core', ip: '192.168.100.13', enablePwd: null }
+                ];
+            }
+            list.innerHTML = GameState.serverRack.map(d => `
+                <div style="padding:8px; border:1px solid rgba(255,255,255,0.05); margin-bottom:6px;">
+                    <strong>${d.name}</strong> <span style="float:right">${d.ip}</span>
+                    <div style="clear:both; margin-top:6px;">enable: <span id="enable-${d.name}">${d.enablePwd? 'set':'(none)'}</span>
+                    <button class="step-btn" style="margin-left:8px;" onclick="promptSetEnable('${d.name}')">設定</button></div>
+                </div>
+            `).join('');
+            // persist any changes
+            saveGameStateToStorage();
+        }
+
+        function promptSetEnable(name) {
+            const pwd = prompt('輸入 enable 密碼 for ' + name + ':');
+            if (!pwd) return;
+            const dev = GameState.serverRack.find(d => d.name === name);
+            if (dev) { dev.enablePwd = pwd; document.getElementById('enable-'+name).textContent = 'set'; addTerminalLine(`[rack] ${name} enable 密碼已設定。`, 'success'); }
+            // save change
+            saveGameStateToStorage();
+        }
+
+        function cmdSetEnablePasswordFromUI() {
+            const name = document.getElementById('rack-device-name').value.trim();
+            const pwd = document.getElementById('rack-enable-pw').value.trim();
+            if (!name || !pwd) { addTerminalLine('[error] 請提供設備名稱與密碼', 'error'); return; }
+            if (!GameState.serverRack) GameState.serverRack = [];
+            let dev = GameState.serverRack.find(d => d.name === name);
+            if (!dev) { dev = { name, ip: '192.168.100.' + (100 + GameState.serverRack.length + 1), enablePwd: pwd }; GameState.serverRack.push(dev); }
+            dev.enablePwd = pwd;
+            showServerRack();
+            addTerminalLine(`[rack] ${name} enable 密碼設定為: ${pwd}`, 'success');
+            saveGameStateToStorage();
+        }
+
+        function setEnablePassword(pwd) {
+            // set enable on all devices
+            if (!GameState.serverRack) GameState.serverRack = [];
+            GameState.serverRack.forEach(d => d.enablePwd = pwd);
+            saveGameStateToStorage();
+        }
+
+        // ===== 升級 Cellebrite 工作站 (模擬) =====
+        function performCellebriteUpgrade() {
+            const verEl = document.getElementById('cellebrite-version-adv') || document.getElementById('cellebrite-version');
+            const nmapOut = document.getElementById('cellebrite-nmap-output-adv') || document.getElementById('cellebrite-nmap-output');
+            addTerminalLine('[upgrade] 開始升級 Cellebrite 工作站...', 'info');
+            if (nmapOut) nmapOut.innerHTML += `<div>開始下載更新套件...</div>`;
+            setTimeout(() => {
+                const now = new Date();
+                const newVer = 'v' + (Math.floor(Math.random()*2)+1) + '.' + Math.floor(Math.random()*10) + '.' + Math.floor(Math.random()*90+10);
+                if (verEl) verEl.textContent = newVer;
+                addTerminalLine('[upgrade] 升級完成: ' + newVer, 'success');
+                if (nmapOut) nmapOut.innerHTML += `<div>升級完成: ${newVer} (${now.toLocaleString()})</div>`;
+                showNotification('升級完成', `Cellebrite 已升級到 ${newVer}`, 'success');
+                saveGameStateToStorage();
+            }, 2200);
+        }
+
+        // ===== 指揮中心與全域儀表板工具 =====
+        function upgradeLECenter() {
+            const verEl = document.getElementById('lecenter-version');
+            addTerminalLine('[upgrade] 開始升級 指揮中心...', 'info');
+            setTimeout(() => {
+                const newVer = 'v' + (Math.floor(Math.random()*2)+2) + '.' + Math.floor(Math.random()*10) + '.' + Math.floor(Math.random()*90+10);
+                if (verEl) verEl.textContent = newVer;
+                addTerminalLine('[upgrade] 指揮中心升級完成: ' + newVer, 'success');
+                showNotification('升級完成', `指揮中心已升級到 ${newVer}`, 'success');
+                saveGameStateToStorage();
+            }, 1800);
+        }
+
+        function upgradeAllDashboards() {
+            addTerminalLine('[upgrade] 開始升級所有儀表板...', 'info');
+            performCellebriteUpgrade();
+            upgradeLECenter();
+            // game UI indicator (if exists)
+            const mainTitle = document.querySelector('.game-title');
+            if (mainTitle) mainTitle.textContent = mainTitle.textContent + ' • UI 已升級';
+            setTimeout(() => showNotification('升級完成', '所有儀表板已升級', 'success'), 2400);
+        }
+
+        function showAllDashboards() {
+            // show LECenter, Cellebrite and main dashboard pages where available
+            try {
+                if (document.getElementById('le-center-page')) showLECenter();
+                if (document.getElementById('cellebrite-page')) showCellebritePage();
+                if (document.getElementById('main-page')) showPage('main-page');
+                addTerminalLine('[ui] 已顯示所有指定儀表板', 'info');
+            } catch(e) { addTerminalLine('[ui] 顯示所有儀表板失敗: ' + e.message, 'error'); }
+        }
+
+        // ===== Forensics Lab handler (e.g., GrayKey) =====
+        function openForensicsLab(mode) {
+            // mode 'graykey' triggers special modal/info
+            if (mode === 'graykey') {
+                addTerminalLine('[forensics] 啟動 GrayKey 模擬介面...', 'info');
+                openStepModal('GrayKey 模擬', [
+                    { name: '連接設備', type: 'progress', duration: 1000 },
+                    { name: '嘗試繞過鎖定', type: 'progress', duration: 2500 },
+                    { name: '提取資料', type: 'progress', duration: 2000 },
+                    { name: '生成 UFDR 報告', type: 'result', content: '已生成 UFDR 報告 (模擬)' }
+                ], (data) => {
+                    addTerminalLine('[forensics] GrayKey 模擬作業完成，報告已生成 (模擬)。', 'success');
+                    showNotification('GrayKey', '模擬提取已完成，請檢視 UFDR 報告。', 'success');
+                });
+                return;
+            }
+            // fallback: open generic forensics lab
+            addTerminalLine('[forensics] 開啟鑑識實驗室', 'info');
+            showNotification('鑑識', '鑑識實驗室已啟動', 'info');
         }
 
         // ===== 連接/斷開目標 =====
@@ -12327,7 +12750,7 @@
 
             // 推薦常用指令
             if (!query) {
-                suggestions.push('help','status','open_shop','scan','monitor');
+                suggestions.push('help','status','open_shop','scan','monitor','nmap','public_ip','private_ip');
             } else {
                 suggestions.push(...commands.filter(c => c.indexOf(query) === 0 || c.includes(query)).slice(0,8));
             }
@@ -12995,6 +13418,10 @@
                     document.getElementById('nav-shop')?.classList.add('active');
                     document.getElementById('nav-shop-mobile')?.classList.add('active');
                     break;
+                case 'cellebrite':
+                    document.getElementById('nav-cellebrite')?.classList.add('active');
+                    document.getElementById('nav-cellebrite-mobile')?.classList.add('active');
+                    break;
                 case 'game':
                     document.getElementById('nav-season2')?.classList.add('active');
                     document.getElementById('nav-season2-mobile')?.classList.add('active');
@@ -13011,6 +13438,74 @@
 
 
         // ===== 初始化函數（缺失的） =====
+        // Interval registry: centralize timer creation so we can clear and inspect timers to avoid leaks
+        (function(){
+            if (!window.IntervalRegistry) {
+                window.IntervalRegistry = {
+                    _list: [],
+                    register(fn, ms, meta) {
+                        const id = setInterval(fn, ms);
+                        this._list.push({ id, fn, ms, meta: meta || null, createdAt: Date.now() });
+                        return id;
+                    },
+                    clear(filter) {
+                        // filter can be id or predicate
+                        if (!filter) return;
+                        if (typeof filter === 'number') {
+                            const idx = this._list.findIndex(i => i.id === filter);
+                            if (idx !== -1) { clearInterval(this._list[idx].id); this._list.splice(idx,1); }
+                            return;
+                        }
+                        if (typeof filter === 'function') {
+                            const toRemove = this._list.filter(filter);
+                            toRemove.forEach(i => clearInterval(i.id));
+                            this._list = this._list.filter(i => !toRemove.includes(i));
+                        }
+                    },
+                    clearAll() {
+                        this._list.forEach(i => clearInterval(i.id));
+                        this._list = [];
+                    },
+                    list() { return this._list.slice(); }
+                };
+            }
+            // convenience alias
+            window.registerInterval = function(fn, ms, meta) { return window.IntervalRegistry.register(fn, ms, meta); };
+            window.clearRegisteredIntervals = function(filter) { return window.IntervalRegistry.clear(filter); };
+            window.clearAllRegisteredIntervals = function(){ return window.IntervalRegistry.clearAll(); };
+            // Timeout registry: track setTimeout so we can clear by meta
+            if (!window.TimeoutRegistry) {
+                window.TimeoutRegistry = {
+                    _list: [],
+                    register(fn, ms, meta) {
+                        const id = setTimeout(() => { try { fn(); } catch(e){}; // remove after run
+                            const idx = this._list.findIndex(t => t.id === id); if (idx !== -1) this._list.splice(idx,1);
+                        }, ms);
+                        this._list.push({ id, fn, ms, meta: meta || null, createdAt: Date.now() });
+                        return id;
+                    },
+                    clear(filter) {
+                        if (!filter) return;
+                        if (typeof filter === 'number') {
+                            const idx = this._list.findIndex(i => i.id === filter);
+                            if (idx !== -1) { clearTimeout(this._list[idx].id); this._list.splice(idx,1); }
+                            return;
+                        }
+                        if (typeof filter === 'function') {
+                            const toRemove = this._list.filter(filter);
+                            toRemove.forEach(i => clearTimeout(i.id));
+                            this._list = this._list.filter(i => !toRemove.includes(i));
+                        }
+                    },
+                    clearAll() { this._list.forEach(i => clearTimeout(i.id)); this._list = []; },
+                    list() { return this._list.slice(); }
+                };
+            }
+            window.registerTimeout = function(fn, ms, meta){ return window.TimeoutRegistry.register(fn, ms, meta); };
+            window.clearRegisteredTimeouts = function(filter){ return window.TimeoutRegistry.clear(filter); };
+            window.clearAllRegisteredTimeouts = function(){ return window.TimeoutRegistry.clearAll(); };
+        })();
+
         function initializeSkillTree() {
             addGameLog('system', '技能樹系統已初始化');
         }
@@ -13020,14 +13515,22 @@
         }
 
         function initializeAutoSave() {
-            GameState.autoSaveInterval = setInterval(() => {
+            const id = registerInterval(() => {
                 localStorage.setItem('gameState', JSON.stringify(GameState));
                 GameState.lastSaveTime = new Date();
-            }, 30000);
+            }, 30000, { name: 'autoSave' });
+            GameState.autoSaveInterval = id;
         }
 
         function initializeEvidenceIntegrity() {
             addGameLog('system', '證據完整性驗證系統已初始化');
+        }
+
+        // ===== Cellebrite 頁面顯示 =====
+        function showCellebritePage() {
+            showPage('cellebrite-page');
+            GameState.currentPage = 'cellebrite';
+            updateNavActive();
         }
 
         // ===== 動態情報生成 =====
@@ -13173,7 +13676,14 @@
                 line.className = 'packet-line' + (isAlert ? ' packet-alert' : (Math.random() > 0.5 ? ' packet-in' : ' packet-out'));
                 line.innerText = `[${new Date().toLocaleTimeString()}] ${proto} ${src} -> ${dst} ${isAlert ? '!!! THREAT DETECTED !!!' : 'LEN=' + Math.floor(Math.random() * 1500)}`;
                 
-                sniffer.appendChild(line);
+                // Apply sniffer filters if present
+                try{
+                    const ipFilter = (document.getElementById('sniffer-filter-ip')||{}).value || '';
+                    const protoFilter = (document.getElementById('sniffer-filter-proto')||{}).value || '';
+                    if(ipFilter && src.indexOf(ipFilter) === -1) { /* skip */ }
+                    else if(protoFilter && proto !== protoFilter) { /* skip */ }
+                    else sniffer.appendChild(line);
+                }catch(e){ sniffer.appendChild(line); }
                 sniffer.scrollTop = sniffer.scrollHeight;
                 if (sniffer.childNodes.length > 50) sniffer.removeChild(sniffer.firstChild);
                 
@@ -13221,8 +13731,8 @@
             originalInitializeGameUI();
             applyRoleBalance();
             updateDeviceSpecs();
-            setInterval(updateNetworkMonitor, 1000);
-            setInterval(updateBrowserPreview, 3000);
+            registerInterval(updateNetworkMonitor, 1000, { name: 'networkMonitor' });
+            registerInterval(updateBrowserPreview, 3000, { name: 'browserPreview' });
         };
     
         // ===== 擴充功能邏輯 =====
@@ -13325,7 +13835,7 @@
                 'open_forensics': '數位鑑識室 - 打開數位鑑識分析工具',
                 'open_warrant': '搜索令系統 - 打開法律搜索令申請系統',
                 'gen_summary': '產生執法摘要 - 生成案件執法摘要報告',
-                'forensic_toolkit': '數位鑑識工具套件 - 硬碟映像、記憶體轉儲分析',
+                'forensic_toolkit': '數位鑑識工具中心 - 硬碟映像、記憶體轉儲分析、GrayKey與行動鑑識模擬',
                 'chain_of_custody': '取證鏈管理系統 - 證據監管鏈記錄',
                 'legal_doc_gen': '法律文書生成器 - 搜索令、法院文件自動生成',
                 'witness_mgmt': '證人/線人管理系統 - 管理證人訊息和線人資料',
@@ -13542,8 +14052,8 @@
             `;
             
             showStepModal('一鍵式攻擊策略設定', content, [
-                {text: '確認執行', onclick: `confirmQuickAttack('${mode}')`},
-                {text: '取消', onclick: 'closeStepModal()'}
+                {text: '確認執行', callback: function(){ return confirmQuickAttack(mode); }},
+                {text: '取消', callback: closeStepModal}
             ]);
         }
 
@@ -13740,7 +14250,7 @@
                     <div class="info-item"><div class="info-label">心理分析</div><div class="info-value">極度謹慎, 具有高度技術自信</div></div>
                 </div>
             `;
-            showStepModal('詳細目標情報 *執法部門專屬*', content, [{text: '關閉', onclick: 'closeStepModal()'}]);
+            showStepModal('詳細目標情報 *執法部門專屬*', content, [{text: '關閉', callback: closeStepModal}]);
         }
 
         function executeAntivirusScan() {
@@ -13769,7 +14279,7 @@
                     <div class="info-item"><div class="info-label">匿名層</div><div class="info-value">3層 (Tor + VPN)</div></div>
                 </div>
             `;
-            showStepModal('裝置詳細狀態儀表板', content, [{text: '關閉', onclick: 'closeStepModal()'}]);
+            showStepModal('裝置詳細狀態儀表板', content, [{text: '關閉', callback: closeStepModal}]);
         }
 
         function executeIPTracking() {
@@ -14307,7 +14817,7 @@
                 </div>
             `;
             
-            showStepModal('案件詳細資料 📋', content, [{text: '關閉', onclick: 'closeStepModal()'}]);
+            showStepModal('案件詳細資料 📋', content, [{text: '關閉', callback: closeStepModal}]);
         }
 
         function showCaseReport() {
@@ -14344,7 +14854,7 @@
                 </div>
             `;
             
-            showStepModal('案件詳細回報 📊', content, [{text: '關閉', onclick: 'closeStepModal()'}]);
+            showStepModal('案件詳細回報 📊', content, [{text: '關閉', callback: closeStepModal}]);
         }
 
         function showInterDeptReport() {
@@ -14393,7 +14903,7 @@
                 </div>
             `;
             
-            showStepModal('跨部門協作進度報告 🤝', content, [{text: '關閉', onclick: 'closeStepModal()'}]);
+            showStepModal('跨部門協作進度報告 🤝', content, [{text: '關閉', callback: closeStepModal}]);
         }
 
         // ===== 執法部門高級工具實作 =====
@@ -14421,7 +14931,7 @@
                     </div>
                 </div>
             `;
-            showStepModal('高級數據加密分析 🔐', content, [{text: '開始分析', onclick: 'startEncryptionAnalysis()'}, {text: '關閉', onclick: 'closeStepModal()'}]);
+            showStepModal('高級數據加密分析 🔐', content, [{text: '開始分析', callback: startEncryptionAnalysis}, {text: '關閉', callback: closeStepModal}]);
         }
 
         function startEncryptionAnalysis() {
@@ -14459,7 +14969,7 @@
                     </div>
                 </div>
             `;
-            showStepModal('智能行為分析系統 🧠', content, [{text: '啟動預測', onclick: 'startBehaviorAnalysis()'}, {text: '關閉', onclick: 'closeStepModal()'}]);
+            showStepModal('智能行為分析系統 🧠', content, [{text: '啟動預測', callback: startBehaviorAnalysis}, {text: '關閉', callback: closeStepModal}]);
         }
 
         function startBehaviorAnalysis() {
@@ -14500,7 +15010,7 @@
                     </div>
                 </div>
             `;
-            showStepModal('瞬時網絡追蹤器 ⚡', content, [{text: '鎖定位置', onclick: 'lockHackerLocation()'}, {text: '關閉', onclick: 'closeStepModal()'}]);
+            showStepModal('瞬時網絡追蹤器 ⚡', content, [{text: '鎖定位置', callback: lockHackerLocation}, {text: '關閉', callback: closeStepModal}]);
         }
 
         function lockHackerLocation() {
@@ -14543,7 +15053,7 @@
                     </div>
                 </div>
             `;
-            showStepModal('跨平台漏洞掃描器 🔍', content, [{text: '修補漏洞', onclick: 'patchVulnerabilities()'}, {text: '關閉', onclick: 'closeStepModal()'}]);
+            showStepModal('跨平台漏洞掃描器 🔍', content, [{text: '修補漏洞', callback: patchVulnerabilities}, {text: '關閉', callback: closeStepModal}]);
         }
 
         function patchVulnerabilities() {
@@ -14764,8 +15274,8 @@
                 </div>
             `;
             showStepModal('實時威脅情報面板 🚨', content, [
-                {text: '刷新', onclick: 'refreshThreatIntel()'},
-                {text: '關閉', onclick: 'closeStepModal()'}
+                {text: '刷新', callback: refreshThreatIntel},
+                {text: '關閉', callback: closeStepModal}
             ]);
         }
 
@@ -14920,58 +15430,195 @@ d41d8cd98f00b204e9800998ecf8427e</textarea>
 
         function showForensicToolkit() {
             const content = `
-                <div class="setup-section" style="max-height: 500px; overflow-y: auto;">
-                    <div style="color: #4a90d9; font-weight: bold; margin-bottom: 15px;">
-                        🖥️ 數位鑑識工具套件
+                <div class="forensic-modal">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            <div style="font-size:1.6rem; color:#9eeff0;">🖥️ 數位鑑識工具中心</div>
+                            <div class="forensic-note">高科技 • 暗黑執法風格</div>
+                        </div>
+                            <div>
+                            <button class="forensic-btn" onclick="runForensicSelfCheck()">執行自檢</button>
+                            <button class="forensic-btn ghost" onclick="closeForensicsPage()">關閉</button>
+                        </div>
                     </div>
-                    <div class="setting-group">
-                        <label class="setting-label">選擇鑑識方法</label>
-                        <select class="setting-input" id="forensic-method">
-                            <option value="disk">硬碟映像取證</option>
-                            <option value="memory" selected>記憶體轉儲分析</option>
-                            <option value="network">網絡封包分析</option>
-                            <option value="registry">系統登錄分析</option>
-                        </select>
-                    </div>
-                    <div class="setting-group">
-                        <label class="setting-label">目標裝置</label>
-                        <input type="text" class="setting-input" id="forensic-device" placeholder="e.g. /dev/sda1 或 C:" value="E:">
-                    </div>
-                    <div class="setting-group">
-                        <label class="setting-label">輸出格式</label>
-                        <select class="setting-input" id="forensic-format">
-                            <option value="dd">DD 格式 (.dd)</option>
-                            <option value="ewf" selected>EWF 格式 (.E01)</option>
-                            <option value="raw">Raw 格式 (.raw)</option>
-                        </select>
-                    </div>
-                    <div class="terminal-output" style="color: #4a90d9; font-size: 0.85rem; margin-top: 15px;">
-                        [準備] 鑑識工具套件已加載
+
+                    <div class="forensic-grid" style="margin-top:12px;">
+                        <div class="forensic-panel">
+                            <div class="panel-title">快速分流</div>
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                <button class="forensic-btn" onclick="openForensicsLab('graykey')">GrayKey 模擬</button>
+                                <button class="forensic-btn" onclick="showLEAdvancedTools()">Cellebrite 分支</button>
+                                <button class="forensic-btn" onclick="showServerRack()">伺服器機架</button>
+                            </div>
+                        </div>
+
+                        <div class="forensic-panel" style="min-height:220px;">
+                            <div class="panel-title">採集設定</div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                                <div>
+                                    <label class="forensic-note">方法</label>
+                                    <select id="forensic-method" style="width:100%; padding:6px; border-radius:6px; background:#001a24; color:#bfefff; border:1px solid rgba(191,250,240,0.06);">
+                                        <option value="memory">記憶體轉儲</option>
+                                        <option value="disk">硬碟映像 (.E01)</option>
+                                        <option value="network">網絡嗅探</option>
+                                        <option value="registry">登錄分析</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="forensic-note">輸出格式</label>
+                                    <select id="forensic-format" style="width:100%; padding:6px; border-radius:6px; background:#001a24; color:#bfefff; border:1px solid rgba(191,250,240,0.06);">
+                                        <option value="ewf">EWF (.E01)</option>
+                                        <option value="dd">DD (.dd)</option>
+                                        <option value="raw">Raw (.raw)</option>
+                                    </select>
+                                </div>
+                                <div style="grid-column:1 / span 2;">
+                                    <label class="forensic-note">目標裝置</label>
+                                    <input id="forensic-device" style="width:100%; padding:8px; border-radius:6px; background:#00141b; color:#bfefff; border:1px solid rgba(191,250,240,0.04);" placeholder="e.g. /dev/sda1 或 E:">
+                                </div>
+                            </div>
+                            <div style="margin-top:12px;">
+                                <div id="forensic-log" style="height:80px; overflow:auto; background:rgba(0,0,0,0.25); padding:8px; border-radius:6px; color:#bfefff; font-size:0.9rem;"></div>
+                            </div>
+                        </div>
+
+                        <div class="forensic-panel">
+                            <div class="panel-title">系統資訊</div>
+                            <div style="display:flex; flex-direction:column; gap:6px;">
+                                <div class="forensic-note">Public IP: <span id="forensic-public-ip">-</span></div>
+                                <div class="forensic-note">Private IP: <span id="forensic-private-ip">-</span></div>
+                                <div class="forensic-note">Server Rack: <button class="forensic-btn ghost" onclick="showServerRack()">管理</button></div>
+                                <div style="margin-top:8px;"><button class="forensic-btn" onclick="startForensicCollection()">啟動採集</button></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
-            showStepModal('數位鑑識工具套件 🖥️', content, [
-                {text: '開始採集', onclick: 'startForensicCollection()'},
-                {text: '取消', onclick: 'closeStepModal()'}
-            ]);
+            // Render Forensics Center as a full-page view (replace modal behavior)
+            (function(){
+                let page = document.getElementById('forensics-page');
+                if (!page) {
+                    page = document.createElement('div');
+                    page.id = 'forensics-page';
+                    page.className = 'page';
+                    // insert after nav or append to body
+                    document.body.appendChild(page);
+                }
+                // Wrap content into a full-page container with header and back control
+                page.innerHTML = `
+                    <div style="padding:18px; max-width:1200px; margin:80px auto;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <div style="display:flex; gap:12px; align-items:center;">
+                                <div style="font-size:1.6rem; color:#9eeff0;">🖥️ 數位鑑識工具中心</div>
+                                <div class="forensic-note">高科技 • 暗黑執法風格</div>
+                            </div>
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <button class="forensic-btn" onclick="runForensicSelfCheck()">執行自檢</button>
+                                <button class="forensic-btn ghost" onclick="showPage('main'); GameState.currentPage='main'; updateNavActive();">關閉</button>
+                                <!-- Export buttons -->
+                                <button class="forensic-btn" id="forensic-export-xlsx" onclick="openForensicsExportFilters('xlsx')">匯出 Excel</button>
+                                <button class="forensic-btn" id="forensic-export-pdf" onclick="openForensicsExportFilters('pdf')">匯出 PDF</button>
+                            </div>
+                        </div>
+                        <div class="forensic-grid" style="margin-top:6px;">
+                            ${content}
+                        </div>
+                    </div>
+                `;
+                showPage('forensics-page');
+                GameState.currentPage = 'forensics';
+                updateNavActive();
+            })();
         }
 
+        // Run a self-check to verify core functions and UI elements are present and operational
+        function runForensicSelfCheck() {
+            return runOnceGuard('forensic-selfcheck', async () => {
+                const log = document.getElementById('forensic-log');
+                if (!log) return alert('自檢失敗：無法找到日誌面板');
+                log.innerHTML = '';
+                const steps = [];
+                steps.push({ name: 'public_ip', fn: () => { const ip = getPublicIP(); document.getElementById('forensic-public-ip').textContent = ip; return `Public IP: ${ip}`; } });
+                steps.push({ name: 'private_ip', fn: () => { const ip = getPrivateIP(); document.getElementById('forensic-private-ip').textContent = ip; return `Private IP: ${ip}`; } });
+                steps.push({ name: 'nmap', fn: () => { simulateNmapScan(GameState.opponentIP, 'cellebrite-nmap-output-adv'); return 'Nmap 模擬啟動'; } });
+                steps.push({ name: 'server_rack', fn: () => { showServerRack(); return 'Server Rack 顯示'; } });
+                steps.push({ name: 'upgrade', fn: () => { performCellebriteUpgrade(); return 'Cellebrite 升級流程呼叫'; } });
+
+                for (let s of steps) {
+                    try {
+                        const res = s.fn();
+                        const line = document.createElement('div'); line.textContent = `[OK] ${s.name} -> ${res}`; log.appendChild(line);
+                        await new Promise(r=>setTimeout(r, 400));
+                    } catch(e) {
+                        const line = document.createElement('div'); line.textContent = `[FAIL] ${s.name} -> ${e.message}`; line.style.color='salmon'; log.appendChild(line);
+                    }
+                    log.scrollTop = log.scrollHeight;
+                }
+            });
+        }
+
+// Utility: ensure a function doesn't run concurrently (simple guard)
+function runOnceGuard(key, fn) {
+    window._runGuards = window._runGuards || {};
+    if (window._runGuards[key]) return null; // already running
+    try { window._runGuards[key] = true; return Promise.resolve(fn()).finally(()=>{ window._runGuards[key] = false; }); } catch(e) { window._runGuards[key] = false; throw e; }
+}
+
+// Cleanly destroy a modal created by showStepModal (or fallback)
+function destroyModal(modalId = 'step-modal'){
+    try {
+        const m = document.getElementById(modalId);
+        if (!m) return;
+        // remove event listeners by cloning
+        const clone = m.cloneNode(false);
+        m.parentNode && m.parentNode.replaceChild(clone, m);
+        // remove any global callbacks tied to modal
+        try { Object.keys(window._modalCallbacks || {}).forEach(k=>{ delete window._modalCallbacks[k]; }); } catch(e){}
+    } catch(e){ console.warn('destroyModal failed', e); }
+}
+
         function startForensicCollection() {
-            const method = document.getElementById('forensic-method')?.value || 'memory';
-            const device = document.getElementById('forensic-device')?.value || 'unknown';
-            const format = document.getElementById('forensic-format')?.value || 'ewf';
-            closeStepModal();
-            addTerminalLine(`[鑑識] 開始 ${method} 採集 (裝置: ${device}, 格式: ${format})...`, 'command');
-            addTerminalLine('[準備] 正在初始化採集引擎...', 'info');
+                    // run under guard to prevent concurrent collections
+                    return runOnceGuard('forensic-collection', async () => {
+                        const method = document.getElementById('forensic-method')?.value || 'memory';
+                        const device = document.getElementById('forensic-device')?.value || 'unknown';
+                        const format = document.getElementById('forensic-format')?.value || 'ewf';
+                        try { closeStepModal(); } catch(e){}
+                        addTerminalLine(`[鑑識] 開始 ${method} 採集 (裝置: ${device}, 格式: ${format})...`, 'command');
+                        addTerminalLine('[準備] 正在初始化採集引擎...', 'info');
+                        await new Promise(r=>setTimeout(r, 3000));
+                        GameState.playerData.law_enforcement.investigationProgress += 25;
+                        addTerminalLine('[✓] 採集完成', 'success');
+                        addTerminalLine(`[大小] 採集文件: forensic_image_${Date.now()}.${format.toLowerCase()}`, 'success');
+                        addTerminalLine('[哈希] SHA-256: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6', 'success');
+                        addTerminalLine('[狀態] 證據完整性已驗證', 'success');
+                        updateGameStats();
+                        showNotification('採集完成', '數位證據已採集', 'success');
+                    });
+        }
+
+        // Alias name for clarity
+        function showForensicCenter() { showForensicToolkit(); }
+
+        // Close the full-page Forensics Center and return to main view
+        function closeForensicsPage() {
+            try {
+                const page = document.getElementById('forensics-page');
+                if (page) page.style.display = 'none';
+            } catch(e){}
+            try { clearRegisteredIntervals(i => (i.meta && i.meta.name && i.meta.name.startsWith && i.meta.name.startsWith('forensics'))); } catch(e) {}
+            try { showPage && typeof showPage === 'function' ? showPage('main') : null; } catch(e) {}
+            try { GameState.currentPage = 'main'; updateNavActive(); } catch(e){}
+            try { destroyModal('step-modal'); } catch(e){}
+            try { if (typeof _forensicsObserver !== 'undefined' && _forensicsObserver && typeof _forensicsObserver.disconnect === 'function') _forensicsObserver.disconnect(); } catch(e){}
+        }
+
+        function deleteSelectedCellebriteReport() {
+            addTerminalLine('[cellebrite] 嘗試刪除最後一份報告...', 'info');
             setTimeout(() => {
-                GameState.playerData.law_enforcement.investigationProgress += 25;
-                addTerminalLine('[✓] 採集完成', 'success');
-                addTerminalLine(`[大小] 採集文件: forensic_image_${Date.now()}.${format.toLowerCase()}`, 'success');
-                addTerminalLine('[哈希] SHA-256: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6', 'success');
-                addTerminalLine('[狀態] 證據完整性已驗證', 'success');
-                updateGameStats();
-                showNotification('採集完成', '數位證據已採集', 'success');
-            }, 3000);
+                addTerminalLine('[cellebrite] 刪除完成：最後一份報告已移除 (模擬)。', 'success');
+                showNotification('Cellebrite', '最後一份報告已刪除（模擬）', 'warning');
+            }, 900);
         }
 
         function showChainOfCustody() {
@@ -14998,9 +15645,9 @@ d41d8cd98f00b204e9800998ecf8427e</textarea>
                 </div>
             `;
             showStepModal('取證鏈管理系統 🔗', content, [
-                {text: '建檔', onclick: 'createCustodyRecord()'},
-                {text: '查詢記錄', onclick: 'queryCustodyLog()'},
-                {text: '取消', onclick: 'closeStepModal()'}
+                {text: '建檔', callback: createCustodyRecord},
+                {text: '查詢記錄', callback: queryCustodyLog},
+                {text: '取消', callback: closeStepModal}
             ]);
         }
 
@@ -15611,8 +16258,8 @@ d41d8cd98f00b204e9800998ecf8427e</textarea>
             const chart = document.getElementById('traffic-chart');
             chart.innerHTML = Array(20).fill(0).map(() => '<div class="traffic-bar" style="height: 5px"></div>').join('');
             
-            if (dashboardInterval) clearInterval(dashboardInterval);
-            dashboardInterval = setInterval(updateDashboardData, 1000);
+            if (dashboardInterval) { clearRegisteredIntervals(i => i.id === dashboardInterval); }
+            dashboardInterval = registerInterval(updateDashboardData, 1000, { name: 'dashboardUpdate' });
         }
 
         function updateDashboardData() {
@@ -16332,14 +16979,14 @@ function updateGameStatsExtended() {
         list.innerHTML = html;
     }
 
-    // 擴展原有的 updateGameStats
-    const originalUpdateGameStats = window.updateGameStats;
-    window.updateGameStats = function() {
-        if (originalUpdateGameStats) originalUpdateGameStats();
-        updateGameStatsExtended();
-        updateObjectiveUI();
-        checkWinConditionsExtended();
-    };
+    // 擴展原有的 updateGameStats using hook API (avoids monkey-patching)
+    try {
+        addUpdateGameStatsHook(function(){
+            try { updateGameStatsExtended(); } catch(e){ console.warn('updateGameStatsExtended failed', e); }
+            try { updateObjectiveUI(); } catch(e){}
+            try { checkWinConditionsExtended(); } catch(e){}
+        });
+    } catch(e) { console.warn('register updateGameStats hook failed', e); }
     
     // 注入新按鈕到快捷面板 (優化版：分組與權限控制)
     function injectActionButtons() {
@@ -17778,11 +18425,9 @@ function applyLEIntelligenceSystem() {
     }
 
     // 3. 整合到遊戲循環
-    const originalUpdateGameStats = window.updateGameStats;
-    window.updateGameStats = function() {
-        if (originalUpdateGameStats) originalUpdateGameStats();
-        updateLEIntelligenceUI();
-    };
+    try {
+        addUpdateGameStatsHook(function(){ try{ updateLEIntelligenceUI(); }catch(e){ console.warn('updateLEIntelligenceUI failed', e); } });
+    } catch(e) { console.warn('register LE intelligence hook failed', e); }
 
     // 初始執行一次
     setTimeout(updateLEIntelligenceUI, 2000);
@@ -19218,7 +19863,7 @@ function applyCombatAndEconomy() {
 
         // 模擬 AI 自動對話
         if (!window.darknetInterval) {
-            window.darknetInterval = setInterval(simulateAIChat, 8000);
+            window.darknetInterval = registerInterval(simulateAIChat, 8000, { name: 'darknetChat' });
         }
     };
 
@@ -19417,6 +20062,208 @@ setTimeout(applyCombatAndEconomy, 4000);
 <script>
 function openForensicsLab(){ const _m = safeGet ? safeGet('forensics-lab-modal') : document.getElementById('forensics-lab-modal'); if(_m){ try{ _m.style.display='block'; setTimeout(()=>{ const f=_m.querySelector('button'); if(f) f.focus(); },100); }catch(e){} } }
 function closeForensicsLab(){ const _m = safeGet ? safeGet('forensics-lab-modal') : document.getElementById('forensics-lab-modal'); if(_m && _m.style) _m.style.display='none'; }
+
+// Forensics Export Filters Modal (hidden by default)
+if (!document.getElementById('forensics-export-modal')) {
+    const expModal = document.createElement('div');
+    expModal.id = 'forensics-export-modal';
+    expModal.className = 'immersive-modal';
+    expModal.style.display = 'none';
+    expModal.setAttribute('role','dialog');
+    expModal.setAttribute('aria-modal','true');
+    expModal.innerHTML = `
+        <div style="padding:18px; max-width:720px; margin:40px auto; background: #021218; color: #dff7ff; border-radius:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-weight:bold;">匯出過濾器</div>
+                <div><button class="close-btn" onclick="closeForensicsExportFilters()">關閉</button></div>
+            </div>
+            <div style="margin-top:12px; display:flex; gap:8px; flex-direction:column;">
+                <label>開始時間 <input type="datetime-local" id="export-filter-from"></label>
+                <label>結束時間 <input type="datetime-local" id="export-filter-to"></label>
+                <label>節點ID/名稱 <input type="text" id="export-filter-node" placeholder="可留空"></label>
+                <label>操作人員 <input type="text" id="export-filter-operator" placeholder="可留空"></label>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button class="forensic-btn" id="apply-export-btn" onclick="applyForensicsExport()">套用並匯出</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(expModal);
+}
+
+function openForensicsExportFilters(kind) {
+    // kind: 'xlsx' or 'pdf'
+    window._forensicsExportKind = kind || 'xlsx';
+    const m = document.getElementById('forensics-export-modal');
+    if (!m) return alert('無法開啟匯出視窗');
+    m.style.display = 'block';
+    // prefill times
+    const from = document.getElementById('export-filter-from');
+    const to = document.getElementById('export-filter-to');
+    if (from && !from.value) from.value = new Date(Date.now()-3600*1000).toISOString().slice(0,16);
+    if (to && !to.value) to.value = new Date().toISOString().slice(0,16);
+}
+
+function closeForensicsExportFilters() {
+    const m = document.getElementById('forensics-export-modal'); if (m) m.style.display = 'none';
+}
+
+function applyForensicsExport() {
+    // guard concurrent exports
+    return runOnceGuard('forensics-export', () => {
+        const kind = window._forensicsExportKind || 'xlsx';
+        const from = document.getElementById('export-filter-from')?.value;
+        const to = document.getElementById('export-filter-to')?.value;
+        const node = document.getElementById('export-filter-node')?.value?.trim();
+        const operator = document.getElementById('export-filter-operator')?.value?.trim();
+        // build filters
+        const filters = {};
+        if (from) filters.from = new Date(from).getTime();
+        if (to) filters.to = new Date(to).getTime();
+        if (node) filters.node = node;
+        if (operator) filters.operator = operator;
+
+        // Prepare data subset from window.gameLogs
+        const logs = (window.gameLogs || []).filter(l => {
+            if (filters.from && l.timestamp < filters.from) return false;
+            if (filters.to && l.timestamp > filters.to) return false;
+            if (filters.node && !(l.nodeId && l.nodeId.includes(filters.node))) return false;
+            if (filters.operator && !(l.operator && l.operator.includes(filters.operator))) return false;
+            return true;
+        });
+
+        if (kind === 'pdf') {
+            try { exportToPDF('forensics-export.pdf', logs); } catch(e){ alert('匯出 PDF 失敗: '+e.message); }
+        } else {
+            try { exportToExcel('forensics-export.xlsx', logs); } catch(e){ alert('匯出 Excel 失敗: '+e.message); }
+        }
+        closeForensicsExportFilters();
+    });
+}
+
+// Safe modal system (replaces eval-based onclick execution and avoids DOM leaks)
+(function(){
+    window._modalCallbacks = window._modalCallbacks || {};
+    let _modalSeq = 1;
+
+    window.showStepModal = function(title, htmlContent, buttons){
+        try {
+            // remove any existing step modal to avoid duplicates
+            const existing = document.getElementById('step-modal');
+            if (existing) existing.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'step-modal';
+            overlay.className = 'modal-overlay';
+            overlay.style.cssText = 'position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:20000;';
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-content';
+            modal.style.cssText = 'width:820px;max-width:96%;background:#071428;color:#fff;padding:16px;border-radius:8px;border:1px solid rgba(74,144,217,0.14);';
+
+            const header = document.createElement('div'); header.style.display='flex'; header.style.justifyContent='space-between'; header.style.alignItems='center';
+            const h = document.createElement('h3'); h.textContent = title || ''; h.style.margin='0';
+            const closeBtn = document.createElement('button'); closeBtn.textContent='×'; closeBtn.style.cssText='background:none;border:none;color:#fff;font-size:18px;cursor:pointer;';
+            closeBtn.onclick = function(){ closeStepModal(); };
+            header.appendChild(h); header.appendChild(closeBtn);
+
+            const body = document.createElement('div'); body.style.marginTop='12px';
+            if (typeof htmlContent === 'string') body.innerHTML = htmlContent; else if (htmlContent instanceof Node) body.appendChild(htmlContent);
+
+            const footer = document.createElement('div'); footer.style.marginTop='12px'; footer.style.display='flex'; footer.style.gap='8px'; footer.style.justifyContent='flex-end';
+
+            // attach buttons
+            (buttons || []).forEach((btn, idx) => {
+                const b = document.createElement('button');
+                b.className = btn.className || 'modal-btn';
+                b.textContent = btn.text || ('btn'+(idx+1));
+                b.style.cursor = 'pointer';
+                // create callback id
+                const cbId = 'mcb_' + (Date.now()) + '_' + (_modalSeq++);
+                // determine callback function
+                let cbFn = null;
+                if (typeof btn.callback === 'function') cbFn = btn.callback;
+                else if (typeof btn.onclick === 'function') cbFn = btn.onclick;
+                else if (typeof btn.onclick === 'string') {
+                    // support simple function name strings like "doSomething()" or "doSomething"
+                    const m = btn.onclick.match(/^\s*([a-zA-Z0-9_\$]+)\s*(\(.*\))?\s*$/);
+                    if (m) {
+                        const fnName = m[1];
+                        cbFn = function(){ try{ const f = window[fnName]; if (typeof f === 'function') return f(); else throw new Error('Function '+fnName+' not found'); }catch(e){ console.warn('modal callback error', e); }};
+                    }
+                }
+                // store callback
+                window._modalCallbacks[cbId] = cbFn || function(){ /* no-op */ };
+                b.dataset.callbackId = cbId;
+
+                // click handler: support promises and disable buttons while running
+                b.addEventListener('click', async function(ev){
+                    try {
+                        // disable all footer buttons to avoid races
+                        Array.from(footer.querySelectorAll('button')).forEach(x=>x.disabled = true);
+                        const cb = window._modalCallbacks[this.dataset.callbackId];
+                        if (!cb) return closeStepModal();
+                        const res = cb();
+                        if (res && typeof res.then === 'function') await res;
+                    } catch(e){ console.error('modal action failed', e); }
+                    finally { // always re-enable (or close modal)
+                        try { Array.from(footer.querySelectorAll('button')).forEach(x=>x.disabled = false); } catch(e){}
+                    }
+                });
+
+                footer.appendChild(b);
+            });
+
+            modal.appendChild(header);
+            modal.appendChild(body);
+            modal.appendChild(footer);
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            // focus first button if present
+            setTimeout(()=>{ const f = footer.querySelector('button'); if(f) f.focus(); }, 80);
+        } catch(e){ console.error('showStepModal error', e); }
+    };
+
+    window.closeStepModal = function(){
+        try {
+            const m = document.getElementById('step-modal');
+            if (m) { // cleanup callbacks
+                try { Object.keys(window._modalCallbacks || {}).forEach(k=>{ delete window._modalCallbacks[k]; }); } catch(e){}
+                m.remove();
+            }
+        } catch(e){ console.warn('closeStepModal error', e); }
+    };
+})();
+
+// Attempt automatic repair when role tools are missing in UI
+(function(){
+    const _origVerify = window.verifyRoleToolsApplied;
+    window.verifyRoleToolsApplied = function(){
+        try { if (typeof _origVerify === 'function') _origVerify(); } catch(e){ console.warn('original verifyRoleToolsApplied failed', e); }
+        try {
+            const missing = { hacker: [], law_enforcement: [] };
+            const toolsGrid = document.getElementById('tools-grid');
+            const pd = (window.GameState && window.GameState.playerData) || {};
+            const hackerTools = (pd.hacker && pd.hacker.tools) || [];
+            const leTools = (pd.law_enforcement && pd.law_enforcement.tools) || [];
+            function domHasTool(id){ return !!document.querySelector(`#tools-grid .tool-card[data-tool-id="${id}"]`); }
+            hackerTools.forEach(t => { if (!domHasTool(t)) missing.hacker.push(t); });
+            leTools.forEach(t => { if (!domHasTool(t)) missing.law_enforcement.push(t); });
+            // auto-fix: render placeholders for missing tools
+            if (toolsGrid && (missing.hacker.length || missing.law_enforcement.length)) {
+                const frag = document.createDocumentFragment();
+                missing.hacker.concat(missing.law_enforcement).forEach(id => {
+                    const card = document.createElement('div'); card.className='tool-card'; card.dataset.toolId = id;
+                    card.innerHTML = `<div style="padding:8px;color:#fff">[自動修復] ${id}</div>`;
+                    frag.appendChild(card);
+                });
+                toolsGrid.appendChild(frag);
+                try { showNotification('工具自動修復', '發現缺失工具，已嘗試自動補齊 UI 元件', 'info'); } catch(e){}
+            }
+        } catch(e) { console.warn('auto-fix verifyRoleToolsApplied failed', e); }
+    };
+})();
 
 function appendForensicsLog(msg){ const el=document.getElementById('forensics-log'); if(!el) return; const d=document.createElement('div'); d.textContent='['+new Date().toLocaleTimeString()+'] '+msg; el.prepend(d); }
 
@@ -19655,11 +20502,11 @@ function startEvidenceDecayTimer(){
     const status = document.getElementById('decay-status');
     status.textContent = '倒數中：'+window._evidenceDecayTimer.remaining+'s';
     appendForensicsLog('啟動證據倒數（模擬）: '+sec+' 秒');
-    window._evidenceDecayTimer.id = setInterval(()=>{
+    window._evidenceDecayTimer.id = registerInterval(()=>{
         window._evidenceDecayTimer.remaining -= 1;
         status.textContent = '倒數中：'+window._evidenceDecayTimer.remaining+'s';
         if(window._evidenceDecayTimer.remaining<=0){
-            clearInterval(window._evidenceDecayTimer.id); window._evidenceDecayTimer.id = null;
+            clearRegisteredIntervals(i => i.id === window._evidenceDecayTimer.id); window._evidenceDecayTimer.id = null;
             status.textContent = '證據已衰減/被加密（模擬）';
             // mark evidence as inaccessible
             window.forensicsLabData.decay = { timestamp: Date.now(), status:'lost_or_encrypted' };
@@ -19670,7 +20517,9 @@ function startEvidenceDecayTimer(){
 }
 
 function stopEvidenceDecayTimer(){
-    if(window._evidenceDecayTimer.id) clearInterval(window._evidenceDecayTimer.id);
+    if(window._evidenceDecayTimer.id) {
+        try { clearRegisteredIntervals(i => i.id === window._evidenceDecayTimer.id); } catch(e){ clearInterval(window._evidenceDecayTimer.id); }
+    }
     window._evidenceDecayTimer.id = null; window._evidenceDecayTimer.remaining = 0;
     const status = document.getElementById('decay-status'); if(status) status.textContent = '';
     appendForensicsLog('已停止證據倒數（模擬）');
@@ -19830,7 +20679,7 @@ window.Analytics = (function(){
         if (history.length > 200) history.shift();
     }
 
-    setInterval(snapshot, 30000); // capture every 30s
+    registerInterval(snapshot, 30000, { name: 'analyticsSnapshot' }); // capture every 30s
 
     function computeSummary(){
         if (!history.length) return {};
@@ -20554,6 +21403,17 @@ window.openAnalyticsDashboard = function(){ window.Analytics.openDashboard(); };
                     </div>
                 </div>
                 <div class="le-panel">
+                    <div class="panel-title"><i class="fas fa-magnet"></i> Magnet GrayKey (Forensics)</div>
+                    <div class="tool-card-mini">
+                        <p>Magnet GrayKey 是一款專業的行動裝置數位鑑識工具，旨在繞過鎖定螢幕、破解密碼並從加密智慧型手機中提取資料。</p>
+                        <p style="font-size:0.85rem;color:#999;">此工具僅供模擬用途；實際使用需要嚴格存取控制。</p>
+                        <div style="display:flex; gap:8px; margin-top:8px;">
+                            <button class="node-action-btn" onclick="openForensicsLab('graykey')">啟動 GrayKey 模擬</button>
+                            <button class="node-action-btn" onclick="addTerminalLine('[forensics] GrayKey 模擬掃描已排入佇列。', 'info')">排入掃描佇列</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="le-panel">
                     <div class="panel-title"><i class="fas fa-microchip"></i> 開發與調試輔助</div>
                     <div class="tool-card-mini">
                         <p>訪問系統底層日誌，實時監控內存與網絡流量。</p>
@@ -20575,6 +21435,14 @@ window.openAnalyticsDashboard = function(){ window.Analytics.openDashboard(); };
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div style="margin-top:14px; display:flex; gap:10px; align-items:center;">
+            <div style="font-size:0.95rem; color:#aaa;">指揮中心版本:</div>
+            <div id="lecenter-version" style="font-weight:bold; color:#ffd700;">v1.0</div>
+            <button class="node-action-btn" onclick="upgradeLECenter()">升級 指揮中心</button>
+            <button class="node-action-btn" onclick="upgradeAllDashboards()">升級 所有儀表板</button>
+            <button class="node-action-btn" onclick="showAllDashboards()">顯示所有儀表板</button>
         </div>
 
         <!-- 1. 案件詳細資料 -->
@@ -20647,6 +21515,224 @@ window.openAnalyticsDashboard = function(){ window.Analytics.openDashboard(); };
                     <div id="report-preview-content" class="preview-paper">
                         <!-- 預覽內容 -->
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cellebrite 仪表板頁面 -->
+<!-- Cellebrite moved: use 執法專務高級工具 page instead -->
+<div id="cellebrite-page" class="page" style="display:none; padding:80px 20px 40px;">
+    <div class="guide-container">
+        <div class="guide-header">
+            <div class="guide-title"><i class="fas fa-info-circle"></i> Cellebrite 已移動</div>
+            <p style="color: #888; font-size: 0.95rem;">Cellebrite 功能已整合到「執法專務高級工具」。請前往 指揮中心 → 執法專務高級工具 使用 Cellebrite 或在 數位鑑識工具中心 選擇 GrayKey / Cellebrite。</p>
+            <div style="margin-top:12px;"><button class="btn btn-primary" onclick="showLEAdvancedTools()">前往 執法專務高級工具</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- 新頁面：執法專務高級工具 (LE Advanced Tools) -->
+<div id="le-advanced-page" class="page game-view" style="display:none; padding:80px 20px 40px;">
+    <div class="guide-container">
+        <div class="guide-header">
+            <div class="guide-title"><i class="fas fa-tools"></i> 執法專務高級工具</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            <!-- Panel 1: Automation & workflow -->
+            <div class="guide-section" style="min-height:360px;">
+                <div class="guide-section-title"><i class="fas fa-cogs"></i> 自動化工作流程</div>
+                <div class="guide-section-content">
+                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                        <div class="tool-card" style="flex:1; min-width:180px;">
+                            <div class="tool-card-title">任務佇列</div>
+                            <div class="tool-card-body">建立與監控背景提取與解碼任務。</div>
+                            <button class="btn forensic-btn" id="btn-open-queue">打開佇列</button>
+                        </div>
+                        <div class="tool-card" style="flex:1; min-width:180px;">
+                            <div class="tool-card-title">背景解碼</div>
+                            <div class="tool-card-body">後台運行的解碼器，支持多檔案批次處理。</div>
+                            <button class="btn forensic-btn" id="btn-start-decode">啟動解碼</button>
+                        </div>
+                        <div class="tool-card" style="flex:1; min-width:180px;">
+                            <div class="tool-card-title">報告生成</div>
+                            <div class="tool-card-body">自動匯整事件、證據與時間軸，產生可列印報告。</div>
+                            <button class="btn forensic-btn" id="btn-gen-report">生成報告</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 2: Forensics center (2x2 cards + terminal) -->
+            <div class="guide-section" style="min-height:360px;">
+                <div class="guide-section-title"><i class="fas fa-microscope"></i> 數位鑑識工具中心</div>
+                <div class="guide-section-content">
+                    <div style="display:grid; grid-template-columns: repeat(2,1fr); gap:12px; margin-bottom:12px;">
+                        <div class="forensic-card" data-tool="GrayKey">
+                            <div class="tool-card-title">GrayKey</div>
+                            <div class="tool-card-body">行動裝置提取模組</div>
+                            <button class="btn forensic-btn run-tool" data-tool="GrayKey">執行</button>
+                        </div>
+                        <div class="forensic-card" data-tool="Cellebrite">
+                            <div class="tool-card-title">Cellebrite</div>
+                            <div class="tool-card-body">深度檔案系統解析器</div>
+                            <button class="btn forensic-btn run-tool" data-tool="Cellebrite">執行</button>
+                        </div>
+                        <div class="forensic-card" data-tool="AXIOM">
+                            <div class="tool-card-title">Magnet AXIOM</div>
+                            <div class="tool-card-body">跨裝置時間軸與雲端關聯</div>
+                            <button class="btn forensic-btn run-tool" data-tool="AXIOM">執行</button>
+                        </div>
+                        <div class="forensic-card" data-tool="EnCase">
+                            <div class="tool-card-title">EnCase</div>
+                            <div class="tool-card-body">證據封存與校驗</div>
+                            <button class="btn forensic-btn run-tool" data-tool="EnCase">執行</button>
+                        </div>
+                    </div>
+
+                    <div style="background:rgba(0,0,0,0.45); padding:10px; border-radius:8px;">
+                        <div style="font-weight:bold; color:#9eeff0; margin-bottom:6px;">Forensics Terminal</div>
+                        <div id="forensics-terminal" style="height:140px; overflow:auto; background:#00141b; padding:8px; border-radius:6px; color:#bfefff; font-family:monospace;"></div>
+                        <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+                            <button class="btn forensic-btn" id="btn-generate-report">報告生成器</button>
+                            <input id="hash-input" placeholder="證據檔案名稱" style="padding:6px; border-radius:6px; background:#00141b; color:#bfefff; border:1px solid rgba(191,250,240,0.04);" />
+                            <button class="btn forensic-btn" id="btn-hash-verify">生成 MD5 / SHA-256</button>
+                        </div>
+                        <div style="margin-top:10px; display:flex; gap:12px;">
+                            <canvas id="evidence-graph" width="360" height="140" style="background:rgba(0,0,0,0.25); border-radius:6px;"></canvas>
+                            <div id="report-preview" style="flex:1; background:rgba(0,0,0,0.15); padding:8px; border-radius:6px; color:#bfefff; font-size:0.85rem;">Report preview...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Centralized forensic tool runner (debounced/clearing logs)
+function runForensicTool(toolName){
+    const terminal = document.getElementById('forensics-terminal');
+    if(!terminal) return;
+    terminal.innerHTML = '';
+    const scripts = {
+        'GrayKey': "正在注入漏洞...繞過 SEP...Keychain 提取完成。",
+        'Cellebrite': "解析 SQLite 資料庫...通訊內容已關聯。",
+        'AXIOM': "建立跨裝置時間軸...關聯嫌疑人雲端賬號。",
+        'EnCase': "MD5 雜湊校驗成功...證據鏈已封存。"
+    };
+    addTerminalLine(`>>> [系統] 啟動工具: ${toolName}`, 'info');
+    setTimeout(()=>{
+        addTerminalLine(`>>> [日誌] ${scripts[toolName] || '操作完成'}`, 'success');
+        // append to forensics terminal as well
+        const el = document.createElement('div'); el.textContent = `>>> ${scripts[toolName] || '完成'}`; document.getElementById('forensics-terminal').appendChild(el);
+    }, 900);
+}
+
+// Unified init logic
+const initSystem = () => {
+    console.log('系統已啟動：模組化配置完成');
+    // mark initialized so other timers skip until ready
+    window._appInitialized = true;
+    document.querySelectorAll('.game-view').forEach(v => v.style.display = 'none');
+    const main = document.getElementById('le-advanced-page');
+    if(main) main.style.display = 'block';
+};
+
+document.addEventListener('DOMContentLoaded', ()=>{
+    initSystem();
+    // wire forensic run buttons using event delegation
+    document.addEventListener('click', function(e){
+        const btn = e.target.closest && e.target.closest('.run-tool');
+        if(!btn) return;
+        const tool = btn.getAttribute('data-tool');
+        if(tool) runForensicTool(tool);
+    });
+
+    // wire sniffer filter apply
+    const btnApply = document.getElementById('btn-apply-sniffer-filter');
+    if(btnApply) btnApply.addEventListener('click', ()=>{ addTerminalLine('[sniffer] 應用過濾器', 'info'); });
+
+    // wire forensic report/hash buttons
+    const btnReport = document.getElementById('btn-generate-report');
+    if(btnReport) btnReport.addEventListener('click', generateReport);
+    const btnHash = document.getElementById('btn-hash-verify');
+    if(btnHash) btnHash.addEventListener('click', verifyHash);
+
+    // render initial evidence graph
+    try{ renderEvidenceGraph(); }catch(e){}
+});
+
+function generateReport(){
+    const preview = document.getElementById('report-preview');
+    if(!preview) return;
+    preview.textContent = '生成報告中...';
+    setTimeout(()=>{ preview.textContent = '報告已生成：包含 3 條關鍵證據、1 張時間軸與 2 個關聯圖。'; addTerminalLine('[report] 報告生成完成', 'success'); }, 900);
+}
+
+function verifyHash(){
+    const fn = document.getElementById('hash-input')?.value || 'evidence.bin';
+    const preview = document.getElementById('report-preview');
+    addTerminalLine(`[hash] 計算 ${fn} 的 MD5 與 SHA-256（模擬）`, 'info');
+    setTimeout(()=>{
+        const md5 = Math.random().toString(16).slice(2, 18);
+        const sha = Math.random().toString(16).slice(2, 66);
+        preview.innerHTML = `<div>MD5: ${md5}</div><div>SHA-256: ${sha}</div>`;
+        addTerminalLine('[hash] 驗證完成', 'success');
+    }, 800);
+}
+
+function renderEvidenceGraph(){
+    const c = document.getElementById('evidence-graph');
+    if(!c) return;
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0,0,c.width,c.height);
+    // simple mock graph: 3 nodes and edges
+    const nodes = [{x:60,y:40,label:'Device A'},{x:180,y:100,label:'Suspect'},{x:300,y:40,label:'Device B'}];
+    ctx.strokeStyle = 'rgba(191,250,240,0.6)'; ctx.lineWidth=1.2;
+    // edges
+    ctx.beginPath(); ctx.moveTo(nodes[0].x,nodes[0].y); ctx.lineTo(nodes[1].x,nodes[1].y); ctx.lineTo(nodes[2].x,nodes[2].y); ctx.stroke();
+    // nodes
+    nodes.forEach(n=>{ ctx.fillStyle='#001a24'; ctx.beginPath(); ctx.arc(n.x,n.y,10,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#9eeff0'; ctx.stroke(); ctx.fillStyle='#9eeff0'; ctx.font='11px monospace'; ctx.fillText(n.label,n.x+12,n.y+4); });
+}
+</script>
+
+            <div class="guide-section">
+                <div class="guide-section-title"><i class="fas fa-flask"></i> 2. 分診與「快速檢視」介面</div>
+                <div class="guide-section-content">
+                    <div class="guide-step"><strong>快速查看選項卡：</strong>即時資料提取（含已安裝應用清單），即使手機鎖定亦可檢測可疑應用。</div>
+                    <div class="guide-step"><strong>檔案掃描器：</strong>載入機構檔案以搜尋高優先度指標（電話、郵件、座標）。</div>
+                    <div class="guide-step"><strong>嚴重性標記 UI：</strong>顏色編碼搜尋匹配（紅=高、黃=中）以協助優先處理。</div>
+                </div>
+            </div>
+
+            <div class="guide-section">
+                <div class="guide-section-title"><i class="fas fa-search-location"></i> 3. 核心功能分析</div>
+                <div class="guide-section-content">
+                    <div class="guide-step"><strong>圖形時間軸：</strong>互動式時間序列，繪製通話、位置與事件。</div>
+                    <div class="guide-step"><strong>統一訊息檢視：</strong>聚合 WhatsApp、微信、簡訊等聊天為單一會話主題。</div>
+                    <div class="guide-step"><strong>地圖與位置儀表板：</strong>解析座標、EXIF 與基地台，視覺化移動路徑。</div>
+                    <div class="guide-step"><strong>數位健康分析：</strong>追蹤應用使用與活躍帳戶行為分析。</div>
+                </div>
+            </div>
+
+            <div class="guide-section">
+                <div class="guide-section-title"><i class="fas fa-robot"></i> 4. 工作流程自動化</div>
+                <div class="guide-section-content">
+                    <div class="guide-step"><strong>簡化按鈕：</strong>右下橘色按鈕可建立自動佇列，背景解碼與報告產生自動化。</div>
+                    <div class="guide-step"><strong>待處理案件標籤：</strong>顯示後台任務與排隊提取進度。</div>
+                </div>
+            </div>
+
+            <div class="guide-section">
+                <div class="guide-section-title"><i class="fas fa-info-circle"></i> 關於 Cellebrite 解決方案</div>
+                <div class="guide-section-content">
+                    <div class="guide-step">Cellebrite Inseyets / UFED：通用鑑識萃取裝置，從 iOS/Android/平板與 SIM 卡進行完整檔案系統萃取與解鎖。</div>
+                    <div class="guide-step">Physical Analyzer：深度分析與解碼已提取資料，提供結構解析與高級搜尋。</div>
+                    <div class="guide-step">Genesis & Pathfinder：Agentic AI 與關聯分析，協助中央多台裝置關聯與時序整合。</div>
+                    <div class="guide-step">Guardian & Endpoint Inspector / Cellebrite Reader：雲端證據管理、終端收集與免費檢視工具。</div>
                 </div>
             </div>
         </div>
@@ -21721,15 +22807,9 @@ if (false) {
 
     // ===== 3. 遊戲循環集成 =====
 
-    const originalUpdateGameStats = window.updateGameStats;
-    window.updateGameStats = function() {
-        if (originalUpdateGameStats) originalUpdateGameStats();
-        
-        // 在遊戲进行时更新雙方面板
-        if (GameState && GameState.gameActive) {
-            window.generateDualRolePanels();
-        }
-    };
+    try {
+        addUpdateGameStatsHook(function(){ if (GameState && GameState.gameActive) { try{ window.generateDualRolePanels(); }catch(e){} } });
+    } catch(e) { console.warn('register dual role panels hook failed', e); }
 
     // 初始执行
     setTimeout(() => {
@@ -22132,16 +23212,9 @@ function generateTopStatusBar() {
 
     // ===== 4. 遊戲循環集成 =====
 
-    const originalUpdateGameStats = window.updateGameStats;
-    window.updateGameStats = function() {
-        if (originalUpdateGameStats) originalUpdateGameStats();
-        
-        // 在遊戲進行時更新面板
-        if (GameState && GameState.gameActive) {
-            window.generateOptimizedRolePanels();
-            window.generateTopStatusBar();
-        }
-    };
+    try {
+        addUpdateGameStatsHook(function(){ if (GameState && GameState.gameActive) { try{ window.generateOptimizedRolePanels(); window.generateTopStatusBar(); }catch(e){ console.warn('generateOptimizedRolePanels hook failed', e); } } });
+    } catch(e) { console.warn('register optimized panels hook failed', e); }
 
     // 初始执行
     setTimeout(() => {
@@ -22816,15 +23889,7 @@ function generateTopStatusBar() {
 
     // ===== 4. 遊戲循環集成 =====
 
-    const originalUpdateGameStats = window.updateGameStats;
-    window.updateGameStats = function() {
-        if (originalUpdateGameStats) originalUpdateGameStats();
-        
-        // 僅在執法部門時顯示
-        if (GameState && GameState.currentRole === 'law_enforcement' && GameState.gameActive) {
-            window.generateLEDashboard();
-        }
-    };
+    try { addUpdateGameStatsHook(function(){ if (GameState && GameState.currentRole === 'law_enforcement' && GameState.gameActive) { try{ window.generateLEDashboard(); }catch(e){} } }); } catch(e){ console.warn('register LE dashboard hook failed', e); }
 
     // 初始執行
     setTimeout(() => {
@@ -23002,15 +24067,20 @@ function deployTrap(type) {
         case 'backdoor': trapName = "受控後門誘餌"; cost = 800; break;
     }
     
-    // 檢查金幣
-    if (window.globalCoins < cost) {
-        showNotification('資金不足', `部署此陷阱需要 $${cost}，但您只有 $${window.globalCoins}`, 'warning');
-        addTerminalLine(`[陷阱部署失敗] 資金不足，需要 $${cost}，但只有 $${window.globalCoins}`, 'error');
+    // 檢查金幣（依角色）
+    const role = GameState.currentRole || 'hacker';
+    function getCurrencyForRole(r){ if(!window.GameState || !window.GameState.playerData) return 0; if(r==='law_enforcement') return window.GameState.playerData.law_enforcement.budget||0; return window.GameState.playerData.hacker.money||0; }
+    function setCurrencyForRole(r, val){ if(!window.GameState || !window.GameState.playerData) return; if(r==='law_enforcement'){ window.GameState.playerData.law_enforcement.budget = Number(val)||0; } else { window.GameState.playerData.hacker.money = Number(val)||0; } }
+
+    const available = getCurrencyForRole(role);
+    if (available < cost) {
+        showNotification('資金不足', `部署此陷阱需要 $${cost}，但您只有 $${available}`, 'warning');
+        addTerminalLine(`[陷阱部署失敗] 資金不足，需要 $${cost}，但只有 $${available}`, 'error');
         return;
     }
-    
+
     // 扣費
-    window.globalCoins -= cost;
+    setCurrencyForRole(role, available - cost);
     
     const timestamp = new Date().toLocaleString('zh-TW');
     const subnet = "子網 " + (Math.floor(Math.random() * 5) + 1);
@@ -23138,8 +24208,8 @@ const AI_ENGINE = {
     }
 };
 
-// 啟動 AI 引擎
-setInterval(() => AI_ENGINE.update(), 5000);
+// 啟動 AI 引擎 (registry-backed)
+registerInterval(() => { try { AI_ENGINE.update(); } catch(e) { console.warn('AI_ENGINE.update failed', e); } }, 5000, { name: 'aiEngineUpdate' });
 
 // --- 實體化操作重構 ---
 function startScanningChannels() {
@@ -23426,9 +24496,11 @@ function updateIntelPanel() {
     if (!intelPanel) return;
     
     // 獲取當前遊戲數據
+    // use centralized currency access
+    function getCurrencyForRolePublic(){ try{ const role = GameState.currentRole||'hacker'; return (role==='law_enforcement' ? (GameState.playerData.law_enforcement.budget||0) : (GameState.playerData.hacker.money||0)); }catch(e){ return 0; } }
     const stats = {
         reputation: window.globalReputation || 0,
-        coins: window.globalCoins || 0,
+        coins: getCurrencyForRolePublic(),
         evidence: (window.evidenceData || []).length,
         traps: (window.deployedTraps || []).length,
         aiEfficiency: (window.AI_ENGINE ? window.AI_ENGINE.efficiency : 1.0).toFixed(1)
@@ -23449,7 +24521,7 @@ function updateIntelPanel() {
     }
 }
 
-// 定時同步數據
+// 定時同步數據 (registered)
 setInterval(updateIntelPanel, 2000);
 
 // --- 3. 實體化技能樹系統 ---
@@ -23470,13 +24542,16 @@ const SKILL_TREE = {
         }
         
         const currentCost = skill.cost * (skill.level + 1);
-        if (window.globalCoins < currentCost) {
+        const role = GameState.currentRole || 'hacker';
+        function getCurrency(r){ return (r==='law_enforcement' ? (GameState.playerData.law_enforcement.budget||0) : (GameState.playerData.hacker.money||0)); }
+        function setCurrency(r, val){ if(r==='law_enforcement') GameState.playerData.law_enforcement.budget = Number(val)||0; else GameState.playerData.hacker.money = Number(val)||0; }
+        if (getCurrency(role) < currentCost) {
             showNotification(`資金不足！需要 ${currentCost} 金幣`, "error");
             return;
         }
         
         // 扣除資源
-        window.globalCoins -= currentCost;
+        setCurrency(role, getCurrency(role) - currentCost);
         skill.level++;
         
         // 應用效果
@@ -26600,6 +27675,52 @@ removedFns.forEach(fn=>{
 
 // Show panel on load and subscribe to GameState changes instead of polling
 window.addEventListener('load', ()=>{ showLEPanelIfAllowed(); });
+
+// Sanitize inline onclick handlers inside the Forensics page and convert them to safe listeners.
+function sanitizeForensicsButtons() {
+    try {
+        const page = document.getElementById('forensics-page');
+        if (!page) return;
+        const els = page.querySelectorAll('[onclick]');
+        els.forEach(el => {
+            try {
+                const onclick = el.getAttribute('onclick');
+                if (!onclick) return;
+                const m = onclick.match(/^\s*([a-zA-Z0-9_\$]+)\s*\((.*)\)\s*;?\s*$/);
+                if (!m) return;
+                const fnName = m[1];
+                const argsRaw = m[2].trim();
+                el.removeAttribute('onclick');
+                el.addEventListener('click', function(ev){
+                    try {
+                        const fn = window[fnName];
+                        if (typeof fn !== 'function') { console.warn('forensic action not found:', fnName); return; }
+                        if (!argsRaw) return fn.call(this, ev);
+                        const parts = argsRaw.match(/(?:'[^']*'|"[^"]*"|[^,])+/g) || [];
+                        const args = parts.map(p => {
+                            const s = p.trim();
+                            if (/^['\"]/.test(s)) return s.replace(/^['\"]|['\"]$/g, '');
+                            if (/^[0-9\.]+$/.test(s)) return Number(s);
+                            return s;
+                        });
+                        return fn.apply(this, args);
+                    } catch(e){ console.warn('forensics button handler failed', e); }
+                });
+            } catch(e){}
+        });
+    } catch(e){ console.warn('sanitizeForensicsButtons failed', e); }
+}
+
+// Run once now and observe DOM for future injections of the forensics page
+sanitizeForensicsButtons();
+const _forensicsObserver = new MutationObserver((mutations)=>{
+    for (const m of mutations) {
+        for (const n of m.addedNodes) {
+            try { if (n && n.id === 'forensics-page') sanitizeForensicsButtons(); } catch(e){}
+        }
+    }
+});
+_forensicsObserver.observe(document.body || document.documentElement, { childList: true, subtree: true });
 if(window.GameState && GameState.onChange && typeof GameState.onChange.addEventListener === 'function'){
     GameState.onChange.addEventListener('change', (e)=>{ try{ showLEPanelIfAllowed(); }catch(err){} });
 }
@@ -26607,6 +27728,161 @@ if(window.GameState && GameState.onChange && typeof GameState.onChange.addEventL
 // Expose safe storage helpers to global for use by autosave
 window.safeSetGameState = safeSetGameState;
 window.safeGetGameState = safeGetGameState;
+
+// -------------------------
+// Global game event logger and export helpers
+window.gameLogs = window.gameLogs || [];
+
+function logAction(nodeId, operation, result, extra = {}){
+    try{
+        const ts = Date.now();
+        const entry = {
+            timestamp: ts, // numeric ms since epoch (for filtering)
+            timestampText: new Date(ts).toLocaleString(), // human readable
+            nodeId: nodeId || 'unknown',
+            action: operation || 'unknown',
+            result: result === undefined ? '' : String(result),
+            status: extra.status || 'Completed',
+            operator: (GameState && GameState.currentRole) || 'unknown',
+            details: extra.details || ''
+        };
+        window.gameLogs.push(entry);
+        // small debug echo
+        try{ console.debug('Log Added:', entry); }catch(e){}
+        return entry;
+    }catch(e){ console.warn('logAction failed', e); }
+}
+
+// Export to Excel using SheetJS
+function exportToExcel(filename = 'Forensics_Report.xlsx', data){
+    try{
+        const rows = (Array.isArray(data) ? data : (window.gameLogs || [])).map(r=>({
+            timestamp: r.timestampText || (r.timestamp ? new Date(r.timestamp).toLocaleString() : ''),
+            nodeId: r.nodeId,
+            action: r.action,
+            result: r.result,
+            status: r.status,
+            operator: r.operator,
+            details: r.details
+        }));
+        const worksheet = XLSX.utils.json_to_sheet(rows);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'ForensicsRecord');
+        XLSX.writeFile(workbook, filename);
+    }catch(e){ console.error('exportToExcel failed', e); }
+}
+
+// Export to PDF using jsPDF (simple linear format)
+function exportToPDF(filename = 'Forensics_Report.pdf', data){
+    try{
+        const rows = Array.isArray(data) ? data : (window.gameLogs || []);
+        const { jsPDF } = window.jspdf || window.jspdf || { jsPDF: window.jspdf };
+        const doc = new jsPDF();
+        doc.setFontSize(12);
+        doc.text('Digital Forensics Investigation Report', 10, 12);
+        let y = 22;
+        rows.forEach((log, index) => {
+            const ts = log.timestampText || (log.timestamp ? new Date(log.timestamp).toLocaleString() : '');
+            const line = `${index+1}. [${ts}] Node:${log.nodeId} | Action:${log.action} | Result:${log.result}`;
+            const wrapped = doc.splitTextToSize(line, 180);
+            doc.text(wrapped, 10, y);
+            y += (wrapped.length * 6) + 4;
+            if (y > 270) { doc.addPage(); y = 20; }
+        });
+        doc.save(filename);
+    }catch(e){ console.error('exportToPDF failed', e); }
+}
+
+// -------------------------
+// Global inline-onclick sanitizer (conservative)
+// Converts simple onclick="fn()" attributes into safe event listeners.
+function sanitizeAllInlineOnclicks(root = document) {
+    try {
+        const els = (root.querySelectorAll ? root.querySelectorAll('[onclick]') : []);
+        els.forEach(el => {
+            try {
+                const onclick = el.getAttribute('onclick');
+                if (!onclick) return;
+                // allow only simple calls: fnName(...) where fnName is an identifier and args are simple strings/numbers
+                const m = onclick.match(/^\s*([a-zA-Z0-9_\$]+)\s*\((.*)\)\s*;?\s*$/);
+                if (!m) return; // skip complex expressions
+                const fnName = m[1];
+                const argsRaw = m[2].trim();
+                // remove the inline attribute to reduce XSS surface
+                el.removeAttribute('onclick');
+                el.addEventListener('click', function(ev){
+                    try {
+                        const fn = window[fnName];
+                        if (typeof fn !== 'function') { console.warn('inline handler not found:', fnName); return; }
+                        if (!argsRaw) return fn.call(this, ev);
+                        const parts = argsRaw.match(/(?:'[^']*'|"[^"]*"|[^,])+/g) || [];
+                        const args = parts.map(p => {
+                            const s = p.trim();
+                            if (/^['\"]/.test(s)) return s.replace(/^['\"]|['\"]$/g, '');
+                            if (/^[0-9\.]+$/.test(s)) return Number(s);
+                            return s;
+                        });
+                        return fn.apply(this, args);
+                    } catch(e){ console.warn('inline onclick handler failed', e); }
+                });
+            } catch(e){}
+        });
+    } catch(e){ console.warn('sanitizeAllInlineOnclicks failed', e); }
+}
+
+// Run once now and observe DOM for future additions globally
+try { sanitizeAllInlineOnclicks(document); } catch(e){}
+const _globalInlineObserver = new MutationObserver((mutations)=>{
+    for (const m of mutations) {
+        for (const n of m.addedNodes) {
+            try { if (n && n.querySelectorAll) sanitizeAllInlineOnclicks(n); } catch(e){}
+        }
+    }
+});
+_globalInlineObserver.observe(document.body || document.documentElement, { childList: true, subtree: true });
+// add to global observers list for cleanup
+window._domObservers = window._domObservers || [];
+window._domObservers.push(_globalInlineObserver);
+
+// -------------------------
+// Page cleanup helper: destroys modals, clears intervals for page, disconnects observers
+function pageCleanup(pageId) {
+    try { destroyModal('step-modal'); } catch(e){}
+    try { if (typeof clearRegisteredIntervals === 'function') clearRegisteredIntervals(i => (i.meta && ((i.meta.page && i.meta.page === pageId) || (i.meta.name && i.meta.name.startsWith && i.meta.name.startsWith(pageId))))); } catch(e){}
+    try { if (typeof _forensicsObserver !== 'undefined' && _forensicsObserver && typeof _forensicsObserver.disconnect === 'function') _forensicsObserver.disconnect(); } catch(e){}
+    try { (window._domObservers || []).forEach(o=>{ try{o.disconnect(); }catch(e){} }); } catch(e){}
+    try { if (_globalInlineObserver && typeof _globalInlineObserver.disconnect === 'function') _globalInlineObserver.disconnect(); } catch(e){}
+    try { // remove any named temp timeouts stored on window
+        if (window._pendingTimeouts) { Object.values(window._pendingTimeouts).forEach(id=>clearTimeout(id)); window._pendingTimeouts = {}; }
+    } catch(e){}
+    return true;
+}
+window.pageCleanup = pageCleanup;
+
+// -------------------------
+// Safe GameState patch helper (shallow deep-merge)
+function patchGameState(patch) {
+    try {
+        if (!window.GameState) window.GameState = {};
+        function merge(target, src){
+            for (const k in src) {
+                if (!Object.prototype.hasOwnProperty.call(src,k)) continue;
+                const sv = src[k];
+                if (sv && typeof sv === 'object' && !Array.isArray(sv)){
+                    if (!target[k] || typeof target[k] !== 'object') target[k] = {};
+                    merge(target[k], sv);
+                } else {
+                    target[k] = sv;
+                }
+            }
+        }
+        merge(GameState, patch);
+        try { if (GameState.onChange && typeof GameState.onChange.dispatchEvent === 'function') GameState.onChange.dispatchEvent(new CustomEvent('change',{detail:{patched:patch}})); } catch(e){}
+        try { if (typeof updateGameStats === 'function') updateGameStats(); } catch(e){}
+        return true;
+    } catch(e){ console.warn('patchGameState failed', e); return false; }
+}
+window.patchGameState = patchGameState;
 
 </script>
 <div id="le-quick-panel" aria-hidden="true">
@@ -26676,16 +27952,53 @@ function tryAttachRoleObserver(){
 }
 
 if(!tryAttachRoleObserver()){
-    const rolePoll = setInterval(()=>{
-        try{
-            const role = (window.GameState && GameState.currentRole) || null;
-            if(role !== lastRole){ lastRole = role; showLEPanelIfAllowed(); }
-            if(tryAttachRoleObserver()){
-                clearInterval(rolePoll);
-            }
-        }catch(e){ /* swallow transient errors */ }
-    }, 1000);
+    // retry-based fallback: try up to N times with increasing backoff, then stop
+    (function retryRoleAttach(attempt){
+        if(tryAttachRoleObserver()) return;
+        if(attempt > 12) return; // stop after ~12 attempts (~10s)
+        setTimeout(()=> retryRoleAttach(attempt+1), 700 + attempt*120);
+    })(0);
 }
+
+// Minimal UIController to centralize UI wiring and provide a single place
+// to add/remove event listeners in future refactors. This helps remove
+// inline onclick usage and makes teardown simpler.
+class UIController {
+    constructor(){ this.bound = []; }
+    init(){
+        // central quick-panel wiring (already guarded earlier) — keep for idempotence
+        const btns = [ ['btn-open-forensics', openForensicsLab], ['btn-open-warrant', openWarrantSystem], ['btn-gen-summary', ()=>renderForensicsSide && renderForensicsSide('快速面板：產生執法摘要（模擬）')] ];
+        btns.forEach(([id, fn]) => {
+            const el = safeGet(id); if(!el) return;
+            const h = (e)=>{ try{ fn && fn(); }catch(err){ console.warn('UIController handler error', err); } };
+            el.addEventListener('click', h);
+            this.bound.push({el, evt:'click', h});
+        });
+    }
+    teardown(){ this.bound.forEach(b=>{ try{ b.el.removeEventListener(b.evt, b.h); }catch(e){} }); this.bound=[]; }
+}
+
+// instantiate and init when DOM is ready
+window.addEventListener('DOMContentLoaded', ()=>{ window._UIController = new UIController(); try{ window._UIController.init(); }catch(e){} });
+
+// Delegated handler for node action buttons (data-action="node-action")
+document.addEventListener('click', function(e){
+    try{
+        const btn = e.target.closest && e.target.closest('[data-action="node-action"]');
+        if(!btn) return;
+        const op = btn.getAttribute('data-op');
+        const nodeId = btn.getAttribute('data-node');
+        if(!op || !nodeId) return;
+        // call existing executor
+        if(typeof executeNodeAction === 'function'){
+            executeNodeAction(nodeId, op);
+        } else {
+            // fallback: mimic behavior
+            addTerminalLine && addTerminalLine('[指令] 對節點 ' + nodeId + ' 執行 ' + op + '...', 'command', true);
+            setTimeout(()=>{ updateGameStats && updateGameStats(); }, 1500);
+        }
+    }catch(err){ /* ignore */ }
+});
 </script>
 
 </body>
